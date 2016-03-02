@@ -18,6 +18,7 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
+import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -32,14 +33,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Initial Example
+ * Basic RNN NIDS Example
  *
  * Resource: http://sacj.cs.uct.ac.za/index.php/sacj/article/viewFile/248/150
  * Dataset used: KDD Cup '99
  */
-public class NIDSExample {
+public class BasicRNNNIDSExample {
 
-    private static final Logger log = LoggerFactory.getLogger(NIDSExample.class);
+    private static final Logger log = LoggerFactory.getLogger(BasicRNNNIDSExample.class);
 
     // values to pass in from command line when compiled, esp running remotely
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
@@ -53,7 +54,7 @@ public class NIDSExample {
     @Option(name="--numTestBatches",usage="Number of test batches",aliases="-nTB")
     protected int numTestBatches = numBatches;
     @Option(name="--numEpochs",usage="Number of epochs",aliases="-nE")
-    protected int numEpochs = 1;
+    protected int numEpochs = 1; // consider 60
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 1;
     @Option(name="--numCategories",usage="Number of categories",aliases="-nC")
@@ -73,13 +74,13 @@ public class NIDSExample {
     protected String paramName = null;
 
     @Option(name="--lstmLayerSize",usage="Layer Size",aliases="-lS")
-    protected int lstmLayerSize = 10;
+    protected int lstmLayerSize = 4;
     @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
     protected int nIn = 10;
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
     protected int nOut = 10;
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
-    protected int truncatedBPTTLength = 100;
+    protected int truncatedBPTTLength = 2;
 
     protected long startTime = 0;
     protected long endTime = 0;
@@ -243,10 +244,19 @@ public class NIDSExample {
         testTime = (int) (endTime - startTime) / 60000;
     }
 
+    protected void saveAndPrintResults(MultiLayerNetwork net){
+        System.out.println("****************************************************");
+        System.out.println("Total training runtime: " + trainTime + " minutes");
+        System.out.println("Total evaluation runtime: " + testTime + " minutes");
+        System.out.println("****************************************************");
+        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, outputPath.toString());
+        if (saveParams) NetSaverLoaderUtils.saveParameters(net, layerIdsVGG, paramPaths);
 
+    }
+    
 
     public static void main(String[] args) throws Exception {
-        new NIDSExample().run(args);
+        new BasicRNNNIDSExample().run(args);
     }
 
 }
