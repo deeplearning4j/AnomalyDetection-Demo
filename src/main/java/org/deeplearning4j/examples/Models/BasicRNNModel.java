@@ -42,7 +42,7 @@ public class BasicRNNModel {
         this.seed = seed;
     }
 
-    protected MultiLayerNetwork buildModel() {
+    public MultiLayerNetwork buildModel() {
         System.out.println("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .iterations(iterations)

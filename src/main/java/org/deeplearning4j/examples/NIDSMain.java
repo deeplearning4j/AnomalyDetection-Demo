@@ -1,7 +1,5 @@
 package org.deeplearning4j.examples;
 
-
-import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
@@ -121,7 +119,7 @@ public class NIDSMain {
         switch (version) {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
-                MultipleEpochsIterator data = standard.loadData();
+                MultipleEpochsIterator data = standard.loadData(batchSize, batchSize * numBatches);
                 network = standard.trainModel(network, data);
                 standard.evaluatePerformance(network, data);
                 break;

@@ -9,7 +9,7 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 
 public class StandardNIDS extends NIDSMain{
 
-    protected MultipleEpochsIterator loadData(int batchSize, int totalNumExamples, String mode) {
+    protected MultipleEpochsIterator loadData(int batchSize, int totalNumExamples) {
         System.out.println("Load data....");
         // TODO setup data load
 //        return new MultipleEpochsIterator(numEpochs,...);
