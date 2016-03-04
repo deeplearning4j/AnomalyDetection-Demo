@@ -6,6 +6,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
+import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.Schema;
 import org.deeplearning4j.examples.data.TransformationSequence;
@@ -22,8 +23,6 @@ import java.util.List;
  * Created by Alex on 4/03/2016.
  */
 public class AnalysisSpark {
-
-    public static final String dataDir = "C:/Data/UNSW-NB15/CSV/";
 
     public static void main(String[] args) throws Exception {
 
@@ -75,8 +74,8 @@ public class AnalysisSpark {
         sparkConf.setAppName("NB15");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        String subsetDir = "C:/Data/UNSW_NB15/CSV_subset/";
-        JavaRDD<String> rawData = sc.textFile(subsetDir);
+        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";
+        JavaRDD<String> rawData = sc.textFile(dataDir);
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         //Data before going through the pipeline:

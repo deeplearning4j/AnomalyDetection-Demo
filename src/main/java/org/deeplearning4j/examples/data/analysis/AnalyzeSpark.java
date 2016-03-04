@@ -51,17 +51,22 @@ public class AnalyzeSpark {
                     JavaDoubleRDD stringLength = ithColumn.mapToDouble(new StringLengthFunction());
                     StatCounter stringLengthStats = stringLength.stats();
 
-                    int min = (int)stringLengthStats.min();
-                    int max = (int)stringLengthStats.max();
+                    long min = (int)stringLengthStats.min();
+                    long max = (int)stringLengthStats.max();
+
+                    long nBuckets = max-min+1;
 
                     Tuple2<double[],long[]> hist;
-                    if(max-min+1 < maxHistogramBuckets){
-                        hist = stringLength.histogram(max-min+1);
+                    if(max == min){
+                        //Edge case that spark doesn't like
+                        hist = new Tuple2<>(new double[]{min},new long[]{stringLengthStats.count()});
+                    } else if(nBuckets < maxHistogramBuckets){
+                        hist = stringLength.histogram((int)nBuckets);
                     } else {
                         hist = stringLength.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new StringAnalysis(countUnique,min,max,stringLengthStats.mean(),
+                    list.add(new StringAnalysis(countUnique,(int)min,(int)max,stringLengthStats.mean(),
                             stringLengthStats.sampleStdev(),stringLengthStats.sampleVariance(),stringLengthStats.count(),
                             hist._1(),hist._2()));
 
@@ -71,12 +76,17 @@ public class AnalyzeSpark {
                     JavaDoubleRDD doubleRDD1 = ithColumn.mapToDouble(new WritableToDoubleFunction());
                     StatCounter stats1 = doubleRDD1.stats();
 
-                    int min1 = (int)stats1.min();
-                    int max1 = (int)stats1.max();
+                    long min1 = (int)stats1.min();
+                    long max1 = (int)stats1.max();
+
+                    long nBuckets1 = max1-min1+1;
 
                     Tuple2<double[],long[]> hist1;
-                    if(max1-min1+1 < maxHistogramBuckets){
-                        hist1 = doubleRDD1.histogram(max1 - min1 + 1);
+                    if(max1 == min1){
+                        //Edge case that spark doesn't like
+                        hist1 = new Tuple2<>(new double[]{min1},new long[]{stats1.count()});
+                    } else if(nBuckets1 < maxHistogramBuckets){
+                        hist1 = doubleRDD1.histogram((int)nBuckets1);
                     } else {
                         hist1 = doubleRDD1.histogram(maxHistogramBuckets);
                     }
@@ -89,12 +99,17 @@ public class AnalyzeSpark {
                     JavaDoubleRDD doubleRDD = ithColumn.mapToDouble(new WritableToDoubleFunction());
                     StatCounter stats = doubleRDD.stats();
 
-                    int min2 = (int)stats.min();
-                    int max2 = (int)stats.max();
+                    long min2 = (int)stats.min();
+                    long max2 = (int)stats.max();
+
+                    long nBuckets2 = max2-min2+1;
 
                     Tuple2<double[],long[]> hist2;
-                    if(max2-min2+1 < maxHistogramBuckets){
-                        hist2 = doubleRDD.histogram(max2 - min2 + 1);
+                    if(max2 == min2){
+                        //Edge case that spark doesn't like
+                        hist2 = new Tuple2<>(new double[]{min2},new long[]{stats.count()});
+                    }else if(nBuckets2 < maxHistogramBuckets){
+                        hist2 = doubleRDD.histogram((int)nBuckets2);
                     } else {
                         hist2 = doubleRDD.histogram(maxHistogramBuckets);
                     }
@@ -103,8 +118,7 @@ public class AnalyzeSpark {
                             hist2._1(),hist2._2()));
                     break;
                 case Categorical:
-
-//                    JavaPairRDD<String,Integer> rdd = ithColumn.mapToPair(new CategoricalToPairFunction());
+                    
                     JavaRDD<String> rdd = ithColumn.map(new WritableToStringFunction());
                     Map<String,Long> map = rdd.countByValue();
 
