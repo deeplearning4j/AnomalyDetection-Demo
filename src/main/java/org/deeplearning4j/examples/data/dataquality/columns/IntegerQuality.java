@@ -6,17 +6,29 @@ import lombok.Data;
 /**
  * Created by Alex on 5/03/2016.
  */
-@AllArgsConstructor @Data
-public class IntegerQuality implements ColumnQuality {
+@Data
+public class IntegerQuality extends ColumnQuality {
 
-    private final long countMissing;
     private final long countNonInteger;
-    private final long countTotal;
+
+    public IntegerQuality(long countValid, long countInvalid, long countMissing, long countTotal, long countNonInteger){
+        super(countValid,countInvalid,countMissing,countTotal);
+        this.countNonInteger = countNonInteger;
+    }
+
 
     public IntegerQuality add(IntegerQuality other){
-        return new IntegerQuality(countMissing + other.countMissing,
-                countNonInteger + other.countNonInteger,
-                countTotal + other.countTotal);
+        return new IntegerQuality(
+                countValid + other.countValid,
+                countInvalid + other.countInvalid,
+                countMissing + other.countMissing,
+                countTotal + other.countTotal,
+                countNonInteger + other.countNonInteger);
+    }
+
+    @Override
+    public String toString(){
+        return "IntegerQuality(" + super.toString() + ", countNonInteger=" + countNonInteger + ")";
     }
 
 }

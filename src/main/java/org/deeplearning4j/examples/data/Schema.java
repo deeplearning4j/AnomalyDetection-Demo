@@ -1,27 +1,34 @@
 package org.deeplearning4j.examples.data;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.deeplearning4j.examples.data.meta.*;
+
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Created by Alex on 4/03/2016.
  */
-public class Schema {
+public class Schema implements Serializable {
 
     private List<String> columnNames;
-    private List<ColumnType> columnTypes;
+    private List<ColumnMetaData> columnMetaData;
+    private Map<String,Integer> columnNamesIndex;   //For efficient lookup
 
 
     private Schema(Builder builder){
         this.columnNames = builder.columnNames;
-        this.columnTypes = builder.columnTypes;
+        this.columnMetaData = builder.columnMetaData;
+        columnNamesIndex = new HashMap<>();
+        for(int i=0; i<columnNames.size(); i++ ){
+            columnNamesIndex.put(columnNames.get(i),i);
+        }
     }
 
-    public Schema(List<String> columnNames, List<ColumnType> columnTypes){
-        if(columnNames == null || columnTypes == null) throw new IllegalArgumentException("Input cannot be null");
-        if(columnNames.size() == 0 || columnNames.size() != columnTypes.size()) throw new IllegalArgumentException("List sizes must match (and be non-zero)");
+    public Schema(List<String> columnNames, List<ColumnMetaData> columnMetaData){
+        if(columnNames == null || columnMetaData == null) throw new IllegalArgumentException("Input cannot be null");
+        if(columnNames.size() == 0 || columnNames.size() != columnMetaData.size()) throw new IllegalArgumentException("List sizes must match (and be non-zero)");
         this.columnNames = columnNames;
-        this.columnTypes = columnTypes;
+        this.columnMetaData = columnMetaData;
     }
 
     public int numColumns(){
@@ -33,7 +40,11 @@ public class Schema {
     }
 
     public ColumnType getType(int column){
-        return columnTypes.get(column);
+        return columnMetaData.get(column).getColumnType();
+    }
+
+    public ColumnMetaData getMetaData(int column){
+        return columnMetaData.get(column);
     }
 
     public List<String> getColumnNames(){
@@ -41,20 +52,32 @@ public class Schema {
     }
 
     public List<ColumnType> getColumnTypes(){
-        return new ArrayList<>(columnTypes);
+        List<ColumnType> list = new ArrayList<>(columnMetaData.size());
+        for(ColumnMetaData md : columnMetaData) list.add(md.getColumnType());
+        return list;
+    }
+
+    public List<ColumnMetaData> getColumnMetaData(){
+        return new ArrayList<>(columnMetaData);
+    }
+
+    public int getIndexOfColumn(String columnName){
+        Integer idx = columnNamesIndex.get(columnName);
+        if(idx == null) throw new NoSuchElementException("Unknown column: \"" + columnName + "\"");
+        return idx;
     }
 
     public static class Builder {
 
         List<String> columnNames = new ArrayList<>();
-        List<ColumnType> columnTypes = new ArrayList<>();
+        List<ColumnMetaData> columnMetaData = new ArrayList<>();
 
         public Builder addColumnString(String name){
-            return addColumn(name,ColumnType.String);
+            return addColumn(name,new StringMetaData());
         }
 
         public Builder addColumnReal(String name){
-            return addColumn(name,ColumnType.Double);
+            return addColumn(name,new DoubleMetaData());
         }
 
         public Builder addColumnsReal(String... columnNames){
@@ -63,7 +86,7 @@ public class Schema {
         }
 
         public Builder addColumnInteger(String name){
-            return addColumn(name,ColumnType.Integer);
+            return addColumn(name,new IntegerMetaData());
         }
 
         public Builder addColumnsInteger(String... names){
@@ -71,19 +94,14 @@ public class Schema {
             return this;
         }
 
-        public Builder addColumnCategorical(String name){
-            return addColumn(name,ColumnType.Categorical);
-        }
-
-        public Builder addColumnsCategorical(String... names){
-            for(String s : names) addColumnCategorical(s);
-            return this;
+        public Builder addColumnCategorical(String name, String... stateNames){
+            return addColumn(name,new CategoricalMetaData(stateNames));
         }
 
 
-        public Builder addColumn(String name, ColumnType type){
+        public Builder addColumn(String name, ColumnMetaData metaData){
             columnNames.add(name);
-            columnTypes.add(type);
+            columnMetaData.add(metaData);
             return this;
         }
 
