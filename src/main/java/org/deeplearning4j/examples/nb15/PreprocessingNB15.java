@@ -6,10 +6,11 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.Schema;
-import org.deeplearning4j.examples.data.TransformationSequence;
+import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
+import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
 
@@ -26,8 +27,9 @@ public class PreprocessingNB15 {
 
         //Set up the sequence of transformations:
 
-        TransformationSequence seq = new TransformationSequence.Builder(csvSchema)
-                .add(new ReplaceEmptyStringTransform("attack category", "none"))
+        TransformSequence seq = new TransformSequence.Builder(csvSchema)
+                .transform(new ReplaceEmptyStringTransform("attack category", "none"))
+                .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these rows
                 .build();
 
         Schema finalSchema = seq.getFinalSchema(csvSchema);

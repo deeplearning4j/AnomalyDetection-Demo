@@ -29,6 +29,10 @@ public class Schema implements Serializable {
         if(columnNames.size() == 0 || columnNames.size() != columnMetaData.size()) throw new IllegalArgumentException("List sizes must match (and be non-zero)");
         this.columnNames = columnNames;
         this.columnMetaData = columnMetaData;
+        this.columnNamesIndex = new HashMap<>();
+        for(int i=0; i<columnNames.size(); i++ ){
+            columnNamesIndex.put(columnNames.get(i),i);
+        }
     }
 
     public int numColumns(){

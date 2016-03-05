@@ -12,4 +12,6 @@ public interface Filter extends Serializable {
 
     boolean removeExample(Collection<Writable> writables);
 
+    void setSchema(Schema schema);
+
 }

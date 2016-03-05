@@ -29,16 +29,20 @@ public class DataQualityAnalysis {
 
         //Header:
         sb.append(String.format("%-6s","idx")).append(String.format("%-"+(maxNameLength+8)+"s","name"))
-                .append(String.format("%-10s","type")).append("quality").append("\n");
+                .append(String.format("%-10s","type"))
+                .append(String.format("%-10s","quality"))
+                .append("details").append("\n");
 
         for( int i=0; i<nCol; i++ ){
             String colName = schema.getName(i);
             ColumnType type = schema.getType(i);
             ColumnQuality columnQuality = columnQualityList.get(i);
+            boolean pass = columnQuality.getCountInvalid() == 0L;
             String paddedName = String.format("%-"+(maxNameLength+8)+"s","\"" + colName + "\"");
             sb.append(String.format("%-6d",i))
                     .append(paddedName)
                     .append(String.format("%-10s",type))
+                    .append(String.format("%-10s",(pass ? "ok" : "FAIL")))
                     .append(columnQuality).append("\n");
         }
 
