@@ -26,8 +26,8 @@ public class AnalysisNB15 {
         sparkConf.setAppName("NB15");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-//        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";
-        String dataDir = "C:/Data/UNSW_NB15/CSV/";
+        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";
+//        String dataDir = "C:/Data/UNSW_NB15/CSV/";
         JavaRDD<String> rawData = sc.textFile(dataDir);
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
