@@ -118,7 +118,7 @@ public class AnalyzeSpark {
                             hist2._1(),hist2._2()));
                     break;
                 case Categorical:
-                    
+
                     JavaRDD<String> rdd = ithColumn.map(new WritableToStringFunction());
                     Map<String,Long> map = rdd.countByValue();
 

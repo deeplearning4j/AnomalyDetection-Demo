@@ -3,21 +3,15 @@ package org.deeplearning4j.examples.nb15;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
-import org.canova.api.split.FileSplit;
-import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.Schema;
-import org.deeplearning4j.examples.data.TransformationSequence;
-import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
-import org.deeplearning4j.examples.data.analysis.DataAnalysis;
+import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
+import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 
-import java.io.File;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Created by Alex on 4/03/2016.
@@ -57,11 +51,12 @@ public class AnalysisSpark {
         }
 
         //Remove some columns, just for testing purposes:
-        TransformationSequence seq = new TransformationSequence.Builder()
-                .removeColumns("source bits per second", "destination bits per second")
-                .build();
-
-        Schema finalSchema = seq.getFinalSchema(csvSchema);
+//        TransformationSequence seq = new TransformationSequence.Builder()
+//                .removeColumns("source bits per second", "destination bits per second")
+//                .build();
+//
+//        Schema finalSchema = seq.getFinalSchema(csvSchema);
+        Schema finalSchema = csvSchema;
 
         System.out.println("-----------------------------");
 //        for( int i=0; i<finalSchema.numColumns(); i++ ){
@@ -74,7 +69,8 @@ public class AnalysisSpark {
         sparkConf.setAppName("NB15");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";
+//        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";
+        String dataDir = "C:/Data/UNSW_NB15/CSV/";
         JavaRDD<String> rawData = sc.textFile(dataDir);
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
@@ -84,7 +80,10 @@ public class AnalysisSpark {
 //        }
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<Collection<Writable>> out = executor.execute(data,seq);
+//        JavaRDD<Collection<Writable>> out = executor.execute(data,seq);
+        JavaRDD<Collection<Writable>> out = data;
+
+        long totalCount = out.count();
 
         //Data after going through the pipeline:
 //        List<Collection<Writable>> collected = out.collect();
@@ -93,18 +92,29 @@ public class AnalysisSpark {
 //            System.out.println(c.size() + "\t" + c);
 //        }
 
+        //Analyze the quality of the columns (missing values, etc), on a per column basis
+        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(finalSchema,out);
+
         //Do analysis, on a per-column basis
-        DataAnalysis da = AnalyzeSpark.analyze(finalSchema,out);
+//        DataAnalysis da = AnalyzeSpark.analyze(finalSchema,out);
         sc.close();
 
         //Wait for spark to stop its console spam before printing analysis
         Thread.sleep(2000);
 
         System.out.println("------------------------------------------");
+        System.out.println("Data quality:");
+        System.out.println(dqa);
 
-        System.out.println(da);
+        System.out.println("Total count: " + totalCount);
+
+        System.out.println("------------------------------------------");
+
+//        System.out.println(da);
 
         //TODO: print histogram bins. Integer, Real and String ColumnAnalysis classes have histogram functionality already implemented
+
+
     }
 
 }
