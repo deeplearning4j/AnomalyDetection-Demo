@@ -11,9 +11,9 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.dataset.DataSet;
-import org.nd4j.linalg.io.ClassPathResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.canova.api.util.ClassPathResource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,14 +47,16 @@ public class NIDSMain {
     protected int iterations = 1;
     @Option(name="--numCategories",usage="Number of categories",aliases="-nC")
     protected int numCategories = 1;
-    @Option(name="--trainFolder",usage="Train folder",aliases="-taF")
-    protected String trainFolder = "train";
-    @Option(name="--testFolder",usage="Test folder",aliases="-teF")
-    protected String testFolder = "test";
+    @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
+    protected String trainFile = "csv_50_records.txt";
+    @Option(name="--testFile",usage="Test filename",aliases="-teFN")
+    protected String testFile = "test.csv";
+//    @Option(name="--trainFolder",usage="Train folder",aliases="-taF")
+//    protected String trainFolder = "train.csv";
+//    @Option(name="--testFolder",usage="Test folder",aliases="-teF")
+//    protected String testFolder = "test";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
-    @Option(name="--saveParams",usage="Save parameters",aliases="-sP")
-    protected boolean saveParams = false;
 
     @Option(name="--confName",usage="Model configuration file name",aliases="-conf")
     protected String confName = null;
@@ -66,7 +68,7 @@ public class NIDSMain {
     @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
     protected int nIn = 10;
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
-    protected int nOut = 10;
+    protected int nOut = 2; //2 binary or 9 classification
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
     protected int truncatedBPTTLength = 2;
 
@@ -75,7 +77,6 @@ public class NIDSMain {
     protected int trainTime = 0;
     protected int testTime = 0;
 
-    protected static final int outputNum = 1860;
     protected int seed = 123;
     protected int listenerFreq = 1;
     protected int totalTrainNumExamples = batchSize * numBatches;
@@ -93,14 +94,13 @@ public class NIDSMain {
     protected Map<String, String> paramPaths = new HashMap<>();
 
     protected List<String> labels;
-    protected String[] layerIdsVGG = {"cnn1", "cnn2", "cnn3", "cnn4", "ffn1", "ffn2", "output"};
     protected int nCores = 1;
 
 
     public void run(String[] args) throws Exception {
+        String trainPath = new ClassPathResource(trainFile).getFile().getAbsolutePath();
+        String testPath = new ClassPathResource(testFile).getFile().getAbsolutePath();
 
-        String trainPath = new ClassPathResource("train").getFile().getAbsolutePath();
-        String testPath = new ClassPathResource("test").getFile().getAbsolutePath();
 //        int sparkExamplesPerFit = 32 * nCores;
 
         // Parse command line arguments if they exist
@@ -112,7 +112,6 @@ public class NIDSMain {
             System.err.println(e.getMessage());
             parser.printUsage(System.err);
         }
-
 
         MultiLayerNetwork network = new BasicRNNModel(nIn, nOut, lstmLayerSize, truncatedBPTTLength, iterations).buildModel();
 
@@ -136,10 +135,7 @@ public class NIDSMain {
         }
 
         saveAndPrintResults(network);
-
         System.out.println("****************Example finished********************");
-
-
     }
 
     protected void saveAndPrintResults(MultiLayerNetwork net){
@@ -149,8 +145,6 @@ public class NIDSMain {
         System.out.println("Total evaluation runtime: " + testTime + " minutes");
         System.out.println("****************************************************");
         if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, outputPath.toString());
-        if (saveParams) NetSaverLoaderUtils.saveParameters(net, layerIdsVGG, paramPaths);
-
     }
 
 
