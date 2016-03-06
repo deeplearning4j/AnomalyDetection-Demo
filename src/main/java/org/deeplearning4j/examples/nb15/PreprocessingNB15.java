@@ -15,7 +15,7 @@ import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithInteger;
-import org.deeplearning4j.examples.data.transform.integer.ReplaceIntegerConditionalTransform;
+import org.deeplearning4j.examples.data.transform.ConditionalTransform;
 import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
 import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
 
@@ -40,7 +40,7 @@ public class PreprocessingNB15 {
                 .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these rows
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods",0))
                 .transform(new ReplaceInvalidWithInteger("count ftp commands",0))
-                .transform(new ReplaceIntegerConditionalTransform("is ftp login", 1, 0, 13, Arrays.asList("ftp", "ftp-data")))
+                .transform(new ConditionalTransform("is ftp login", 1, 0, 13, Arrays.asList("ftp", "ftp-data")))
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods",0))
                 .build();
 
