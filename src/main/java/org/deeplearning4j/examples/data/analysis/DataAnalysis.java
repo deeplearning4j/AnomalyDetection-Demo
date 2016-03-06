@@ -2,6 +2,7 @@ package org.deeplearning4j.examples.data.analysis;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.Schema;
 import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
@@ -44,5 +45,6 @@ public class DataAnalysis {
 
         return sb.toString();
     }
+
 
 }

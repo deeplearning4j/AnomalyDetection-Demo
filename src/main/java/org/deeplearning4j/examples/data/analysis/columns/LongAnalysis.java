@@ -24,4 +24,7 @@ public class LongAnalysis implements ColumnAnalysis{
                 ",sampleVariance="+sampleVariance+",count="+count+")";
     }
 
+    @Override
+    public double getMean(){ return mean; }
+
 }

@@ -26,4 +26,7 @@ public class RealAnalysis implements ColumnAnalysis {
                 ",sampleVariance="+sampleVariance+",count="+count+")";
     }
 
+    @Override
+    public double getMean(){ return mean; }
+
 }

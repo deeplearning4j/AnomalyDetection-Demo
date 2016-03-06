@@ -1,9 +1,11 @@
 package org.deeplearning4j.examples.nb15;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
+import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.Temp.Histograms;
 import org.deeplearning4j.examples.data.ColumnType;
@@ -26,6 +28,7 @@ import org.deeplearning4j.examples.data.transform.categorical.StringToCategorica
 import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithIntegerTransform;
 import org.deeplearning4j.examples.data.transform.ConditionalTransform;
+import org.deeplearning4j.examples.data.transform.real.DoubleNormalizer;
 import org.deeplearning4j.examples.data.transform.string.MapAllStringsExceptListTransform;
 import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
 import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
@@ -42,7 +45,17 @@ import java.util.List;
  */
 public class PreprocessingNB15 {
 
-    public static final String CHART_DIRECTORY = "C:/Data/UNSW_NB15/Out/Charts/";
+    protected static boolean isWin = false;
+    protected static String inputFilePath =  "data/NIDS/UNSW/input/";
+    protected static String outputFilePath =  "data/NIDS/UNSW/preprocessed/";
+    protected static String chartFilePath =  "charts/";
+
+    public static final String IN_DIRECTORY = (isWin)? "C:/Data/UNSW_NB15/Out/" :
+            FilenameUtils.concat(System.getProperty("user.home"), inputFilePath);
+    public static final String OUT_DIRECTORY = (isWin)? "C:/Data/UNSW_NB15/Out/" :
+            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath);
+    public static final String CHART_DIRECTORY = (isWin)? "C:/Data/UNSW_NB15/Out/Charts/" :
+            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
 
     public static void main(String[] args) throws Exception {
 
@@ -81,16 +94,12 @@ public class PreprocessingNB15 {
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
 //        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";   //Subset of data
-        String dataDir = "C:/Data/UNSW_NB15/CSV/";
+        String inputName = "csv_50_records.txt";
+        String dataDir = (isWin)?  "C:/Data/UNSW_NB15/CSV/": new ClassPathResource(inputName).getFile().getAbsolutePath();
+//        String dataDir = (isWin)?  "C:/Data/UNSW_NB15/CSV/": IN_DIRECTORY;
         JavaRDD<String> rawData = sc.textFile(dataDir);
 
-//        String inputName = "csv_50_records.txt";
-//        String basePath = new ClassPathResource(inputName).getFile().getAbsolutePath();
-//        JavaRDD<String> rawData = sc.textFile(basePath);
-
-
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
-
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
         JavaRDD<Collection<Writable>> processedData = executor.execute(data, seq);
@@ -101,6 +110,27 @@ public class PreprocessingNB15 {
 
         //Do analysis, on a per-column basis
         DataAnalysis da = AnalyzeSpark.analyze(finalSchema, processedData);
+
+        // TODO normalize double
+        TransformSequence norm = new TransformSequence.Builder(finalSchema)
+                .transform(new DoubleNormalizer("total duration",  da.getColumnAnalysis().get(4).getMean(),0.5))
+                .transform(new DoubleNormalizer("source bits per second",  da.getColumnAnalysis().get(12).getMean(),0.5))
+                .transform(new DoubleNormalizer("destination bits per second",  da.getColumnAnalysis().get(13).getMean(),0.5))
+                .transform(new DoubleNormalizer("source jitter ms",  da.getColumnAnalysis().get(24).getMean(),0.5))
+                .transform(new DoubleNormalizer("dest jitter ms",  da.getColumnAnalysis().get(25).getMean(),0.5))
+                .transform(new DoubleNormalizer("source interpacket arrival time",  da.getColumnAnalysis().get(26).getMean(),0.5))
+                .transform(new DoubleNormalizer("destination interpacket arrival time", da.getColumnAnalysis().get(27).getMean(),0.5))
+                .transform(new DoubleNormalizer("tcp setup round trip time", da.getColumnAnalysis().get(28).getMean(),0.5))
+                .transform(new DoubleNormalizer("tcp setup time syn syn_ack", da.getColumnAnalysis().get(29).getMean(),0.5))
+                .transform(new DoubleNormalizer("tcp setup time syn_ack ack",  da.getColumnAnalysis().get(30).getMean(),0.5))
+                .build();
+
+        JavaRDD<Collection<Writable>> normalizedData = executor.execute(processedData, norm);
+        processedData.unpersist();
+        normalizedData.cache();
+
+        DataAnalysis da2 = AnalyzeSpark.analyze(finalSchema, normalizedData);
+
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
 //        List<Writable> invalidSourceTCPBaseSequenceNum = QualityAnalyzeSpark.sampleInvalidColumns(100,"source TCP base sequence num",finalSchema,processedData);
 //        List<Writable> invalidDestTCPBaseSequenceNum = QualityAnalyzeSpark.sampleInvalidColumns(100,"dest TCP base sequence num",finalSchema,processedData);
@@ -116,9 +146,16 @@ public class PreprocessingNB15 {
 
         System.out.println("------------------------------------------");
 
+        System.out.println("Processed data summary:");
         System.out.println(da);
 
-        //TODO: analysis and histograms
+        System.out.println("------------------------------------------");
+
+        System.out.println("Normalized data summary:");
+        System.out.println(da2);
+
+        //analysis and histograms
+//        plot(finalSchema, da);
 
 //        System.out.println("Invalid is ftp login data:");
 //        System.out.println(invalidIsFtpLogin);
@@ -127,6 +164,13 @@ public class PreprocessingNB15 {
 //        System.out.println(invalidAttack);
 
 
+        // TODO store processedData
+//        processedData.saveAsObjectFile(OUT_DIRECTORY);
+
+        System.out.println();
+    }
+
+    public static void plot(Schema finalSchema,  DataAnalysis da) throws Exception{
         //Plots!
         List<ColumnAnalysis> analysis = da.getColumnAnalysis();
         List<String> names = finalSchema.getColumnNames();
@@ -167,7 +211,6 @@ public class PreprocessingNB15 {
         }
 
 
-        System.out.println();
     }
 
 }

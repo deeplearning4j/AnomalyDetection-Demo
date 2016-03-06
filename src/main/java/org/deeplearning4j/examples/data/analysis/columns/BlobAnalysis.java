@@ -15,4 +15,7 @@ public class BlobAnalysis implements ColumnAnalysis {
         return "BlobAnalysis()";
     }
 
+    @Override
+    public double getMean() { return 0.0;}
+
 }

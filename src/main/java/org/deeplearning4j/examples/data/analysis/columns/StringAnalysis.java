@@ -25,4 +25,7 @@ public class StringAnalysis implements ColumnAnalysis {
                 ",sampleStDevLen="+ sampleStdevLength + ",sampleVarianceLen="+ sampleVarianceLength +",count="+count+")";
     }
 
+    @Override
+    public double getMean(){ return meanLength; }
+
 }

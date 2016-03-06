@@ -18,4 +18,8 @@ public class CategoricalAnalysis implements ColumnAnalysis{
     public String toString() {
         return "CategoricalAnalysis(CategoryCounts=" + mapOfCounts + ")";
     }
+
+    @Override
+    public double getMean() { return 0.0;}
+
 }

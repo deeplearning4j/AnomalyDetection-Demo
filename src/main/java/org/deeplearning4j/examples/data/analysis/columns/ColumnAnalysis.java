@@ -6,4 +6,6 @@ import java.io.Serializable;
  * Created by Alex on 4/03/2016.
  */
 public interface ColumnAnalysis extends Serializable {
+
+    public double getMean();
 }
