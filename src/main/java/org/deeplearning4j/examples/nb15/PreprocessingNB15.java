@@ -16,6 +16,7 @@ import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
 import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class PreprocessingNB15 {
 
         //Set up the sequence of transforms:
         TransformSequence seq = new TransformSequence.Builder(csvSchema)
+                .transform(new RemoveWhiteSpaceTransform("attack category"))
                 .transform(new ReplaceEmptyStringTransform("attack category", "none"))  //Replace empty strings in "attack category"
                 .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these rows
                 .build();
