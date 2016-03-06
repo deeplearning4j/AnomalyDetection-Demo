@@ -1,6 +1,5 @@
 package org.deeplearning4j.examples.nb15;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -9,8 +8,6 @@ import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.Schema;
 import org.deeplearning4j.examples.data.TransformSequence;
-import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
-import org.deeplearning4j.examples.data.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
@@ -18,10 +15,11 @@ import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithInteger;
+import org.deeplearning4j.examples.data.transform.integer.ReplaceIntegerConditionalTransform;
 import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
 import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
 
-import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -42,6 +40,8 @@ public class PreprocessingNB15 {
                 .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these rows
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods",0))
                 .transform(new ReplaceInvalidWithInteger("count ftp commands",0))
+                .transform(new ReplaceIntegerConditionalTransform("is ftp login", 1, 0, 13, Arrays.asList("ftp", "ftp-data")))
+                .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods",0))
                 .build();
 
         Schema finalSchema = seq.getFinalSchema(csvSchema);
@@ -53,12 +53,12 @@ public class PreprocessingNB15 {
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
 //        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";   //Subset of data
-        String dataDir = "C:/Data/UNSW_NB15/CSV/";
-        JavaRDD<String> rawData = sc.textFile(dataDir);
+//        String dataDir = "C:/Data/UNSW_NB15/CSV/";
+//        JavaRDD<String> rawData = sc.textFile(dataDir);
 
-//        String inputName = "csv_50_records.txt";
-//        String basePath = new ClassPathResource(inputName).getFile().getAbsolutePath();
-//        JavaRDD<String> rawData = sc.textFile(basePath);
+        String inputName = "csv_50_records.txt";
+        String basePath = new ClassPathResource(inputName).getFile().getAbsolutePath();
+        JavaRDD<String> rawData = sc.textFile(basePath);
 
 
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
