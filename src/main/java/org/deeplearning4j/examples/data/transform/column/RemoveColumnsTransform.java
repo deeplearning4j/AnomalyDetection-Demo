@@ -21,30 +21,28 @@ public class RemoveColumnsTransform extends BaseTransform {
         this.columnsToRemove = columnsToRemove;
     }
 
-    public Set<Integer> getIndicesToRemove(){
-        if(indicesToRemove == null){
-            indicesToRemove = new HashSet<>();
-            for( int i : columnsToRemoveIdx) indicesToRemove.add(i);
-        }
-        return indicesToRemove;
-    }
+//    public Set<Integer> getIndicesToRemove(){
+//        if(indicesToRemove == null){
+//            indicesToRemove = new HashSet<>();
+//            for( int i : columnsToRemoveIdx) indicesToRemove.add(i);
+//        }
+//        return indicesToRemove;
+//    }
 
     @Override
     public void setInputSchema(Schema schema){
         super.setInputSchema(schema);
 
+        indicesToRemove = new HashSet<>();
+
         int i=0;
         columnsToRemoveIdx = new int[columnsToRemove.length];
         String[] allNames = schema.getColumnNames().toArray(new String[schema.numColumns()]);
         for( String s : columnsToRemove){
-            int idx = ArrayUtils.indexOf(allNames,s);
+            int idx = schema.getIndexOfColumn(s);
             if(idx<0) throw new RuntimeException("Column \"" + s + "\" not found");
             columnsToRemoveIdx[i++] = idx;
-        }
-
-        if(indicesToRemove == null){
-            indicesToRemove = new HashSet<>();
-            for( int j : columnsToRemoveIdx) indicesToRemove.add(i);
+            indicesToRemove.add(idx);
         }
     }
 

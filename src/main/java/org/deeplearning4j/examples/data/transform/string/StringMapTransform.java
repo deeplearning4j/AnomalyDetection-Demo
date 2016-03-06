@@ -14,6 +14,11 @@ public class StringMapTransform extends BaseStringTransform {
 
     private final Map<String,String> map;
 
+    /**
+     *
+     * @param columnName
+     * @param map Key: From. Value: To
+     */
     public StringMapTransform(String columnName, Map<String, String> map) {
         super(columnName);
         this.map = map;

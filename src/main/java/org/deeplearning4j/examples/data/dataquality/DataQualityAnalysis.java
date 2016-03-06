@@ -29,7 +29,7 @@ public class DataQualityAnalysis {
 
         //Header:
         sb.append(String.format("%-6s","idx")).append(String.format("%-"+(maxNameLength+8)+"s","name"))
-                .append(String.format("%-10s","type"))
+                .append(String.format("%-15s","type"))
                 .append(String.format("%-10s","quality"))
                 .append("details").append("\n");
 
@@ -41,7 +41,7 @@ public class DataQualityAnalysis {
             String paddedName = String.format("%-"+(maxNameLength+8)+"s","\"" + colName + "\"");
             sb.append(String.format("%-6d",i))
                     .append(paddedName)
-                    .append(String.format("%-10s",type))
+                    .append(String.format("%-15s",type))
                     .append(String.format("%-10s",(pass ? "ok" : "FAIL")))
                     .append(columnQuality).append("\n");
         }

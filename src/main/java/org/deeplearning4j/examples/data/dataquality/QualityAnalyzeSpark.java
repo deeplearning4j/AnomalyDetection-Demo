@@ -74,7 +74,7 @@ public class QualityAnalyzeSpark {
                     CategoricalQuality initialCat = new CategoricalQuality();
                     CategoricalQuality categoricalQuality = ithColumn.aggregate(initialCat,new CategoricalQualityAddFunction((CategoricalMetaData)meta),new CategoricalQualityMergeFunction());
 
-                    list.add(new CategoricalQuality()); //TODO
+                    list.add(categoricalQuality);
 
 
                     break;

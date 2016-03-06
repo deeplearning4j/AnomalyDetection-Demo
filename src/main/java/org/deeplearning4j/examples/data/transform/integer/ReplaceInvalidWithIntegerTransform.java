@@ -6,11 +6,11 @@ import org.canova.api.writable.Writable;
 /**
  * Created by Alex on 6/03/2016.
  */
-public class ReplaceInvalidWithInteger extends BaseIntegerTransform {
+public class ReplaceInvalidWithIntegerTransform extends BaseIntegerTransform {
 
     private final int intValue;
 
-    public ReplaceInvalidWithInteger(String column, int intValue) {
+    public ReplaceInvalidWithIntegerTransform(String column, int intValue) {
         super(column);
         this.intValue = intValue;
     }

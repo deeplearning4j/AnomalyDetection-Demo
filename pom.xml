@@ -177,6 +177,13 @@
       <artifactId>deeplearning4j-ui</artifactId>
       <version>${dl4j.version}</version>
     </dependency>
+
+    <!-- For histogram plots -->
+    <dependency>
+      <groupId>jfree</groupId>
+      <artifactId>jfreechart</artifactId>
+      <version>1.0.13</version>
+    </dependency>
   </dependencies>
 
 </project>

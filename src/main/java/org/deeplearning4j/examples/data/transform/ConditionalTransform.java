@@ -51,7 +51,12 @@ public class ConditionalTransform implements Transform {
         List<Writable> out = new ArrayList<>(writables);
 
         int idx = inputSchema.getIndexOfColumn(column);
-        Double val = out.get(idx).toDouble();
+        double val = Double.NaN;
+        try{
+            val = out.get(idx).toDouble();
+        } catch(NumberFormatException e){
+
+        }
         if( Double.isNaN(val) || val > 1) {
             if (filterVal.contains(out.get(filterCol).toString()))
                 out.set(idx, new IntWritable(newVal1));

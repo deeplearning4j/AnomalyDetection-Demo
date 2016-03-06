@@ -29,7 +29,7 @@ public class DataAnalysis {
 
         //Header:
         sb.append(String.format("%-6s","idx")).append(String.format("%-"+(maxNameLength+8)+"s","name"))
-                .append(String.format("%-10s","type")).append("analysis").append("\n");
+                .append(String.format("%-15s","type")).append("analysis").append("\n");
 
         for( int i=0; i<nCol; i++ ){
             String colName = schema.getName(i);
@@ -38,7 +38,7 @@ public class DataAnalysis {
             String paddedName = String.format("%-"+(maxNameLength+8)+"s","\"" + colName + "\"");
             sb.append(String.format("%-6d",i))
                     .append(paddedName)
-                    .append(String.format("%-10s",type))
+                    .append(String.format("%-15s",type))
                     .append(analysis).append("\n");
         }
 

@@ -25,7 +25,7 @@ public class NB15Util {
                 .addColumnsInteger("source mean flow packet size",
                         "dest mean flow packet size", "transaction pipelined depth", "content size")
                 .addColumnsReal("source jitter ms", "dest jitter ms")
-                .addColumnsString("timestart start", "timestamp end")
+                .addColumnsString("timestamp start", "timestamp end")
                 .addColumnsReal("source interpacket arrival time", "destination interpacket arrival time", "tcp setup round trip time",
                         "tcp setup time syn syn_ack", "tcp setup time syn_ack ack")
                 .addColumnsInteger("equal ips and ports", "count time to live", "count flow http methods", "is ftp login",
