@@ -51,6 +51,10 @@ public class Schema implements Serializable {
         return columnMetaData.get(column);
     }
 
+    public ColumnMetaData getMetaData(String column){
+        return getMetaData(getIndexOfColumn(column));
+    }
+
     public List<String> getColumnNames(){
         return new ArrayList<>(columnNames);
     }
@@ -100,6 +104,15 @@ public class Schema implements Serializable {
 
         public Builder addColumnCategorical(String name, String... stateNames){
             return addColumn(name,new CategoricalMetaData(stateNames));
+        }
+
+        public Builder addColumnLong(String name){
+            return addColumn(name, new LongMetaData());
+        }
+
+        public Builder addColumnsLong(String... names){
+            for(String s : names) addColumnLong(s);
+            return this;
         }
 
 

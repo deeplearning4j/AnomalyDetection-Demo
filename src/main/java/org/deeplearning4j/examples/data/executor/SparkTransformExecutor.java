@@ -3,10 +3,10 @@ package org.deeplearning4j.examples.data.executor;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.DataAction;
-import org.deeplearning4j.examples.data.Filter;
-import org.deeplearning4j.examples.data.Transform;
-import org.deeplearning4j.examples.data.TransformSequence;
+import org.deeplearning4j.examples.data.*;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectColumnFunction;
+import org.deeplearning4j.examples.data.meta.ColumnMetaData;
+import org.deeplearning4j.examples.data.spark.FilterWritablesBySchemaFunction;
 import org.deeplearning4j.examples.data.spark.SparkFilterFunction;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.split.SplitStrategy;
@@ -65,6 +65,4 @@ public class SparkTransformExecutor {
         }
 
     }
-
-
 }

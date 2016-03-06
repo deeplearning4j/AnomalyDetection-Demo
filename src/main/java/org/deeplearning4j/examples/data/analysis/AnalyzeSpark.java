@@ -95,6 +95,29 @@ public class AnalyzeSpark {
                             hist1._1(),hist1._2()));
 
                     break;
+                case Long:
+                    JavaDoubleRDD doubleRDDLong = ithColumn.mapToDouble(new WritableToDoubleFunction());
+                    StatCounter statsLong = doubleRDDLong.stats();
+
+                    long minLong = (long)statsLong.min();
+                    long maxLong = (long)statsLong.max();
+
+                    long nBucketsLong = maxLong-minLong+1;
+
+                    Tuple2<double[],long[]> histLong;
+                    if(maxLong == minLong){
+                        //Edge case that spark doesn't like
+                        hist1 = new Tuple2<>(new double[]{minLong},new long[]{statsLong.count()});
+                    } else if(nBucketsLong < maxHistogramBuckets){
+                        hist1 = doubleRDDLong.histogram((int)nBucketsLong);
+                    } else {
+                        hist1 = doubleRDDLong.histogram(maxHistogramBuckets);
+                    }
+
+                    list.add(new LongAnalysis((long)statsLong.min(),(long)statsLong.max(),statsLong.mean(),statsLong.sampleStdev(),statsLong.sampleVariance(),
+                            statsLong.count(),hist1._1(),hist1._2()));
+
+                    break;
                 case Double:
                     JavaDoubleRDD doubleRDD = ithColumn.mapToDouble(new WritableToDoubleFunction());
                     StatCounter stats = doubleRDD.stats();

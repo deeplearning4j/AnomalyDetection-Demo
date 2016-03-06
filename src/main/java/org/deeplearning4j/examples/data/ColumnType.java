@@ -6,6 +6,7 @@ package org.deeplearning4j.examples.data;
 public enum ColumnType {
     String,
     Integer,
+    Long,
     Double,
     Categorical,
     Time,

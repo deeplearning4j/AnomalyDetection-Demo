@@ -20,8 +20,9 @@ public class NB15Util {
                         "source packets lost", "destination packets lost")
                 .addColumnString("service")
                 .addColumnsReal("source bits per second","destination bits per second")
-                .addColumnsInteger("source-destination packet count", "dest-source packet count", "source TCP window adv", "dest TCP window adv",
-                        "source TCP base sequence num", "dest TCP base sequence num", "source mean flow packet size",
+                .addColumnsInteger("source-destination packet count", "dest-source packet count", "source TCP window adv", "dest TCP window adv")
+                .addColumnsLong("source TCP base sequence num", "dest TCP base sequence num")
+                .addColumnsInteger("source mean flow packet size",
                         "dest mean flow packet size", "transaction pipelined depth", "content size")
                 .addColumnsReal("source jitter ms", "dest jitter ms")
                 .addColumnsString("timestart start", "timestamp end")
