@@ -43,32 +43,20 @@ public class ConditionalTransform implements Transform {
 
     @Override
     public Schema transform(Schema schema) {
-        List<ColumnMetaData> oldMeta = schema.getColumnMetaData();
-        List<ColumnMetaData> newMeta = new ArrayList<>(oldMeta.size());
-
-        Iterator<ColumnMetaData> typesIter = oldMeta.iterator();
-
-        while(typesIter.hasNext()){
-            ColumnMetaData t = typesIter.next();
-            newMeta.add(t);
-        }
-
-        return new Schema(new ArrayList<>(schema.getColumnNames()),newMeta);
+        return schema;
     }
 
     @Override
     public Collection<Writable> map(Collection<Writable> writables) {
-        int n = writables.size();
-        List<Writable> out = new ArrayList<>(n);
+        List<Writable> out = new ArrayList<>(writables);
 
-        for(Writable w : writables){
-            Double val = w.toDouble();
-            if(Double.isNaN(val) || val > 1) {
-                if (filterVal.contains(out.get(filterCol).toString()))
-                    out.add(new IntWritable(newVal1));
-                else
-                    out.add(new IntWritable(newVal2));
-            }
+        int idx = inputSchema.getIndexOfColumn(column);
+        Double val = out.get(idx).toDouble();
+        if( Double.isNaN(val) || val > 1) {
+            if (filterVal.contains(out.get(filterCol).toString()))
+                out.set(idx, new IntWritable(newVal1));
+            else
+                out.set(idx, new IntWritable(newVal2));
         }
         return out;
     }
