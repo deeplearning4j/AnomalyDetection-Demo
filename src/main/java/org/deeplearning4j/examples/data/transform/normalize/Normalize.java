@@ -6,7 +6,7 @@ package org.deeplearning4j.examples.data.transform.normalize;
 public enum Normalize {
 
     MinMax,
-    Log2Mean0Min,
-    Log2Mean1Min
+    Log2Mean,
+    Log2MeanExcludingMin
 
 }

@@ -107,9 +107,22 @@ public class AnalyzeSpark {
                         hist1 = doubleRDD1.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new IntegerAnalysis((int)stats1.min(),(int)stats1.max(),stats1.mean(),stats1.sampleStdev(),stats1.sampleVariance(),
-                            counter.getCountZero(),counter.getCountNegative(),counter.getCountPositive(),stats1.count(),hist1._1(),hist1._2()));
+                    IntegerAnalysis ia = IntegerAnalysis.builder()
+                            .min((int)stats1.min())
+                            .max((int)stats1.max())
+                            .mean(stats1.mean())
+                            .sampleStdev(stats1.sampleStdev())
+                            .sampleVariance(stats1.sampleVariance())
+                            .countZero(counter.getCountZero())
+                            .countNegative(counter.getCountNegative())
+                            .countPositive(counter.getCountPositive())
+                            .countMinValue(counter.getCountMinValue())
+                            .countMaxValue(counter.getCountMaxValue())
+                            .countTotal(stats1.count())
+                            .histogramBuckets(hist1._1())
+                            .histogramBucketCounts(hist1._2()).build();
 
+                    list.add(ia);
                     break;
                 case Long:
                     JavaDoubleRDD doubleRDDLong = ithColumn.mapToDouble(new WritableToDoubleFunction());
@@ -126,16 +139,29 @@ public class AnalyzeSpark {
                     Tuple2<double[],long[]> histLong;
                     if(maxLong == minLong){
                         //Edge case that spark doesn't like
-                        hist1 = new Tuple2<>(new double[]{minLong},new long[]{statsLong.count()});
+                        histLong = new Tuple2<>(new double[]{minLong},new long[]{statsLong.count()});
                     } else if(nBucketsLong < maxHistogramBuckets){
-                        hist1 = doubleRDDLong.histogram((int)nBucketsLong);
+                        histLong = doubleRDDLong.histogram((int)nBucketsLong);
                     } else {
-                        hist1 = doubleRDDLong.histogram(maxHistogramBuckets);
+                        histLong = doubleRDDLong.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new LongAnalysis((long)statsLong.min(),(long)statsLong.max(),statsLong.mean(),statsLong.sampleStdev(),
-                            statsLong.sampleVariance(),counterL.getCountZero(),counterL.getCountNegative(),counterL.getCountPositive(),
-                            statsLong.count(),hist1._1(),hist1._2()));
+                    LongAnalysis la = LongAnalysis.builder()
+                            .min((long)statsLong.min())
+                            .max((long)statsLong.max())
+                            .mean(statsLong.mean())
+                            .sampleStdev(statsLong.sampleStdev())
+                            .sampleVariance(statsLong.sampleVariance())
+                            .countZero(counterL.getCountZero())
+                            .countNegative(counterL.getCountNegative())
+                            .countPositive(counterL.getCountPositive())
+                            .countMinValue(counterL.getCountMinValue())
+                            .countMaxValue(counterL.getCountMaxValue())
+                            .countTotal(statsLong.count())
+                            .histogramBuckets(histLong._1())
+                            .histogramBucketCounts(histLong._2()).build();
+
+                    list.add(la);
 
                     break;
                 case Double:
@@ -156,9 +182,26 @@ public class AnalyzeSpark {
                         hist2 = doubleRDD.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new RealAnalysis(stats.min(),stats.max(),stats.mean(),stats.sampleStdev(),stats.sampleVariance(),
-                            counterR.getCountZero(),counterR.getCountNegative(),counterR.getCountPositive(),stats.count(),
-                            hist2._1(),hist2._2()));
+                    RealAnalysis ra = RealAnalysis.builder()
+                            .min(stats.min())
+                            .max(stats.max())
+                            .mean(stats.mean())
+                            .sampleStdev(stats.sampleStdev())
+                            .sampleVariance(stats.sampleVariance())
+                            .countZero(counterR.getCountZero())
+                            .countNegative(counterR.getCountNegative())
+                            .countPositive(counterR.getCountPositive())
+                            .countMinValue(counterR.getCountMinValue())
+                            .countMaxValue(counterR.getCountMaxValue())
+                            .countTotal(stats.count())
+                            .histogramBuckets(hist2._1())
+                            .histogramBucketCounts(hist2._2()).build();
+
+                    list.add(ra);
+
+//                    list.add(new RealAnalysis(stats.min(),stats.max(),stats.mean(),stats.sampleStdev(),stats.sampleVariance(),
+//                            counterR.getCountZero(),counterR.getCountNegative(),counterR.getCountPositive(),stats.count(),
+//                            hist2._1(),hist2._2()));
                     break;
                 case Categorical:
 

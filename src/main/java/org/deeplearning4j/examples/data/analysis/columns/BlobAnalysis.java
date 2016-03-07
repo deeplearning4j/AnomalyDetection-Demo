@@ -30,5 +30,10 @@ public class BlobAnalysis implements ColumnAnalysis {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public long getTotalCount() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
 
 }

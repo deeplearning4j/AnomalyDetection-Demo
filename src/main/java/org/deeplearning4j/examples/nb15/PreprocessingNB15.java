@@ -174,43 +174,43 @@ public class PreprocessingNB15 {
     public static Pair<Schema, JavaRDD<Collection<Writable>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
                                                                         SparkTransformExecutor executor) {
         TransformSequence norm = new TransformSequence.Builder(schema)
-                //source port: ?
-                //destination port: ?
-                .normalize("total duration", Normalize.Log2Mean0Min, da)
-                .normalize("source-dest bytes", Normalize.Log2Mean0Min, da)
-                .normalize("dest-source bytes", Normalize.Log2Mean0Min, da)
+                .normalize("source port", Normalize.MinMax, da)
+                .normalize("destination port", Normalize.MinMax, da)
+                .normalize("total duration", Normalize.Log2Mean, da)
+                .normalize("source-dest bytes", Normalize.Log2Mean, da)
+                .normalize("dest-source bytes", Normalize.Log2Mean, da)
                 .normalize("source-dest time to live", Normalize.MinMax, da)
                 .normalize("dest-source time to live", Normalize.MinMax, da)
-                .normalize("source packets lost", Normalize.Log2Mean0Min, da)
-                .normalize("destination packets lost", Normalize.Log2Mean0Min, da)
-                .normalize("source bits per second", Normalize.Log2Mean0Min, da)
-                .normalize("destination bits per second", Normalize.Log2Mean0Min, da)
-                .normalize("source-destination packet count", Normalize.Log2Mean0Min, da)
-                .normalize("dest-source packet count", Normalize.Log2Mean0Min, da)
+                .normalize("source packets lost", Normalize.Log2Mean, da)
+                .normalize("destination packets lost", Normalize.Log2Mean, da)
+                .normalize("source bits per second", Normalize.Log2Mean, da)
+                .normalize("destination bits per second", Normalize.Log2Mean, da)
+                .normalize("source-destination packet count", Normalize.Log2Mean, da)
+                .normalize("dest-source packet count", Normalize.Log2Mean, da)
                 .normalize("source TCP window adv", Normalize.MinMax, da)           //raw data: 0 or 255 -> 0 or 1
                 .normalize("dest TCP window adv", Normalize.MinMax, da)
-                .normalize("source mean flow packet size", Normalize.Log2Mean0Min, da)
-                .normalize("dest mean flow packet size", Normalize.Log2Mean0Min, da)
-                .normalize("transaction pipelined depth", Normalize.Log2Mean0Min, da)
-                .normalize("content size", Normalize.Log2Mean0Min, da)
+                .normalize("source mean flow packet size", Normalize.Log2Mean, da)
+                .normalize("dest mean flow packet size", Normalize.Log2Mean, da)
+                .normalize("transaction pipelined depth", Normalize.Log2MeanExcludingMin, da)   //2.33M are 0
+                .normalize("content size", Normalize.Log2Mean, da)
 
-                .normalize("source jitter ms", Normalize.Log2Mean0Min, da)
-                .normalize("dest jitter ms", Normalize.Log2Mean0Min, da)
-                .normalize("source interpacket arrival time", Normalize.Log2Mean0Min, da)
-                .normalize("destination interpacket arrival time", Normalize.Log2Mean0Min, da)
-                .normalize("tcp setup round trip time", Normalize.Log2Mean0Min, da)
-                .normalize("tcp setup time syn syn_ack", Normalize.Log2Mean0Min, da)
-                .normalize("tcp setup time syn_ack ack", Normalize.Log2Mean0Min, da)
+                .normalize("source jitter ms", Normalize.Log2MeanExcludingMin, da)      //963k are 0
+                .normalize("dest jitter ms", Normalize.Log2MeanExcludingMin, da)        //900k are 0
+                .normalize("source interpacket arrival time", Normalize.Log2MeanExcludingMin, da)       //OK, but just to keep in line with the below
+                .normalize("destination interpacket arrival time", Normalize.Log2MeanExcludingMin, da)  //500k are 0
+                .normalize("tcp setup round trip time", Normalize.Log2MeanExcludingMin, da)     //1.05M are 0
+                .normalize("tcp setup time syn syn_ack", Normalize.Log2MeanExcludingMin, da)    //1.05M are 0
+                .normalize("tcp setup time syn_ack ack", Normalize.Log2MeanExcludingMin, da)    //1.06M are 0
                 .normalize("count time to live", Normalize.MinMax, da)  //0 to 6 in data
-                .normalize("count flow http methods", Normalize.Log2Mean0Min, da) //0 to 37
-                .normalize("count ftp commands", Normalize.MinMax, da)  //0 to 8
-                .normalize("count same service and source", Normalize.Log2Mean0Min, da)
-                .normalize("count same service and dest", Normalize.Log2Mean0Min, da)
-                .normalize("count same dest", Normalize.Log2Mean0Min, da)
-                .normalize("count same source", Normalize.Log2Mean0Min, da)
-                .normalize("count same source addr dest port", Normalize.Log2Mean0Min, da)
-                .normalize("count same dest addr source port", Normalize.Log2Mean0Min, da)
-                .normalize("count same source dest address", Normalize.Log2Mean0Min, da)
+                .normalize("count flow http methods", Normalize.Log2MeanExcludingMin, da) //0 to 37; vast majority (2.33M of 2.54M) are 0
+                .normalize("count ftp commands", Normalize.MinMax, da)  //0 to 8; only 43k are non-zero
+                .normalize("count same service and source", Normalize.Log2Mean, da)
+                .normalize("count same service and dest", Normalize.Log2Mean, da)
+                .normalize("count same dest", Normalize.Log2Mean, da)
+                .normalize("count same source", Normalize.Log2Mean, da)
+                .normalize("count same source addr dest port", Normalize.Log2MeanExcludingMin, da)              //1.69M ore the min value of 1.0
+                .normalize("count same dest addr source port", Normalize.Log2MeanExcludingMin, da) //1.97M of 2.54M are the minimum value of 1.0
+                .normalize("count same source dest address", Normalize.Log2Mean, da)
                 .build();
 
         Schema normSchema = norm.getFinalSchema(schema);

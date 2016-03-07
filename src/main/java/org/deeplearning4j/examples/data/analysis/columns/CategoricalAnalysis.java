@@ -3,6 +3,7 @@ package org.deeplearning4j.examples.data.analysis.columns;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -32,6 +33,14 @@ public class CategoricalAnalysis implements ColumnAnalysis{
     @Override
     public double getMax() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getTotalCount() {
+        Collection<Long> counts = mapOfCounts.values();
+        long sum = 0;
+        for(Long l : counts) sum += l;
+        return sum;
     }
 
 }

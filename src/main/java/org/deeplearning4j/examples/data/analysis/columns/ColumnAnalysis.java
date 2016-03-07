@@ -13,4 +13,6 @@ public interface ColumnAnalysis extends Serializable {
 
     double getMax();
 
+    long getTotalCount();
+
 }

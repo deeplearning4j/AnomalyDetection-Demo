@@ -20,6 +20,33 @@ public class RealAnalysisAddFunction implements Function2<RealAnalysisCounter,Wr
         else if(value < 0.0) neg++;
         else pos++;
 
-        return new RealAnalysisCounter(zero,pos,neg);
+        double newMinValue;
+        long countMinValue = v1.getCountMinValue();
+        if(value == v1.getMinValueSeen()){
+            newMinValue = value;
+            countMinValue++;
+        } else if(v1.getMinValueSeen() > value){
+            newMinValue = value;
+            countMinValue = 1;
+        } else {
+            newMinValue = v1.getMinValueSeen();
+            //no change to count
+        }
+
+        double newMaxValue;
+        long countMaxValue = v1.getCountMaxValue();
+        if(value == v1.getMaxValueSeen()){
+            newMaxValue = value;
+            countMaxValue++;
+        } else if(v1.getMaxValueSeen() < value){
+            //reset max counter
+            newMaxValue = value;
+            countMaxValue = 1;
+        } else {
+            newMaxValue = v1.getMaxValueSeen();
+            //no change to count
+        }
+
+        return new RealAnalysisCounter(zero,pos,neg,countMinValue,newMinValue,countMaxValue,newMaxValue);
     }
 }

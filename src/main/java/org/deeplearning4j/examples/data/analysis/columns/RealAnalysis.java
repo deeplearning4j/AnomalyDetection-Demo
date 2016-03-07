@@ -1,14 +1,13 @@
 package org.deeplearning4j.examples.data.analysis.columns;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-import java.io.Serializable;
 
 /**
  * Created by Alex on 4/03/2016.
  */
-@AllArgsConstructor @Data
+@AllArgsConstructor @Data @Builder
 public class RealAnalysis implements ColumnAnalysis {
 
     private final double min;
@@ -19,7 +18,9 @@ public class RealAnalysis implements ColumnAnalysis {
     private final long countZero;
     private final long countNegative;
     private final long countPositive;
-    private final long count;
+    private final long countMinValue;
+    private final long countMaxValue;
+    private final long countTotal;
     private double[] histogramBuckets;
     private long[] histogramBucketCounts;
 
@@ -27,10 +28,16 @@ public class RealAnalysis implements ColumnAnalysis {
     public String toString(){
         return "RealAnalysis(min="+min+",max="+max+",mean="+mean+",sampleStDev="+sampleStdev+
                 ",sampleVariance="+sampleVariance+",countZero="+countZero + ",countNegative="+countNegative
-                +",countPositive="+countPositive+",count="+count+")";
+                +",countPositive="+countPositive+",countMinValue="+countMinValue+",countMaxValue="+countMaxValue+
+                ",count="+ countTotal +")";
     }
 
     @Override
     public double getMean(){ return mean; }
+
+    @Override
+    public long getTotalCount() {
+        return countTotal;
+    }
 
 }
