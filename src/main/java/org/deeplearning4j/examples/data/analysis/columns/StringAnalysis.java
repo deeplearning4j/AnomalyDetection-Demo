@@ -15,17 +15,32 @@ public class StringAnalysis implements ColumnAnalysis {
     private final double meanLength;
     private final double sampleStdevLength;
     private final double sampleVarianceLength;
-    private final long count;
+    private final long countTotal;
     private double[] histogramBuckets;
     private long[] histogramBucketCounts;
 
     @Override
     public String toString(){
         return "StringAnalysis(unique="+countUnique+",minLen="+ minLength +",maxLen="+ maxLength +",meanLen="+ meanLength +
-                ",sampleStDevLen="+ sampleStdevLength + ",sampleVarianceLen="+ sampleVarianceLength +",count="+count+")";
+                ",sampleStDevLen="+ sampleStdevLength + ",sampleVarianceLen="+ sampleVarianceLength +",count="+ countTotal +")";
     }
 
     @Override
     public double getMean(){ return meanLength; }
+
+    @Override
+    public double getMin() {
+        return minLength;
+    }
+
+    @Override
+    public double getMax() {
+        return maxLength;
+    }
+
+    @Override
+    public long getTotalCount() {
+        return countTotal;
+    }
 
 }

@@ -16,6 +16,24 @@ public class BlobAnalysis implements ColumnAnalysis {
     }
 
     @Override
-    public double getMean() { return 0.0;}
+    public double getMean() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double getMin() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double getMax() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getTotalCount() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
 
 }

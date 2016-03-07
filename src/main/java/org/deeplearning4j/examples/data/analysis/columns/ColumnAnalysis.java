@@ -7,5 +7,12 @@ import java.io.Serializable;
  */
 public interface ColumnAnalysis extends Serializable {
 
-    public double getMean();
+    double getMean();
+
+    double getMin();
+
+    double getMax();
+
+    long getTotalCount();
+
 }

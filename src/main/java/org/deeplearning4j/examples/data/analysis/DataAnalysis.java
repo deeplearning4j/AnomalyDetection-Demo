@@ -46,5 +46,9 @@ public class DataAnalysis {
         return sb.toString();
     }
 
+    public ColumnAnalysis getColumnAnalysis(String column){
+        return columnAnalysis.get(schema.getIndexOfColumn(column));
+    }
+
 
 }

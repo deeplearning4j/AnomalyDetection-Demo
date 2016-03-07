@@ -61,7 +61,8 @@ public abstract class BaseColumnTransform implements Transform {
         int i=0;
         for(Writable w : writables){
             if(i++ == columnNumber){
-                out.add(map(w));
+                Writable newW = map(w);
+                out.add(newW);
             } else {
                 out.add(w);
             }

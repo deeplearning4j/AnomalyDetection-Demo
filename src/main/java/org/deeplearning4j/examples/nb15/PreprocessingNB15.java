@@ -1,13 +1,15 @@
 package org.deeplearning4j.examples.nb15;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.Temp.Histograms;
+import org.deeplearning4j.examples.data.split.RandomSplit;
+import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.Schema;
 import org.deeplearning4j.examples.data.TransformSequence;
@@ -21,18 +23,19 @@ import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
-import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.transform.categorical.IntegerToCategoricalTransform;
 import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithIntegerTransform;
 import org.deeplearning4j.examples.data.transform.ConditionalTransform;
-import org.deeplearning4j.examples.data.transform.real.DoubleNormalizer;
+import org.deeplearning4j.examples.data.transform.normalize.Normalize;
 import org.deeplearning4j.examples.data.transform.string.MapAllStringsExceptListTransform;
 import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
 import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
 import org.deeplearning4j.examples.data.transform.string.StringMapTransform;
+import org.deeplearning4j.examples.misc.SparkExport;
+import org.deeplearning4j.examples.misc.SparkUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -45,16 +48,20 @@ import java.util.List;
  */
 public class PreprocessingNB15 {
 
-    protected static boolean isWin = false;
-    protected static String inputFilePath =  "data/NIDS/UNSW/input/";
-    protected static String outputFilePath =  "data/NIDS/UNSW/preprocessed/";
-    protected static String chartFilePath =  "charts/";
+    protected static double FRACTION_TRAIN = 0.75;
 
-    public static final String IN_DIRECTORY = (isWin)? "C:/Data/UNSW_NB15/Out/" :
+    protected static boolean isWin = true;
+    protected static String inputFilePath = "data/NIDS/UNSW/input/";
+    protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
+    protected static String chartFilePath = "charts/";
+
+    public static final String IN_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
             FilenameUtils.concat(System.getProperty("user.home"), inputFilePath);
-    public static final String OUT_DIRECTORY = (isWin)? "C:/Data/UNSW_NB15/Out/" :
+    public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
             FilenameUtils.concat(System.getProperty("user.home"), outputFilePath);
-    public static final String CHART_DIRECTORY = (isWin)? "C:/Data/UNSW_NB15/Out/Charts/" :
+    public static final String CHART_DIRECTORY_ORIG = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Orig/" :
+            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
+    public static final String CHART_DIRECTORY_NORMALIZED = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Norm/" :
             FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
 
     public static void main(String[] args) throws Exception {
@@ -64,7 +71,8 @@ public class PreprocessingNB15 {
 
         //Set up the sequence of transforms:
         TransformSequence seq = new TransformSequence.Builder(csvSchema)
-                .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip")  //Don't need timestamps, we have duration. Can't really use IPs here
+                .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip",  //Don't need timestamps, we have duration. Can't really use IPs here.
+                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
 //                .removeColumns("timestamp start", "timestamp end")  //Don't need timestamps, we have duration. Can't really use IPs here
                 .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these columns
                 .transform(new RemoveWhiteSpaceTransform("attack category"))
@@ -73,16 +81,16 @@ public class PreprocessingNB15 {
                 .transform(new ReplaceInvalidWithIntegerTransform("count ftp commands", 0)) //Only invalid ones here are whitespace
                 .transform(new ConditionalTransform("is ftp login", 1, 0, 13, Arrays.asList("ftp", "ftp-data")))
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
-                .transform(new StringMapTransform("attack category", Collections.singletonMap("Backdoors","Backdoor"))) //Replace all instances of "Backdoors" with "Backdoor"
+                .transform(new StringMapTransform("attack category", Collections.singletonMap("Backdoors", "Backdoor"))) //Replace all instances of "Backdoors" with "Backdoor"
                 .transform(new StringToCategoricalTransform("attack category", "none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"))
                 .transform(new StringToCategoricalTransform("service", "-", "dns", "http", "smtp", "ftp-data", "ftp", "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp"))
-                .transform(new MapAllStringsExceptListTransform("transaction protocol", "other", Arrays.asList("unas","sctp","ospf", "tcp", "udp", "arp"))) //Map all protocols except these to "other" (all others have <<1000 examples)
+                .transform(new MapAllStringsExceptListTransform("transaction protocol", "other", Arrays.asList("unas", "sctp", "ospf", "tcp", "udp", "arp"))) //Map all protocols except these to "other" (all others have <<1000 examples)
                 .transform(new StringToCategoricalTransform("transaction protocol", "unas", "sctp", "ospf", "tcp", "udp", "arp", "other"))
                 .transform(new MapAllStringsExceptListTransform("state", "other", Arrays.asList("FIN", "CON", "INT", "RST", "REQ")))  //Before: CategoricalAnalysis(CategoryCounts={CLO=161, FIN=1478689, ECR=8, PAR=26, MAS=7, URN=7, ECO=96, TXD=5, CON=560588, INT=490469, RST=528, TST=8, ACC=43, REQ=9043, no=7, URH=54})
                 .transform(new StringToCategoricalTransform("state", "FIN", "CON", "INT", "RST", "REQ", "other"))
                 .transform(new IntegerToCategoricalTransform("label", Arrays.asList("normal", "attack")))
-                .transform(new IntegerToCategoricalTransform("equal ips and ports",Arrays.asList("notEqual","equal")))
-                .transform(new IntegerToCategoricalTransform("is ftp login",Arrays.asList("not ftp","ftp login")))
+                .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
+                .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
                 .build();
 
         Schema finalSchema = seq.getFinalSchema(csvSchema);
@@ -91,11 +99,12 @@ public class PreprocessingNB15 {
         SparkConf sparkConf = new SparkConf();
         sparkConf.setMaster("local[*]");
         sparkConf.setAppName("NB15");
+        sparkConf.set("spark.driver.maxResultSize", "2G");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
 //        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";   //Subset of data
         String inputName = "csv_50_records.txt";
-        String dataDir = (isWin)?  "C:/Data/UNSW_NB15/CSV/": new ClassPathResource(inputName).getFile().getAbsolutePath();
+        String dataDir = (isWin) ? "C:/Data/UNSW_NB15/CSV/" : new ClassPathResource(inputName).getFile().getAbsolutePath();
 //        String dataDir = (isWin)?  "C:/Data/UNSW_NB15/CSV/": IN_DIRECTORY;
         JavaRDD<String> rawData = sc.textFile(dataDir);
 
@@ -111,30 +120,31 @@ public class PreprocessingNB15 {
         //Do analysis, on a per-column basis
         DataAnalysis da = AnalyzeSpark.analyze(finalSchema, processedData);
 
-        // TODO normalize double
-        TransformSequence norm = new TransformSequence.Builder(finalSchema)
-                .transform(new DoubleNormalizer("total duration",  da.getColumnAnalysis().get(4).getMean(),0.5))
-                .transform(new DoubleNormalizer("source bits per second",  da.getColumnAnalysis().get(12).getMean(),0.5))
-                .transform(new DoubleNormalizer("destination bits per second",  da.getColumnAnalysis().get(13).getMean(),0.5))
-                .transform(new DoubleNormalizer("source jitter ms",  da.getColumnAnalysis().get(24).getMean(),0.5))
-                .transform(new DoubleNormalizer("dest jitter ms",  da.getColumnAnalysis().get(25).getMean(),0.5))
-                .transform(new DoubleNormalizer("source interpacket arrival time",  da.getColumnAnalysis().get(26).getMean(),0.5))
-                .transform(new DoubleNormalizer("destination interpacket arrival time", da.getColumnAnalysis().get(27).getMean(),0.5))
-                .transform(new DoubleNormalizer("tcp setup round trip time", da.getColumnAnalysis().get(28).getMean(),0.5))
-                .transform(new DoubleNormalizer("tcp setup time syn syn_ack", da.getColumnAnalysis().get(29).getMean(),0.5))
-                .transform(new DoubleNormalizer("tcp setup time syn_ack ack",  da.getColumnAnalysis().get(30).getMean(),0.5))
-                .build();
+        //Do train/test split:
+        List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData);
+        JavaRDD<Collection<Writable>> trainData = allData.get(0);
+        JavaRDD<Collection<Writable>> testData = allData.get(1);
 
-        JavaRDD<Collection<Writable>> normalizedData = executor.execute(processedData, norm);
+        DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(finalSchema, trainData);
+
+        //Same normalization scheme for both. Normalization scheme based only on test data, however
+        Pair<Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(finalSchema, trainDataAnalysis, trainData, executor);
+        Pair<Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(finalSchema, trainDataAnalysis, testData, executor);
+
         processedData.unpersist();
-        normalizedData.cache();
+        trainDataNormalized.getSecond().cache();
+        testDataNormalized.getSecond().cache();
+        Schema normSchema = trainDataNormalized.getFirst();
 
-        DataAnalysis da2 = AnalyzeSpark.analyze(finalSchema, normalizedData);
+
+        DataAnalysis trainDataAnalyis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getSecond());
+
+        //Save as CSV file
+        int nSplits = 1;
+        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond());
+        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond());
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
-//        List<Writable> invalidSourceTCPBaseSequenceNum = QualityAnalyzeSpark.sampleInvalidColumns(100,"source TCP base sequence num",finalSchema,processedData);
-//        List<Writable> invalidDestTCPBaseSequenceNum = QualityAnalyzeSpark.sampleInvalidColumns(100,"dest TCP base sequence num",finalSchema,processedData);
-//        List<Writable> invalidAttack = QualityAnalyzeSpark.sampleInvalidColumns(100,"attack category",finalSchema,processedData);
         sc.close();
 
         //Wait for spark to stop its console spam before printing analysis
@@ -151,49 +161,87 @@ public class PreprocessingNB15 {
 
         System.out.println("------------------------------------------");
 
-        System.out.println("Normalized data summary:");
-        System.out.println(da2);
+        System.out.println("Normalized data summary: (train)");
+        System.out.println(trainDataAnalyis);
 
         //analysis and histograms
-//        plot(finalSchema, da);
-
-//        System.out.println("Invalid is ftp login data:");
-//        System.out.println(invalidIsFtpLogin);
-
-//        System.out.println("Invalid attack:");
-//        System.out.println(invalidAttack);
-
-
-        // TODO store processedData
-//        processedData.saveAsObjectFile(OUT_DIRECTORY);
+        plot(finalSchema, da, CHART_DIRECTORY_ORIG);
+        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORMALIZED);
 
         System.out.println();
     }
 
-    public static void plot(Schema finalSchema,  DataAnalysis da) throws Exception{
+    public static Pair<Schema, JavaRDD<Collection<Writable>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
+                                                                        SparkTransformExecutor executor) {
+        TransformSequence norm = new TransformSequence.Builder(schema)
+                .normalize("source port", Normalize.MinMax, da)
+                .normalize("destination port", Normalize.MinMax, da)
+                .normalize("total duration", Normalize.Log2Mean, da)
+                .normalize("source-dest bytes", Normalize.Log2Mean, da)
+                .normalize("dest-source bytes", Normalize.Log2Mean, da)
+                .normalize("source-dest time to live", Normalize.MinMax, da)
+                .normalize("dest-source time to live", Normalize.MinMax, da)
+                .normalize("source packets lost", Normalize.Log2Mean, da)
+                .normalize("destination packets lost", Normalize.Log2Mean, da)
+                .normalize("source bits per second", Normalize.Log2Mean, da)
+                .normalize("destination bits per second", Normalize.Log2Mean, da)
+                .normalize("source-destination packet count", Normalize.Log2Mean, da)
+                .normalize("dest-source packet count", Normalize.Log2Mean, da)
+                .normalize("source TCP window adv", Normalize.MinMax, da)           //raw data: 0 or 255 -> 0 or 1
+                .normalize("dest TCP window adv", Normalize.MinMax, da)
+                .normalize("source mean flow packet size", Normalize.Log2Mean, da)
+                .normalize("dest mean flow packet size", Normalize.Log2Mean, da)
+                .normalize("transaction pipelined depth", Normalize.Log2MeanExcludingMin, da)   //2.33M are 0
+                .normalize("content size", Normalize.Log2Mean, da)
+
+                .normalize("source jitter ms", Normalize.Log2MeanExcludingMin, da)      //963k are 0
+                .normalize("dest jitter ms", Normalize.Log2MeanExcludingMin, da)        //900k are 0
+                .normalize("source interpacket arrival time", Normalize.Log2MeanExcludingMin, da)       //OK, but just to keep in line with the below
+                .normalize("destination interpacket arrival time", Normalize.Log2MeanExcludingMin, da)  //500k are 0
+                .normalize("tcp setup round trip time", Normalize.Log2MeanExcludingMin, da)     //1.05M are 0
+                .normalize("tcp setup time syn syn_ack", Normalize.Log2MeanExcludingMin, da)    //1.05M are 0
+                .normalize("tcp setup time syn_ack ack", Normalize.Log2MeanExcludingMin, da)    //1.06M are 0
+                .normalize("count time to live", Normalize.MinMax, da)  //0 to 6 in data
+                .normalize("count flow http methods", Normalize.Log2MeanExcludingMin, da) //0 to 37; vast majority (2.33M of 2.54M) are 0
+                .normalize("count ftp commands", Normalize.MinMax, da)  //0 to 8; only 43k are non-zero
+                .normalize("count same service and source", Normalize.Log2Mean, da)
+                .normalize("count same service and dest", Normalize.Log2Mean, da)
+                .normalize("count same dest", Normalize.Log2Mean, da)
+                .normalize("count same source", Normalize.Log2Mean, da)
+                .normalize("count same source addr dest port", Normalize.Log2MeanExcludingMin, da)              //1.69M ore the min value of 1.0
+                .normalize("count same dest addr source port", Normalize.Log2MeanExcludingMin, da) //1.97M of 2.54M are the minimum value of 1.0
+                .normalize("count same source dest address", Normalize.Log2Mean, da)
+                .build();
+
+        Schema normSchema = norm.getFinalSchema(schema);
+        JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
+        return new Pair<>(normSchema, normalizedData);
+    }
+
+    public static void plot(Schema finalSchema, DataAnalysis da, String directory) throws Exception {
         //Plots!
         List<ColumnAnalysis> analysis = da.getColumnAnalysis();
         List<String> names = finalSchema.getColumnNames();
         List<ColumnType> types = finalSchema.getColumnTypes();
 
-        for( int i=0; i<analysis.size(); i++ ){
+        for (int i = 0; i < analysis.size(); i++) {
             ColumnType type = types.get(i);
             ColumnAnalysis a = analysis.get(i);
             double[] bins;
             long[] counts;
-            switch(type){
+            switch (type) {
                 case Integer:
-                    IntegerAnalysis ia = (IntegerAnalysis)a;
+                    IntegerAnalysis ia = (IntegerAnalysis) a;
                     bins = ia.getHistogramBuckets();
                     counts = ia.getHistogramBucketCounts();
                     break;
                 case Long:
-                    LongAnalysis la = (LongAnalysis)a;
+                    LongAnalysis la = (LongAnalysis) a;
                     bins = la.getHistogramBuckets();
                     counts = la.getHistogramBucketCounts();
                     break;
                 case Double:
-                    RealAnalysis ra = (RealAnalysis)a;
+                    RealAnalysis ra = (RealAnalysis) a;
                     bins = ra.getHistogramBuckets();
                     counts = ra.getHistogramBucketCounts();
                     break;
@@ -205,9 +253,9 @@ public class PreprocessingNB15 {
 
 
 //            Histograms.plot(bins,counts,colName);
-            File f = new File(CHART_DIRECTORY,colName + ".png");
-            if(f.exists()) f.delete();
-            Histograms.exportHistogramImage(f,bins,counts,colName,1000,650);
+            File f = new File(directory, colName + ".png");
+            if (f.exists()) f.delete();
+            Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
         }
 
 
