@@ -14,6 +14,9 @@ public class IntegerAnalysis implements ColumnAnalysis{
     private final double mean;
     private final double sampleStdev;
     private final double sampleVariance;
+    private final long countZero;
+    private final long countNegative;
+    private final long countPositive;
     private final long count;
     private final double[] histogramBuckets;
     private final long[] histogramBucketCounts;
@@ -21,11 +24,14 @@ public class IntegerAnalysis implements ColumnAnalysis{
     @Override
     public String toString(){
         return "IntegerAnalysis(min="+min+",max="+max+",mean="+mean+",sampleStDev="+sampleStdev+
-                ",sampleVariance="+sampleVariance+",count="+count+")";
+                ",sampleVariance="+sampleVariance+",countZero="+countZero + ",countNegative="+countNegative
+                +",countPositive="+countPositive+",count="+count+")";
     }
 
     @Override
-    public double getMean(){ return mean; }
+    public double getMean(){
+        return mean;
+    }
 
     @Override
     public double getMin(){

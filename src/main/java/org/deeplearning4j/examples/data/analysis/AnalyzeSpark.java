@@ -9,6 +9,15 @@ import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.Schema;
 import org.deeplearning4j.examples.data.analysis.columns.*;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.*;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.integer.IntegerAnalysisAddFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.integer.IntegerAnalysisCounter;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.integer.IntegerAnalysisMergeFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.longa.LongAnalysisAddFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.longa.LongAnalysisCounter;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.longa.LongAnalysisMergeFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.real.RealAnalysisAddFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.real.RealAnalysisCounter;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.real.RealAnalysisMergeFunction;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 import scala.Tuple2;
 
@@ -42,6 +51,7 @@ public class AnalyzeSpark {
             ColumnType type = schema.getType(i);
 
             JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(i));
+            ithColumn.cache();
 
             switch(type){
                 case String:
@@ -77,6 +87,11 @@ public class AnalyzeSpark {
                     JavaDoubleRDD doubleRDD1 = ithColumn.mapToDouble(new WritableToDoubleFunction());
                     StatCounter stats1 = doubleRDD1.stats();
 
+                    //Now: count number of 0, >0, <0
+
+                    IntegerAnalysisCounter counter = new IntegerAnalysisCounter();
+                    counter = ithColumn.aggregate(counter,new IntegerAnalysisAddFunction(),new IntegerAnalysisMergeFunction());
+
                     long min1 = (int)stats1.min();
                     long max1 = (int)stats1.max();
 
@@ -92,13 +107,16 @@ public class AnalyzeSpark {
                         hist1 = doubleRDD1.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new IntegerAnalysis((int)stats1.min(),(int)stats1.max(),stats1.mean(),stats1.sampleStdev(),stats1.sampleVariance(),stats1.count(),
-                            hist1._1(),hist1._2()));
+                    list.add(new IntegerAnalysis((int)stats1.min(),(int)stats1.max(),stats1.mean(),stats1.sampleStdev(),stats1.sampleVariance(),
+                            counter.getCountZero(),counter.getCountNegative(),counter.getCountPositive(),stats1.count(),hist1._1(),hist1._2()));
 
                     break;
                 case Long:
                     JavaDoubleRDD doubleRDDLong = ithColumn.mapToDouble(new WritableToDoubleFunction());
                     StatCounter statsLong = doubleRDDLong.stats();
+
+                    LongAnalysisCounter counterL = new LongAnalysisCounter();
+                    counterL = ithColumn.aggregate(counterL,new LongAnalysisAddFunction(),new LongAnalysisMergeFunction());
 
                     long minLong = (long)statsLong.min();
                     long maxLong = (long)statsLong.max();
@@ -115,13 +133,17 @@ public class AnalyzeSpark {
                         hist1 = doubleRDDLong.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new LongAnalysis((long)statsLong.min(),(long)statsLong.max(),statsLong.mean(),statsLong.sampleStdev(),statsLong.sampleVariance(),
+                    list.add(new LongAnalysis((long)statsLong.min(),(long)statsLong.max(),statsLong.mean(),statsLong.sampleStdev(),
+                            statsLong.sampleVariance(),counterL.getCountZero(),counterL.getCountNegative(),counterL.getCountPositive(),
                             statsLong.count(),hist1._1(),hist1._2()));
 
                     break;
                 case Double:
                     JavaDoubleRDD doubleRDD = ithColumn.mapToDouble(new WritableToDoubleFunction());
                     StatCounter stats = doubleRDD.stats();
+
+                    RealAnalysisCounter counterR = new RealAnalysisCounter();
+                    counterR = ithColumn.aggregate(counterR,new RealAnalysisAddFunction(),new RealAnalysisMergeFunction());
 
                     long min2 = (int)stats.min();
                     long max2 = (int)stats.max();
@@ -134,7 +156,8 @@ public class AnalyzeSpark {
                         hist2 = doubleRDD.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new RealAnalysis(stats.min(),stats.max(),stats.mean(),stats.sampleStdev(),stats.sampleVariance(),stats.count(),
+                    list.add(new RealAnalysis(stats.min(),stats.max(),stats.mean(),stats.sampleStdev(),stats.sampleVariance(),
+                            counterR.getCountZero(),counterR.getCountNegative(),counterR.getCountPositive(),stats.count(),
                             hist2._1(),hist2._2()));
                     break;
                 case Categorical:
@@ -150,6 +173,8 @@ public class AnalyzeSpark {
                     list.add(new BlobAnalysis());
                     break;
             }
+
+            ithColumn.unpersist();
         }
 
 
