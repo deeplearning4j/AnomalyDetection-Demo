@@ -9,6 +9,7 @@ import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.Schema;
 import org.deeplearning4j.examples.data.analysis.columns.*;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.*;
+import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -125,14 +126,10 @@ public class AnalyzeSpark {
                     long min2 = (int)stats.min();
                     long max2 = (int)stats.max();
 
-                    long nBuckets2 = max2-min2+1;
-
                     Tuple2<double[],long[]> hist2;
                     if(max2 == min2){
                         //Edge case that spark doesn't like
                         hist2 = new Tuple2<>(new double[]{min2},new long[]{stats.count()});
-                    }else if(nBuckets2 < maxHistogramBuckets){
-                        hist2 = doubleRDD.histogram((int)nBuckets2);
                     } else {
                         hist2 = doubleRDD.histogram(maxHistogramBuckets);
                     }
@@ -159,5 +156,12 @@ public class AnalyzeSpark {
         return new DataAnalysis(schema,list);
     }
 
+    public static List<Writable> sampleFromColumn(int count, String columnName, Schema schema, JavaRDD<Collection<Writable>> data){
+
+        int colIdx = schema.getIndexOfColumn(columnName);
+        JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(colIdx));
+
+        return ithColumn.takeSample(false,count);
+    }
 
 }

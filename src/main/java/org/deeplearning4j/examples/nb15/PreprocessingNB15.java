@@ -131,7 +131,7 @@ public class PreprocessingNB15 {
                 .normalize("destination bits per second", Normalize.Log2Mean0Min, da)
                 .normalize("source-destination packet count", Normalize.Log2Mean0Min, da)
                 .normalize("dest-source packet count", Normalize.Log2Mean0Min, da)
-                .normalize("source TCP window adv", Normalize.MinMax, da)
+                .normalize("source TCP window adv", Normalize.MinMax, da)           //raw data: 0 or 255 -> 0 or 1
                 .normalize("dest TCP window adv", Normalize.MinMax, da)
                 .normalize("source mean flow packet size", Normalize.Log2Mean0Min, da)
                 .normalize("dest mean flow packet size", Normalize.Log2Mean0Min, da)
@@ -163,6 +163,7 @@ public class PreprocessingNB15 {
         normalizedData.cache();
 
         DataAnalysis da2 = AnalyzeSpark.analyze(normSchema, normalizedData);
+
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
 //        List<Writable> invalidSourceTCPBaseSequenceNum = QualityAnalyzeSpark.sampleInvalidColumns(100,"source TCP base sequence num",finalSchema,processedData);
