@@ -28,4 +28,14 @@ public class StringAnalysis implements ColumnAnalysis {
     @Override
     public double getMean(){ return meanLength; }
 
+    @Override
+    public double getMin() {
+        return minLength;
+    }
+
+    @Override
+    public double getMax() {
+        return maxLength;
+    }
+
 }

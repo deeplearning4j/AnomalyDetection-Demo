@@ -20,6 +20,18 @@ public class CategoricalAnalysis implements ColumnAnalysis{
     }
 
     @Override
-    public double getMean() { return 0.0;}
+    public double getMean() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double getMin() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double getMax() {
+        throw new UnsupportedOperationException();
+    }
 
 }

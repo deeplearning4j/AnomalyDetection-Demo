@@ -27,4 +27,16 @@ public class IntegerAnalysis implements ColumnAnalysis{
     @Override
     public double getMean(){ return mean; }
 
+    @Override
+    public double getMin(){
+        return min;
+    }
+
+    @Override
+    public double getMax(){
+        return max;
+    }
+
+
+
 }

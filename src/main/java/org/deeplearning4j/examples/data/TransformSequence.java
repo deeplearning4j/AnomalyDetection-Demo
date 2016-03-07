@@ -1,6 +1,10 @@
 package org.deeplearning4j.examples.data;
 
+import org.deeplearning4j.examples.data.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.transform.column.RemoveColumnsTransform;
+import org.deeplearning4j.examples.data.transform.normalize.Normalize;
+import org.deeplearning4j.examples.data.transform.real.DoubleLog2Normalizer;
+import org.deeplearning4j.examples.data.transform.real.DoubleMinMaxNormalizer;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -70,6 +74,20 @@ public class TransformSequence implements Serializable {
 
         public Builder removeColumns(String... columnNames){
             return transform(new RemoveColumnsTransform(columnNames));
+        }
+
+        //This is kinda ugly
+        public Builder normalize(String column, Normalize type, DataAnalysis da){
+
+            switch(type){
+                case MinMax:
+                    return transform(new DoubleMinMaxNormalizer(column, da.getColumnAnalysis(column).getMin(), da.getColumnAnalysis(column).getMax()));
+                case Log2Mean0Min:
+                    return transform(new DoubleLog2Normalizer(column,  da.getColumnAnalysis(column).getMean(),0.5));
+                default:
+                    throw new RuntimeException("Unknown/not implemented normalization type: " + type);
+            }
+
         }
 
         public TransformSequence build(){

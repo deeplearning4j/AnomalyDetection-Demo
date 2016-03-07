@@ -7,18 +7,18 @@ import org.canova.api.writable.Writable;
  *
  */
 
-public class DoubleNormalizer extends BaseDoubleTransform{
+public class DoubleLog2Normalizer extends BaseDoubleTransform {
 
     protected static final double log2 = Math.log(2);
     protected final double columnMean;
     protected final double scalingFactor;
     protected final boolean norm0;
 
-    public DoubleNormalizer(String columnName, double columnMean, double scalingFactor) {
+    public DoubleLog2Normalizer(String columnName, double columnMean, double scalingFactor) {
         this(columnName, columnMean, scalingFactor, true);
     }
 
-    public DoubleNormalizer(String columnName, double columnMean, double scalingFactor, boolean norm0) {
+    public DoubleLog2Normalizer(String columnName, double columnMean, double scalingFactor, boolean norm0) {
         super(columnName);
         if(Double.isNaN(columnMean)) throw new IllegalArgumentException("Invalid input");
         this.columnMean = columnMean;
