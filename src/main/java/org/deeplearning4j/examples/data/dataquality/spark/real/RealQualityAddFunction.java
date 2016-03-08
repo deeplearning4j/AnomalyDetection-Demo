@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.apache.spark.api.java.function.Function2;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.dataquality.columns.RealQuality;
-import org.deeplearning4j.examples.data.dataquality.columns.RealQuality;
 import org.deeplearning4j.examples.data.meta.DoubleMetaData;
 
 /**

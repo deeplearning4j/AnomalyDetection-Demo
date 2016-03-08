@@ -1,22 +1,13 @@
 package org.deeplearning4j.examples.nb15;
 
-import com.amazonaws.event.ProgressListener;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.transfer.MultipleFileDownload;
-import com.amazonaws.services.s3.transfer.MultipleFileUpload;
-import com.amazonaws.services.s3.transfer.TransferProgress;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
-import org.apache.hadoop.fs.Options;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.aws.s3.reader.S3Downloader;
-import org.deeplearning4j.aws.s3.uploader.S3Uploader;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.misc.Histograms;
@@ -57,7 +48,7 @@ public class PreprocessingNB15 {
 
     protected static double FRACTION_TRAIN = 0.75;
 
-    protected static boolean isWin = true;
+    public static boolean isWin = true;
     protected static String inputFilePath = "data/NIDS/UNSW/input/";
     protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
     protected static String chartFilePath = "charts/";
@@ -171,8 +162,8 @@ public class PreprocessingNB15 {
 
         //Save as CSV file
         int nSplits = 1;
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond());
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond());
+        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
