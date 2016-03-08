@@ -3,6 +3,7 @@ package org.deeplearning4j.examples.nb15;
 import org.apache.commons.io.FilenameUtils;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
+import org.canova.api.util.ClassPathResource;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -34,22 +35,16 @@ public class TrainMLP {
 
 
     public static boolean isWin = false;
-    protected static String inputFilePath = "data/NIDS/UNSW/input/";
-    protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
-    protected static String chartFilePath = "charts/";
+    protected static String outputFilePath = "src/main/resources/";
 
-    public static final String IN_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
-            FilenameUtils.concat(System.getProperty("user.home"), inputFilePath);
     public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath);
-    public static final String CHART_DIRECTORY_ORIG = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Orig/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
-    public static final String CHART_DIRECTORY_NORMALIZED = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Norm/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
+            FilenameUtils.concat(System.getProperty("user.dir"), outputFilePath);
 
     public static final String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"train/normalized0.csv");
     public static final String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"test/normalized0.csv");
 
+//    public static String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY, "csv_100_preprocessed.csv");
+//    public static String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"csv_100_test_preprocessed.csv");
 
     public static void main(String[] args) throws Exception {
 
