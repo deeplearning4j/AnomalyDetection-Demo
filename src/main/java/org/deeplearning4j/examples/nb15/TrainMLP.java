@@ -33,7 +33,7 @@ public class TrainMLP {
     private static final Logger log = LoggerFactory.getLogger(TrainMLP.class);
 
 
-    public static boolean isWin = true;
+    public static boolean isWin = false;
     protected static String inputFilePath = "data/NIDS/UNSW/input/";
     protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
     protected static String chartFilePath = "charts/";
@@ -83,18 +83,18 @@ public class TrainMLP {
                 .regularization(true).l2(1e-6)
                 .activation("leakyrelu")
                 .weightInit(WeightInit.XAVIER)
-                .list(3)
+                .list()
                 .layer(0, new DenseLayer.Builder().nIn(nIn).nOut(layerSize).build())
                 .layer(1, new DenseLayer.Builder().nIn(layerSize).nOut(layerSize).build())
                 .layer(2, new OutputLayer.Builder().lossFunction(LossFunctions.LossFunction.MCXENT)
-                        .nIn(layerSize).nOut(nOut).activation("softmax").weightInit(WeightInit.XAVIER).build())
+                        .nIn(layerSize).nOut(nOut).activation("softmax").build())
                 .pretrain(false).backprop(true).build();
 
         MultiLayerNetwork net = new MultiLayerNetwork(conf);
         net.init();
 
 //        net.setListeners(new HistogramIterationListener(1));
-//        net.setListeners(new ScoreIterationListener(1));
+        net.setListeners(new ScoreIterationListener(1));
 
         log.info("Start training");
         long start = System.currentTimeMillis();
