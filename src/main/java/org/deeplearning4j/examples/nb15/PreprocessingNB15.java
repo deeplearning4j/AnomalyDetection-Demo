@@ -1,13 +1,21 @@
 package org.deeplearning4j.examples.nb15;
 
+import com.amazonaws.event.ProgressListener;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.transfer.MultipleFileDownload;
+import com.amazonaws.services.s3.transfer.MultipleFileUpload;
+import com.amazonaws.services.s3.transfer.TransferProgress;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
+import org.apache.hadoop.fs.Options;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
-import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.aws.s3.reader.S3Downloader;
+import org.deeplearning4j.aws.s3.uploader.S3Uploader;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.data.ColumnType;
@@ -38,10 +46,7 @@ import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Alex on 5/03/2016.
@@ -50,7 +55,7 @@ public class PreprocessingNB15 {
 
     protected static double FRACTION_TRAIN = 0.75;
 
-    protected static boolean isWin = true;
+    protected static boolean isWin = false;
     protected static String inputFilePath = "data/NIDS/UNSW/input/";
     protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
     protected static String chartFilePath = "charts/";
@@ -64,7 +69,19 @@ public class PreprocessingNB15 {
     public static final String CHART_DIRECTORY_NORMALIZED = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Norm/" :
             FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
 
+    protected static boolean aws = false;
+    protected static String s3Bucket = "anomaly-data";
+    protected static String s3KeyPrefixIn = "/nids/UNSW/";
+    protected static String s3KeyPrefixOut = "nids/UNSW/preprocessed";
+
     public static void main(String[] args) throws Exception {
+        // For AWS
+        if(aws) {
+            // pull down raw
+            S3Downloader s3Down = new S3Downloader();
+            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
+            mlpDown.waitForCompletion();
+        }
 
         //Get the initial schema
         Schema csvSchema = NB15Util.getNB15CsvSchema();
@@ -103,9 +120,8 @@ public class PreprocessingNB15 {
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
 //        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";   //Subset of data
-        String inputName = "csv_50_records.txt";
-        String dataDir = (isWin) ? "C:/Data/UNSW_NB15/CSV/" : new ClassPathResource(inputName).getFile().getAbsolutePath();
-//        String dataDir = (isWin)?  "C:/Data/UNSW_NB15/CSV/": IN_DIRECTORY;
+//        String dataDir = (isWin) ? "C:/Data/UNSW_NB15/CSV/" : new ClassPathResource(inputName).getFile().getAbsolutePath();
+        String dataDir = (isWin)?  "C:/Data/UNSW_NB15/CSV/": IN_DIRECTORY;
         JavaRDD<String> rawData = sc.textFile(dataDir);
 
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
@@ -146,6 +162,15 @@ public class PreprocessingNB15 {
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
         sc.close();
+
+
+        if(aws) {
+            // load preprocessed
+            S3Uploader s3Up = new S3Uploader();
+            MultipleFileUpload mlpUp = s3Up.uploadFolder(s3Bucket, s3KeyPrefixIn, new File(System.getProperty("user.home") + outputFilePath), true);
+            mlpUp.waitForCompletion();
+
+        }
 
         //Wait for spark to stop its console spam before printing analysis
         Thread.sleep(2000);
