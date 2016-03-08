@@ -208,13 +208,6 @@
             <artifactId>jfreechart</artifactId>
             <version>1.0.13</version>
         </dependency>
-
-        <!-- For aws access -->
-        <!--<dependency>-->
-            <!--<groupId>com.amazonaws</groupId>-->
-            <!--<artifactId>aws-java-sdk-pom</artifactId>-->
-            <!--<version>1.10.58</version>-->
-        <!--</dependency>-->
     </dependencies>
 
 </project>

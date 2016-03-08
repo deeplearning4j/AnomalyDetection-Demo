@@ -1,12 +1,28 @@
 package org.deeplearning4j.examples;
 
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.storage.StorageLevel;
+import org.canova.api.records.reader.impl.CSVRecordReader;
+import org.canova.api.split.FileSplit;
+import org.canova.api.writable.Writable;
+import org.canova.spark.functions.RecordReaderFunction;
+import org.canova.spark.functions.data.FilesAsBytesFunction;
+import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
+import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.deeplearning4j.spark.canova.CanovaDataSetFunction;
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
 import org.nd4j.linalg.dataset.DataSet;
+
+import java.io.File;
+import java.util.Collection;
 
 /**
  *
@@ -31,12 +47,13 @@ public class SparkNIDS extends NIDSMain{
     }
 
 
-    protected JavaRDD<DataSet> loadData(JavaSparkContext sc, String inputPath, String seqOutputPath, int numberExamples, boolean save) {
+    protected JavaRDD<DataSet> loadData(JavaSparkContext sc, String dataPath) {
         System.out.println("Load data...");
-        // TODO setup data load
-//        JavaRDD<String> rawStrings = sc.parallelize(list);
-//        rawStrings.persist(StorageLevel.MEMORY_ONLY());
-        return null;
+        JavaRDD<String> rawStrings = sc.textFile(dataPath);
+        JavaRDD<Collection<Writable>> rdd = rawStrings.map(new StringToWritablesFunction(new CSVRecordReader(0,",")));
+        JavaRDD<DataSet> ds = rdd.map(new CanovaDataSetFunction(labelIdx, nOut, false));
+        ds.persist(StorageLevel.MEMORY_ONLY());
+        return ds;
     }
 
     protected MultiLayerNetwork trainModel(SparkDl4jMultiLayer model, JavaRDD<DataSet> data){

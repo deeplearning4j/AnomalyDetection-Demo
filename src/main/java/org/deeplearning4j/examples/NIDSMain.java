@@ -37,13 +37,13 @@ public class NIDSMain {
 
     // values to pass in from command line when compiled, esp running remotely
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
-    protected String version = "Standard";
+    protected String version = "SparkStandAlone";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
     protected int testBatchSize = batchSize;
     @Option(name="--numBatches",usage="Number of batches",aliases="-nB")
-    protected int numBatches = 1; // set to max 20000 when full set
+    protected int numBatches = 4; // set to max 20000 when full set
     @Option(name="--numTestBatches",usage="Number of test batches",aliases="-nTB")
     protected int numTestBatches = numBatches; // set to 2500 when full set
     @Option(name="--numEpochs",usage="Number of epochs",aliases="-nE")
@@ -54,10 +54,6 @@ public class NIDSMain {
     protected String trainFile = "csv_preprocessed.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
     protected String testFile = "csv_test_preprocessed.csv";
-//    @Option(name="--trainFolder",usage="Train folder",aliases="-taF")
-//    protected String trainFolder = "train.csv";
-//    @Option(name="--testFolder",usage="Test folder",aliases="-teF")
-//    protected String testFolder = "test";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
 
@@ -79,9 +75,9 @@ public class NIDSMain {
     protected long endTime = 0;
     protected int trainTime = 0;
     protected int testTime = 0;
-    protected int MAX_TRAIN_MINIBATCHES = 20;
+    protected int MAX_TRAIN_MINIBATCHES = 2;
 //    protected int TEST_NUM_MINIBATCHES = 2;
-    protected int TEST_EVERY_N_MINIBATCHES = 5;
+    protected int TEST_EVERY_N_MINIBATCHES = 1;
 
     protected int seed = 123;
     protected int listenerFreq = 1;
@@ -139,11 +135,15 @@ public class NIDSMain {
             case "SparkCluster":
                 SparkNIDS spark = new SparkNIDS();
                 JavaSparkContext sc = (version == "SparkStandAlone")? spark.setupLocalSpark(): spark.setupClusterSpark();
-                JavaRDD<DataSet> sparkData = spark.loadData(sc, TRAIN_DATA_PATH, OUT_DIRECTORY, batchSize * numBatches, false);
+                JavaRDD<DataSet> trainSparkData = spark.loadData(sc, TRAIN_DATA_PATH);
                 SparkDl4jMultiLayer sparkNetwork = new SparkDl4jMultiLayer(sc, network);
-                network = spark.trainModel(sparkNetwork, sparkData);
+                network = spark.trainModel(sparkNetwork, trainSparkData);
+                trainSparkData.unpersist();
+
                 sparkNetwork = new SparkDl4jMultiLayer(sc, network);
-                spark.evaluatePerformance(sparkNetwork, sparkData);
+                JavaRDD<DataSet> testSparkData = spark.loadData(sc, TEST_DATA_PATH);
+                spark.evaluatePerformance(sparkNetwork, testSparkData);
+                testSparkData.unpersist();
                 break;
         }
 
