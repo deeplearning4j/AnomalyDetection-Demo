@@ -21,20 +21,19 @@ public class BasicMLPModel {
 
     protected int[] nIn;
     protected int[] nOut;
-    protected int iterations = 1;
-    protected String activation = "relu";
-    protected WeightInit weightInit = WeightInit.XAVIER;
-    protected OptimizationAlgorithm optimizationAlgorithm = OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT;
-    protected Updater updater = Updater.ADAGRAD;
-    protected LossFunctions.LossFunction lossFunctions = LossFunctions.LossFunction.MSE;
-    protected double learningRate = 0.05;
-    protected double l2 = 0.0001;
-    protected long seed = 123;
-
+    protected int iterations;
+    protected String activation;
+    protected WeightInit weightInit;
+    protected OptimizationAlgorithm optimizationAlgorithm;
+    protected Updater updater;
+    protected LossFunctions.LossFunction lossFunctions;
+    protected double learningRate;
+    protected double l2;
+    protected long seed;
 
     public BasicMLPModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit, double learningRate, double l2){
         this(nIn, nOut, iterations, activation, weightInit, OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
-                Updater.SGD, LossFunctions.LossFunction.MSE, learningRate, l2, 123);
+                Updater.NESTEROVS, LossFunctions.LossFunction.MCXENT, learningRate, l2, 123);
     }
 
     public BasicMLPModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit,
@@ -45,7 +44,6 @@ public class BasicMLPModel {
         this.iterations = iterations;
         this.weightInit = weightInit;
         this.activation = activation;
-        this.weightInit = weightInit;
         this.optimizationAlgorithm = optimizationAlgorithm;
         this.updater = updater;
         this.lossFunctions = lossFunctions;

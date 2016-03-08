@@ -1,10 +1,14 @@
 package org.deeplearning4j.examples;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
+import org.deeplearning4j.examples.Models.BasicMLPModel;
 import org.deeplearning4j.examples.Models.BasicRNNModel;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
 import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
@@ -15,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.canova.api.util.ClassPathResource;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,29 +33,27 @@ import java.util.Map;
  */
 public class NIDSMain {
 
-    private static final Logger log = LoggerFactory.getLogger(NIDSMain.class);
+    protected static final Logger log = LoggerFactory.getLogger(NIDSMain.class);
 
     // values to pass in from command line when compiled, esp running remotely
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
-    protected int batchSize = 40;
+    protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
     protected int testBatchSize = batchSize;
     @Option(name="--numBatches",usage="Number of batches",aliases="-nB")
-    protected int numBatches = 1;
+    protected int numBatches = 1; // set to max 20000 when full set
     @Option(name="--numTestBatches",usage="Number of test batches",aliases="-nTB")
-    protected int numTestBatches = numBatches;
+    protected int numTestBatches = numBatches; // set to 2500 when full set
     @Option(name="--numEpochs",usage="Number of epochs",aliases="-nE")
     protected int numEpochs = 1; // consider 60
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 1;
-    @Option(name="--numCategories",usage="Number of categories",aliases="-nC")
-    protected int numCategories = 1;
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
-    protected String trainFile = "csv_50_records.txt";
+    protected String trainFile = "csv_preprocssed.txt";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
-    protected String testFile = "test.csv";
+    protected String testFile = "csv_test_preprocssed.txt.csv";
 //    @Option(name="--trainFolder",usage="Train folder",aliases="-taF")
 //    protected String trainFolder = "train.csv";
 //    @Option(name="--testFolder",usage="Test folder",aliases="-teF")
@@ -63,12 +66,12 @@ public class NIDSMain {
     @Option(name="--paramName",usage="Parameter file name",aliases="-param")
     protected String paramName = null;
 
+    @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
+    protected int nIn = 66;
+    @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
+    protected int nOut = 10; // 2 binary or 10 classification of attack types
     @Option(name="--lstmLayerSize",usage="Layer Size",aliases="-lS")
     protected int lstmLayerSize = 4;
-    @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
-    protected int nIn = 10;
-    @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
-    protected int nOut = 2; //2 binary or 9 classification
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
     protected int truncatedBPTTLength = 2;
 
@@ -76,6 +79,9 @@ public class NIDSMain {
     protected long endTime = 0;
     protected int trainTime = 0;
     protected int testTime = 0;
+    protected int MAX_TRAIN_MINIBATCHES = 20;
+//    protected int TEST_NUM_MINIBATCHES = 2;
+    protected int TEST_EVERY_N_MINIBATCHES = 5;
 
     protected int seed = 123;
     protected int listenerFreq = 1;
@@ -87,19 +93,23 @@ public class NIDSMain {
 //    protected String trainPath = FilenameUtils.concat(basePath, trainFolder);
 //    protected String testPath = FilenameUtils.concat(basePath, testFolder);
 
-    protected String labelPath;
-    protected String outputPath;
+    public static boolean isWin = false;
+    protected static String outputFilePath = "src/main/resources/";
     protected String confPath = this.toString() + "conf.yaml";
     protected String paramPath = this.toString() + "param.bin";
     protected Map<String, String> paramPaths = new HashMap<>();
 
-    protected List<String> labels;
-    protected int nCores = 1;
+    public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
+            FilenameUtils.concat(System.getProperty("user.dir"), outputFilePath);
+    public static final String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"train/normalized0.csv");
+    public static final String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"test/normalized0.csv");
 
+    protected List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
+    protected int labelIdx = 66;
 
     public void run(String[] args) throws Exception {
-        String trainPath = new ClassPathResource(trainFile).getFile().getAbsolutePath();
-        String testPath = new ClassPathResource(testFile).getFile().getAbsolutePath();
+//        String trainPath = new ClassPathResource(trainFile).getFile().getAbsolutePath();
+//        String testPath = new ClassPathResource(testFile).getFile().getAbsolutePath();
 
 //        int sparkExamplesPerFit = 32 * nCores;
 
@@ -113,20 +123,31 @@ public class NIDSMain {
             parser.printUsage(System.err);
         }
 
-        MultiLayerNetwork network = new BasicRNNModel(nIn, nOut, lstmLayerSize, truncatedBPTTLength, iterations).buildModel();
+//        MultiLayerNetwork network = new BasicRNNModel(nIn, nOut, lstmLayerSize, truncatedBPTTLength, iterations).buildModel();
+        MultiLayerNetwork network = new BasicMLPModel(
+                new int[] {nIn, 512, 512},
+                new int[] {512, 512, nOut},
+                iterations,
+                "leakyrelu",
+                WeightInit.XAVIER,
+                1e-2,
+                1e-6
+                ).buildModel();
+        network.setListeners(new ScoreIterationListener(1));
 
         switch (version) {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
-                MultipleEpochsIterator data = standard.loadData(batchSize, batchSize * numBatches);
-                network = standard.trainModel(network, data);
-                standard.evaluatePerformance(network, data);
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, TRAIN_DATA_PATH, labelIdx, numEpochs);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, TEST_DATA_PATH, labelIdx, 1);
+                network = standard.trainModel(network, trainData);
+                standard.evaluatePerformance(network, testData);
                 break;
             case "SparkStandAlone":
             case "SparkCluster":
                 SparkNIDS spark = new SparkNIDS();
                 JavaSparkContext sc = (version == "SparkStandAlone")? spark.setupLocalSpark(): spark.setupClusterSpark();
-                JavaRDD<DataSet> sparkData = spark.loadData(sc, trainPath, outputPath, batchSize * numBatches,false);
+                JavaRDD<DataSet> sparkData = spark.loadData(sc, TRAIN_DATA_PATH, OUT_DIRECTORY, batchSize * numBatches, false);
                 SparkDl4jMultiLayer sparkNetwork = new SparkDl4jMultiLayer(sc, network);
                 network = spark.trainModel(sparkNetwork, sparkData);
                 sparkNetwork = new SparkDl4jMultiLayer(sc, network);
@@ -144,7 +165,7 @@ public class NIDSMain {
         System.out.println("Total training runtime: " + trainTime + " minutes");
         System.out.println("Total evaluation runtime: " + testTime + " minutes");
         System.out.println("****************************************************");
-        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, outputPath.toString());
+        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIRECTORY.toString());
     }
 
 
