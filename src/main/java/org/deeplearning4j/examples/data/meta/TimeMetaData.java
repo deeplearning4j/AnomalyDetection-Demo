@@ -50,7 +50,8 @@ public class TimeMetaData implements ColumnMetaData {
     }
 
 
-
-
-
+    @Override
+    public String toString(){
+        return "TimeMetaData()";
+    }
 }

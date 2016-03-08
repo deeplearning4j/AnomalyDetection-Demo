@@ -43,4 +43,9 @@ public class DoubleMetaData implements ColumnMetaData {
 
         return d >= min && d <= max;
     }
+
+    @Override
+    public String toString(){
+        return "DoubleMetaData(minAllowed=" + min + ",maxAllowed="+ max + ",allowNaN=" + allowNaN + ",allowInfinite="+ allowInfinite + ")";
+    }
 }

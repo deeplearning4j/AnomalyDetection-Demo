@@ -75,6 +75,34 @@ public class Schema implements Serializable {
         return idx;
     }
 
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        int nCol = numColumns();
+
+        int maxNameLength = 0;
+        for(String s :getColumnNames()){
+            maxNameLength = Math.max(maxNameLength,s.length());
+        }
+
+        //Header:
+        sb.append(String.format("%-6s","idx")).append(String.format("%-"+(maxNameLength+8)+"s","name"))
+                .append(String.format("%-15s","type")).append("meta data").append("\n");
+
+        for( int i=0; i<nCol; i++ ){
+            String colName = getName(i);
+            ColumnType type = getType(i);
+            ColumnMetaData meta = getMetaData(i);
+            String paddedName = String.format("%-"+(maxNameLength+8)+"s","\"" + colName + "\"");
+            sb.append(String.format("%-6d",i))
+                    .append(paddedName)
+                    .append(String.format("%-15s",type))
+                    .append(meta).append("\n");
+        }
+
+        return sb.toString();
+    }
+
     public static class Builder {
 
         List<String> columnNames = new ArrayList<>();

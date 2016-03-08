@@ -5,6 +5,7 @@ import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.LongAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.RealAnalysis;
+import org.deeplearning4j.examples.data.transform.categorical.CategoricalToOneHotTransform;
 import org.deeplearning4j.examples.data.transform.column.RemoveColumnsTransform;
 import org.deeplearning4j.examples.data.transform.normalize.Normalize;
 import org.deeplearning4j.examples.data.transform.real.DoubleLog2Normalizer;
@@ -78,6 +79,13 @@ public class TransformSequence implements Serializable {
 
         public Builder removeColumns(String... columnNames){
             return transform(new RemoveColumnsTransform(columnNames));
+        }
+
+        public Builder categoricalToOneHot(String... columnNames){
+            for(String s : columnNames){
+                transform(new CategoricalToOneHotTransform(s));
+            }
+            return this;
         }
 
         public Builder normalize(String column, Normalize type, DataAnalysis da){

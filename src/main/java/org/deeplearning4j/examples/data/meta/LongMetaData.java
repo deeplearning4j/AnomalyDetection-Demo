@@ -41,4 +41,9 @@ public class LongMetaData implements ColumnMetaData {
         }
         return value >= minValue && value <= maxValue;
     }
+
+    @Override
+    public String toString(){
+        return "LongMetaData(minAllowed=" + minValue + ",maxAllowed="+ maxValue + ")";
+    }
 }

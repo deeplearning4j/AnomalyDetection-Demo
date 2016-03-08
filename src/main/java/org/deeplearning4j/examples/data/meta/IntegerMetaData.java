@@ -35,4 +35,9 @@ public class IntegerMetaData implements ColumnMetaData {
         }
         return value >= minValue && value <= maxValue;
     }
+
+    @Override
+    public String toString(){
+        return "IntegerMetaData(minAllowed=" + minValue + ",maxAllowed="+ maxValue + ")";
+    }
 }

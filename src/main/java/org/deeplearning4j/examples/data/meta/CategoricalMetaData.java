@@ -39,4 +39,17 @@ public class CategoricalMetaData implements ColumnMetaData {
         return stateNames;
     }
 
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("CategoricalMetaData(");
+        boolean first = true;
+        for(String s : stateNamesSet){
+            if(!first) sb.append(",");
+            sb.append(s);
+            first = false;
+        }
+        sb.append(")");
+        return sb.toString();
+    }
 }

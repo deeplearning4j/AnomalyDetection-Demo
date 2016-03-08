@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferProgress;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.hadoop.fs.Options;
@@ -17,6 +18,7 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.aws.s3.reader.S3Downloader;
 import org.deeplearning4j.aws.s3.uploader.S3Uploader;
 import org.deeplearning4j.examples.data.split.RandomSplit;
+import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.Schema;
@@ -55,7 +57,7 @@ public class PreprocessingNB15 {
 
     protected static double FRACTION_TRAIN = 0.75;
 
-    protected static boolean isWin = false;
+    protected static boolean isWin = true;
     protected static String inputFilePath = "data/NIDS/UNSW/input/";
     protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
     protected static String chartFilePath = "charts/";
@@ -69,6 +71,15 @@ public class PreprocessingNB15 {
     public static final String CHART_DIRECTORY_NORMALIZED = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Norm/" :
             FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
 
+    static{
+        File outDir = new File(OUT_DIRECTORY);
+        if(!outDir.exists()) outDir.mkdirs();
+        File chartsOrig = new File(CHART_DIRECTORY_ORIG);
+        if(!chartsOrig.mkdirs()) chartsOrig.mkdirs();
+        File chartsNorm = new File(CHART_DIRECTORY_NORMALIZED);
+        if(!chartsNorm.exists()) chartsNorm.mkdirs();
+    }
+
     protected static boolean aws = false;
     protected static String s3Bucket = "anomaly-data";
     protected static String s3KeyPrefixIn = "/nids/UNSW/";
@@ -78,9 +89,10 @@ public class PreprocessingNB15 {
         // For AWS
         if(aws) {
             // pull down raw
-            S3Downloader s3Down = new S3Downloader();
-            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
-            mlpDown.waitForCompletion();
+            throw new UnsupportedOperationException();  //I was having issues with the downloadFolder method not being found
+//            S3Downloader s3Down = new S3Downloader();
+//            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
+//            mlpDown.waitForCompletion();
         }
 
         //Get the initial schema
@@ -108,10 +120,12 @@ public class PreprocessingNB15 {
                 .transform(new IntegerToCategoricalTransform("label", Arrays.asList("normal", "attack")))
                 .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
                 .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
+
+                .removeColumns("label") //leave attack category
                 .build();
 
-        Schema finalSchema = seq.getFinalSchema(csvSchema);
-
+        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
         sparkConf.setMaster("local[*]");
@@ -131,21 +145,21 @@ public class PreprocessingNB15 {
         processedData.cache();
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(finalSchema, processedData);
+        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, processedData);
 
         //Do analysis, on a per-column basis
-        DataAnalysis da = AnalyzeSpark.analyze(finalSchema, processedData);
+        DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
 
         //Do train/test split:
         List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData);
         JavaRDD<Collection<Writable>> trainData = allData.get(0);
         JavaRDD<Collection<Writable>> testData = allData.get(1);
 
-        DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(finalSchema, trainData);
+        DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Pair<Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(finalSchema, trainDataAnalysis, trainData, executor);
-        Pair<Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(finalSchema, trainDataAnalysis, testData, executor);
+        Pair<Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Pair<Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
         trainDataNormalized.getSecond().cache();
@@ -159,6 +173,7 @@ public class PreprocessingNB15 {
         int nSplits = 1;
         SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond());
         SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond());
+        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
         sc.close();
@@ -166,9 +181,10 @@ public class PreprocessingNB15 {
 
         if(aws) {
             // load preprocessed
-            S3Uploader s3Up = new S3Uploader();
-            MultipleFileUpload mlpUp = s3Up.uploadFolder(s3Bucket, s3KeyPrefixIn, new File(System.getProperty("user.home") + outputFilePath), true);
-            mlpUp.waitForCompletion();
+            throw new UnsupportedOperationException();
+//            S3Uploader s3Up = new S3Uploader();
+//            MultipleFileUpload mlpUp = s3Up.uploadFolder(s3Bucket, s3KeyPrefixIn, new File(System.getProperty("user.home") + outputFilePath), true);
+//            mlpUp.waitForCompletion();
 
         }
 
@@ -190,7 +206,7 @@ public class PreprocessingNB15 {
         System.out.println(trainDataAnalyis);
 
         //analysis and histograms
-        plot(finalSchema, da, CHART_DIRECTORY_ORIG);
+        plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
         plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORMALIZED);
 
         System.out.println();
@@ -236,6 +252,10 @@ public class PreprocessingNB15 {
                 .normalize("count same source addr dest port", Normalize.Log2MeanExcludingMin, da)              //1.69M ore the min value of 1.0
                 .normalize("count same dest addr source port", Normalize.Log2MeanExcludingMin, da) //1.97M of 2.54M are the minimum value of 1.0
                 .normalize("count same source dest address", Normalize.Log2Mean, da)
+
+                //Do conversion of categorical fields to a set of one-hot columns, ready for network training:
+                .categoricalToOneHot("transaction protocol", "state", "service", "equal ips and ports", "is ftp login")
+                .transform(new CategoricalToIntegerTransform("attack category"))
                 .build();
 
         Schema normSchema = norm.getFinalSchema(schema);

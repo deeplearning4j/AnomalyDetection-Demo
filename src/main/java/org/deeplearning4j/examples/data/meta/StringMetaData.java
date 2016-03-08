@@ -37,4 +37,10 @@ public class StringMetaData implements ColumnMetaData {
         if(!matches) return false;
         return regex == null || str.matches(regex);
     }
+
+    @Override
+    public String toString(){
+        return "StringMetaData(minLengthAllowed=" + minLength + ",maxLengthAllowed="+ maxLength + ",regex=" + regex + ")";
+    }
+
 }
