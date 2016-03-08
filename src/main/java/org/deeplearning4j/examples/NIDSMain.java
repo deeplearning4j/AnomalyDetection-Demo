@@ -51,9 +51,9 @@ public class NIDSMain {
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 1;
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
-    protected String trainFile = "csv_preprocssed.txt";
+    protected String trainFile = "csv_preprocessed.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
-    protected String testFile = "csv_test_preprocssed.txt.csv";
+    protected String testFile = "csv_test_preprocessed.csv";
 //    @Option(name="--trainFolder",usage="Train folder",aliases="-taF")
 //    protected String trainFolder = "train.csv";
 //    @Option(name="--testFolder",usage="Test folder",aliases="-teF")
@@ -88,11 +88,6 @@ public class NIDSMain {
     protected int totalTrainNumExamples = batchSize * numBatches;
     protected int totalTestNumExamples = testBatchSize * numTestBatches;
 
-    // Paths for data
-//    protected String basePath = FilenameUtils.concat(System.getProperty("user.dir"), "src/main/resources/");
-//    protected String trainPath = FilenameUtils.concat(basePath, trainFolder);
-//    protected String testPath = FilenameUtils.concat(basePath, testFolder);
-
     public static boolean isWin = false;
     protected static String outputFilePath = "src/main/resources/";
     protected String confPath = this.toString() + "conf.yaml";
@@ -101,18 +96,15 @@ public class NIDSMain {
 
     public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
             FilenameUtils.concat(System.getProperty("user.dir"), outputFilePath);
-    public static final String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"train/normalized0.csv");
-    public static final String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"test/normalized0.csv");
+    public String TRAIN_DATA_PATH = (isWin) ? FilenameUtils.concat(OUT_DIRECTORY,"train/normalized0.csv"):
+            FilenameUtils.concat(OUT_DIRECTORY, trainFile);
+    public String TEST_DATA_PATH = (isWin) ? FilenameUtils.concat(OUT_DIRECTORY,"test/normalized0.csv"):
+            FilenameUtils.concat(OUT_DIRECTORY, testFile);
 
     protected List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
     protected int labelIdx = 66;
 
     public void run(String[] args) throws Exception {
-//        String trainPath = new ClassPathResource(trainFile).getFile().getAbsolutePath();
-//        String testPath = new ClassPathResource(testFile).getFile().getAbsolutePath();
-
-//        int sparkExamplesPerFit = 32 * nCores;
-
         // Parse command line arguments if they exist
         CmdLineParser parser = new CmdLineParser(this);
         try {
