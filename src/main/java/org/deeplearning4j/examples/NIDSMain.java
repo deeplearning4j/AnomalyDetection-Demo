@@ -6,6 +6,8 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.examples.Models.BasicMLPModel;
 import org.deeplearning4j.examples.Models.BasicRNNModel;
+import org.deeplearning4j.nn.api.OptimizationAlgorithm;
+import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
@@ -15,6 +17,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.canova.api.util.ClassPathResource;
@@ -37,13 +40,15 @@ public class NIDSMain {
 
     // values to pass in from command line when compiled, esp running remotely
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
-    protected String version = "SparkStandAlone";
+    protected String version = "Standard";
+    @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
+    protected String modelType = "MLP";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
     protected int testBatchSize = batchSize;
     @Option(name="--numBatches",usage="Number of batches",aliases="-nB")
-    protected int numBatches = 4; // set to max 20000 when full set
+    protected int numBatches = 2; // set to max 20000 when full set
     @Option(name="--numTestBatches",usage="Number of test batches",aliases="-nTB")
     protected int numTestBatches = numBatches; // set to 2500 when full set
     @Option(name="--numEpochs",usage="Number of epochs",aliases="-nE")
@@ -75,7 +80,6 @@ public class NIDSMain {
     protected long endTime = 0;
     protected int trainTime = 0;
     protected int testTime = 0;
-    protected int MAX_TRAIN_MINIBATCHES = 2;
 //    protected int TEST_NUM_MINIBATCHES = 2;
     protected int TEST_EVERY_N_MINIBATCHES = 1;
 
@@ -99,6 +103,7 @@ public class NIDSMain {
 
     protected List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
     protected int labelIdx = 66;
+    protected MultiLayerNetwork network;
 
     public void run(String[] args) throws Exception {
         // Parse command line arguments if they exist
@@ -111,16 +116,7 @@ public class NIDSMain {
             parser.printUsage(System.err);
         }
 
-//        MultiLayerNetwork network = new BasicRNNModel(nIn, nOut, lstmLayerSize, truncatedBPTTLength, iterations).buildModel();
-        MultiLayerNetwork network = new BasicMLPModel(
-                new int[] {nIn, 512, 512},
-                new int[] {512, 512, nOut},
-                iterations,
-                "leakyrelu",
-                WeightInit.XAVIER,
-                1e-2,
-                1e-6
-                ).buildModel();
+        buildModel();
         network.setListeners(new ScoreIterationListener(1));
 
         switch (version) {
@@ -149,6 +145,42 @@ public class NIDSMain {
 
         saveAndPrintResults(network);
         System.out.println("****************Example finished********************");
+    }
+
+    protected void buildModel(){
+        switch (modelType) {
+            case "MLP":
+                network = new BasicMLPModel(
+                        new int[]{nIn, 512, 512},
+                        new int[]{512, 512, nOut},
+                        iterations,
+                        "leakyrelu",
+                        WeightInit.XAVIER,
+                        1e-2,
+                        1e-6
+                ).buildModel();
+                break;
+            case "RNN":
+                // reference: http://sacj.cs.uct.ac.za/index.php/sacj/article/viewFile/248/150
+                // partial config for this and from examples repo
+                // use 1000 epochs
+                network = new BasicRNNModel(
+                        new int[]{nIn, 10, 10},
+                        new int[]{10, 10, nOut},
+                        iterations,
+                        "tanh",
+                        WeightInit.DISTRIBUTION,
+                        OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
+                        Updater.RMSPROP,
+                        LossFunctions.LossFunction.MCXENT,
+                        5e-1,
+                        1,
+                        truncatedBPTTLength,
+                        123
+                        ).buildModel();
+                break;
+        }
+
     }
 
     protected void saveAndPrintResults(MultiLayerNetwork net){

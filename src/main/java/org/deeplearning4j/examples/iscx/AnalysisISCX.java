@@ -1,5 +1,7 @@
 package org.deeplearning4j.examples.iscx;
 
+import com.jcraft.jsch.MAC;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -18,11 +20,12 @@ import java.util.Collection;
  */
 public class AnalysisISCX {
 
-    public static final boolean win = true;
+    public static final boolean win = false;
 
     public static final String WIN_DIR = "C:/Data/ISCX/CSV/";
+    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/input/");
 
-    public static final String DATA_DIR = (win ? WIN_DIR : null);
+    public static final String DATA_DIR = (win ? WIN_DIR : MAC_DIR);
 
 
     public static void main(String[] args) throws Exception {

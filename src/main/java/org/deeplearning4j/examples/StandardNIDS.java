@@ -28,15 +28,13 @@ public class StandardNIDS extends NIDSMain{
         System.out.println("Train model....");
         startTime = System.currentTimeMillis();
         int countTrain = 0;
-        while(iter.hasNext() && countTrain++ < MAX_TRAIN_MINIBATCHES) {
-            net.fit(iter);
-            if(countTrain % TEST_EVERY_N_MINIBATCHES == 0){
-                iter.reset();
-                //Test:
-                evaluatePerformance(net, iter);
-            }
-            if(!iter.hasNext()) iter.reset();
+        net.fit(iter);
+        if(countTrain % TEST_EVERY_N_MINIBATCHES == 0){
+            iter.reset();
+            //Test:
+            evaluatePerformance(net, iter);
         }
+        if(!iter.hasNext()) iter.reset();
         endTime = System.currentTimeMillis();
         trainTime = (int) (endTime - startTime) / 60000;
         return net;
