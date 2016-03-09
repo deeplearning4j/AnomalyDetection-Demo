@@ -232,4 +232,11 @@ public class AnalyzeSpark {
         return ithColumn.takeSample(false,count);
     }
 
+    public static List<Writable> getUnique(String columnName, Schema schema, JavaRDD<Collection<Writable>> data){
+        int colIdx = schema.getIndexOfColumn(columnName);
+        JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(colIdx));
+
+        return ithColumn.distinct().collect();
+    }
+
 }
