@@ -30,8 +30,8 @@
         <logback.version>1.1.2</logback.version>
         <netty.version>4.0.28.Final</netty.version>
         <lombok.version>1.16.4</lombok.version>
-        <nd4j.version>0.4-rc3.9-SNAPSHOT</nd4j.version>
-        <dl4j.version>0.4-rc3.9-SNAPSHOT</dl4j.version>
+        <nd4j.version>0.4-rc3.8</nd4j.version>
+        <dl4j.version>0.4-rc3.8</dl4j.version>
         <scala.binary.version>2.10</scala.binary.version>
         <scala.version>2.10.4</scala.version>
         <spark.version>1.3.1</spark.version>
@@ -120,7 +120,7 @@
         <dependencies>
             <dependency>
                 <groupId>org.nd4j</groupId>
-                <artifactId>nd4j-native</artifactId>
+                <artifactId>nd4j-x86</artifactId>
                 <version>${nd4j.version}</version>
             </dependency>
             <dependency>
@@ -193,7 +193,7 @@
         </dependency>
         <dependency>
             <groupId>org.nd4j</groupId>
-            <artifactId>nd4j-native</artifactId>
+            <artifactId>nd4j-x86</artifactId>
         </dependency>
         <!--includes kohsuke package-->
         <dependency>
@@ -207,6 +207,13 @@
             <groupId>jfree</groupId>
             <artifactId>jfreechart</artifactId>
             <version>1.0.13</version>
+        </dependency>
+
+        <!-- For kafka -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
         </dependency>
     </dependencies>
 

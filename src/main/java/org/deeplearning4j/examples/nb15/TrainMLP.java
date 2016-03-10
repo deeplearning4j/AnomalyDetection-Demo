@@ -4,7 +4,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
-import org.canova.api.util.ClassPathResource;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -16,7 +15,6 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.ui.weights.HistogramIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
@@ -84,7 +82,7 @@ public class TrainMLP {
                 .regularization(true).l2(1e-6)
                 .activation("leakyrelu")
                 .weightInit(WeightInit.XAVIER)
-                .list()
+                .list(3)
                 .layer(0, new DenseLayer.Builder().nIn(nIn).nOut(layerSize).build())
                 .layer(1, new DenseLayer.Builder().nIn(layerSize).nOut(layerSize).build())
                 .layer(2, new OutputLayer.Builder().lossFunction(LossFunctions.LossFunction.MCXENT)
@@ -124,13 +122,13 @@ public class TrainMLP {
         long end = System.currentTimeMillis();
         log.info("Training complete. Time: {} min", (end - start) / 60000);
 
-        FileUtils.writeStringToFile(new File(NETWORK_SAVE_DIR, "config.json"), conf.toJson());
-        try(DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(NETWORK_SAVE_DIR,"params.bin")))){
+        FileUtils.writeStringToFile(new File(NETWORK_SAVE_DIR, "Trained/config.json"), conf.toJson());
+        try(DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(NETWORK_SAVE_DIR, "Trained/params.bin")))){
             Nd4j.write(net.params(),dos);
         }
 
         INDArray params;
-        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(NETWORK_SAVE_DIR,"params.bin")))){
+        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(NETWORK_SAVE_DIR, "Trained/params.bin")))){
             params = Nd4j.read(dis);
         }
 
