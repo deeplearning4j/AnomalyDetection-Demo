@@ -48,7 +48,7 @@ public class PreprocessingNB15 {
 
     protected static double FRACTION_TRAIN = 0.75;
 
-    public static boolean isWin = true;
+    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
     protected static String inputFilePath = "data/NIDS/UNSW/input/";
     protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
     protected static String chartFilePath = "charts/";

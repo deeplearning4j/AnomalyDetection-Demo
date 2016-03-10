@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class ISCXDataConvert {
 
-    public static boolean isWin = true;
+    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
 
 //    public static final String windowsPath = "C:/Data/ISCX/labeled_flows_xml/TestbedMonJun14Flows.xml";  //Only a subset of the data
     public static final String windowsPath = "C:/Data/ISCX/labeled_flows_xml/";  //Only a subset of the data

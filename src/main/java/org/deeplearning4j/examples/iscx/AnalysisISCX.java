@@ -20,7 +20,7 @@ import java.util.Collection;
  */
 public class AnalysisISCX {
 
-    public static final boolean win = false;
+    public static final boolean win = System.getProperty("os.name").toLowerCase().contains("win");
 
     public static final String WIN_DIR = "C:/Data/ISCX/CSV/";
     public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/input/");

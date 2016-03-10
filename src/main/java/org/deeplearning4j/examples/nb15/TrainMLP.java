@@ -1,5 +1,6 @@
 package org.deeplearning4j.examples.nb15;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
@@ -16,13 +17,15 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.weights.HistogramIterationListener;
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +37,7 @@ public class TrainMLP {
     private static final Logger log = LoggerFactory.getLogger(TrainMLP.class);
 
 
-    public static boolean isWin = false;
+    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
     protected static String outputFilePath = "src/main/resources/";
 
     public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
@@ -42,6 +45,9 @@ public class TrainMLP {
 
     public static final String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"train/normalized0.csv");
     public static final String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"test/normalized0.csv");
+
+    public static final String NETWORK_SAVE_DIR = (isWin) ? "C:/Data/UNSW_NB15/Trained/" :
+            FilenameUtils.concat(System.getProperty("user.dir"), outputFilePath);
 
 //    public static String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY, "csv_100_preprocessed.csv");
 //    public static String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"csv_100_test_preprocessed.csv");
@@ -117,6 +123,18 @@ public class TrainMLP {
         }
         long end = System.currentTimeMillis();
         log.info("Training complete. Time: {} min", (end - start) / 60000);
+
+        FileUtils.writeStringToFile(new File(NETWORK_SAVE_DIR, "config.json"), conf.toJson());
+        try(DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(NETWORK_SAVE_DIR,"params.bin")))){
+            Nd4j.write(net.params(),dos);
+        }
+
+        INDArray params;
+        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(NETWORK_SAVE_DIR,"params.bin")))){
+            params = Nd4j.read(dis);
+        }
+
+        System.out.println(params);
 
         log.info("----- Complete -----");
     }
