@@ -40,11 +40,6 @@ public class FromCsvReceiver extends Receiver<Tuple2<Long,INDArray>> {
         this.labelIdx = labelIdx;
         this.nOut = nOut;
 
-//        RecordReader rr = new CSVRecordReader(0,",");
-//        rr.initialize(new FileSplit(new File(localCSVPath)));
-//        iterator = new RecordReaderDataSetIterator(rr,1,labelIdx,nOut);
-
-
     }
 
     @Override
