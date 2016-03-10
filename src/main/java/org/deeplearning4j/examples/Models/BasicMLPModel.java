@@ -55,17 +55,18 @@ public class BasicMLPModel {
     public MultiLayerNetwork buildModel() {
         System.out.println("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+                .seed(seed)
                 .iterations(iterations)
                 .activation(activation)
                 .weightInit(weightInit)
                 .optimizationAlgo(optimizationAlgorithm)
                 .learningRate(learningRate)
-                .seed(seed)
+                .momentum(0.9)
                 .regularization(true)
                 .l2(l2)
                 .list()
-                .layer(0, new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0]).build())
-                .layer(1, new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1]).build())
+                .layer(0, new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0]).dropOut(0.5).build())
+                .layer(1, new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1]).dropOut(0.5).build())
                 .layer(2, new OutputLayer.Builder(lossFunctions).activation("softmax").nIn(nIn[2]).nOut(nOut[2]).build())
                 .pretrain(false).backprop(true)
                 .build();

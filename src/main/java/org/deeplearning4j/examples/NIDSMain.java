@@ -40,7 +40,7 @@ public class NIDSMain {
 
     // values to pass in from command line when compiled, esp running remotely
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
-    protected String version = "Standard";
+    protected String version = "SparkStandAlone";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
     protected String modelType = "MLP";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
@@ -48,13 +48,13 @@ public class NIDSMain {
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
     protected int testBatchSize = batchSize;
     @Option(name="--numBatches",usage="Number of batches",aliases="-nB")
-    protected int numBatches = 2; // set to max 20000 when full set
+    protected int numBatches = 3; // set to max 20000 when full set
     @Option(name="--numTestBatches",usage="Number of test batches",aliases="-nTB")
     protected int numTestBatches = numBatches; // set to 2500 when full set
     @Option(name="--numEpochs",usage="Number of epochs",aliases="-nE")
     protected int numEpochs = 1; // consider 60
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
-    protected int iterations = 1;
+    protected int iterations = 2;
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
     protected String trainFile = "csv_preprocessed.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
@@ -71,8 +71,6 @@ public class NIDSMain {
     protected int nIn = 66;
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
     protected int nOut = 10; // 2 binary or 10 classification of attack types
-    @Option(name="--lstmLayerSize",usage="Layer Size",aliases="-lS")
-    protected int lstmLayerSize = 4;
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
     protected int truncatedBPTTLength = 2;
 
@@ -80,8 +78,7 @@ public class NIDSMain {
     protected long endTime = 0;
     protected int trainTime = 0;
     protected int testTime = 0;
-//    protected int TEST_NUM_MINIBATCHES = 2;
-    protected int TEST_EVERY_N_MINIBATCHES = 1;
+    protected int TEST_EVERY_N_MINIBATCHES = 2 * numEpochs;
 
     protected int seed = 123;
     protected int listenerFreq = 1;
@@ -122,15 +119,18 @@ public class NIDSMain {
         switch (version) {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, TRAIN_DATA_PATH, labelIdx, numEpochs);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, TEST_DATA_PATH, labelIdx, 1);
-                network = standard.trainModel(network, trainData);
+                System.out.println("\nLoad data....");
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, TRAIN_DATA_PATH, labelIdx, numEpochs, numBatches);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, TEST_DATA_PATH, labelIdx, 1, numTestBatches);
+                network = standard.trainModel(network, trainData, testData);
+                System.out.println("\nFinal evaluation....");
                 standard.evaluatePerformance(network, testData);
                 break;
             case "SparkStandAlone":
             case "SparkCluster":
                 SparkNIDS spark = new SparkNIDS();
                 JavaSparkContext sc = (version == "SparkStandAlone")? spark.setupLocalSpark(): spark.setupClusterSpark();
+                System.out.println("\nLoad data....");
                 JavaRDD<DataSet> trainSparkData = spark.loadData(sc, TRAIN_DATA_PATH);
                 SparkDl4jMultiLayer sparkNetwork = new SparkDl4jMultiLayer(sc, network);
                 network = spark.trainModel(sparkNetwork, trainSparkData);
@@ -138,26 +138,27 @@ public class NIDSMain {
 
                 sparkNetwork = new SparkDl4jMultiLayer(sc, network);
                 JavaRDD<DataSet> testSparkData = spark.loadData(sc, TEST_DATA_PATH);
+                System.out.println("\nFinal evaluation....");
                 spark.evaluatePerformance(sparkNetwork, testSparkData);
                 testSparkData.unpersist();
                 break;
         }
 
         saveAndPrintResults(network);
-        System.out.println("****************Example finished********************");
+        System.out.println("\n==========================Example Finished==============================");
     }
 
     protected void buildModel(){
         switch (modelType) {
             case "MLP":
                 network = new BasicMLPModel(
-                        new int[]{nIn, 512, 512},
-                        new int[]{512, 512, nOut},
+                        new int[]{nIn, 500, 100},
+                        new int[]{500, 100, nOut},
                         iterations,
-                        "leakyrelu",
+                        "sigmoid",
                         WeightInit.XAVIER,
-                        1e-2,
-                        1e-6
+                        5e-1, // standard works with 1e-2
+                        1 // standard works with 1e-6
                 ).buildModel();
                 break;
             case "RNN":
@@ -184,11 +185,9 @@ public class NIDSMain {
     }
 
     protected void saveAndPrintResults(MultiLayerNetwork net){
-        // TODO save udpaters
-        System.out.println("****************************************************");
-        System.out.println("Total training runtime: " + trainTime + " minutes");
-        System.out.println("Total evaluation runtime: " + testTime + " minutes");
-        System.out.println("****************************************************");
+        System.out.println("\n============================Time========================================");
+        System.out.println("Training complete. Time: " + trainTime +" min");
+        System.out.println("Evaluation complete. Time " + testTime +" min");
         if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIRECTORY.toString());
     }
 

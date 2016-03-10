@@ -23,6 +23,7 @@ import org.nd4j.linalg.dataset.DataSet;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -48,7 +49,6 @@ public class SparkNIDS extends NIDSMain{
 
 
     protected JavaRDD<DataSet> loadData(JavaSparkContext sc, String dataPath) {
-        System.out.println("Load data...");
         JavaRDD<String> rawStrings = sc.textFile(dataPath);
         JavaRDD<Collection<Writable>> rdd = rawStrings.map(new StringToWritablesFunction(new CSVRecordReader(0,",")));
         JavaRDD<DataSet> ds = rdd.map(new CanovaDataSetFunction(labelIdx, nOut, false));
@@ -67,7 +67,6 @@ public class SparkNIDS extends NIDSMain{
     }
 
     protected void evaluatePerformance(SparkDl4jMultiLayer model, JavaRDD<DataSet> testData) {
-        System.out.println("Eval model...");
         startTime = System.currentTimeMillis();
         Evaluation evalActual = model.evaluate(testData, labels);
         System.out.println(evalActual.stats());

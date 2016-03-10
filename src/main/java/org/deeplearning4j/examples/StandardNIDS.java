@@ -7,6 +7,7 @@ import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.nd4j.linalg.dataset.api.DataSet;
 
 import java.io.File;
 
@@ -15,24 +16,31 @@ import java.io.File;
 
 public class StandardNIDS extends NIDSMain{
 
-    protected MultipleEpochsIterator loadData(int batchSize, String dataPath, int labelIdx, int numEpochs) throws Exception{
-        System.out.println("Load data....");
+    protected MultipleEpochsIterator loadData(int batchSize, String dataPath, int labelIdx, int numEpochs, int numBatches) throws Exception{
         CSVRecordReader rr = new CSVRecordReader(0,",");
         rr.initialize(new FileSplit(new File(dataPath)));
-        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut);
+        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
         return new MultipleEpochsIterator(numEpochs, iter);
 
     }
 
-    protected MultiLayerNetwork trainModel(MultiLayerNetwork net, MultipleEpochsIterator iter){
+    protected MultiLayerNetwork trainModel(MultiLayerNetwork net, MultipleEpochsIterator iter, MultipleEpochsIterator testIter){
+        DataSet next;
         System.out.println("Train model....");
         startTime = System.currentTimeMillis();
         int countTrain = 0;
-        net.fit(iter);
-        if(countTrain % TEST_EVERY_N_MINIBATCHES == 0){
-            iter.reset();
-            //Test:
-            evaluatePerformance(net, iter);
+
+        while(iter.hasNext()) {
+            countTrain++;
+            next = iter.next();
+            if(next == null) break;
+            net.fit(next);
+            if (countTrain % TEST_EVERY_N_MINIBATCHES == 0) {
+                //Test:
+                log.info("--- Evaluation after {} examples ---",countTrain*batchSize);
+                evaluatePerformance(net, testIter);
+                testIter.reset();
+            }
         }
         if(!iter.hasNext()) iter.reset();
         endTime = System.currentTimeMillis();
@@ -41,12 +49,10 @@ public class StandardNIDS extends NIDSMain{
     }
 
     protected void evaluatePerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
-        System.out.println("Evaluate model....");
         startTime = System.currentTimeMillis();
         Evaluation eval = net.evaluate(iter, labels);
         endTime = System.currentTimeMillis();
         System.out.println(eval.stats());
-        System.out.println("****************************************************");
         testTime = (int) (endTime - startTime) / 60000;
 
     }
