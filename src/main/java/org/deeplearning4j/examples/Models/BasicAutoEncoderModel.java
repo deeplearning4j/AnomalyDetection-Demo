@@ -69,7 +69,7 @@ public class BasicAutoEncoderModel {
                 .l2(l2)
                 .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue)
                 .gradientNormalizationThreshold(1.0)
-                .list()
+                .list(3)
                 .layer(0, new AutoEncoder.Builder().nIn(nIn[0]).nOut(nOut[0])
                         .corruptionLevel(corruptionLevel).lossFunction(autoLossFunctions).build())
                 .layer(1, new AutoEncoder.Builder().nIn(nIn[1]).nOut(nOut[1])

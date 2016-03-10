@@ -12,7 +12,7 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
-import org.deeplearning4j.util.NetSaverLoaderUtils;
+//import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -188,7 +188,7 @@ public class NIDSMain {
         System.out.println("\n============================Time========================================");
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
-        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIRECTORY.toString());
+//        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIRECTORY.toString());
     }
 
 

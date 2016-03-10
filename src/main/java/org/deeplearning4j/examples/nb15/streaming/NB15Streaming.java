@@ -22,13 +22,14 @@ public class NB15Streaming {
 
     private static final boolean WIN = System.getProperty("os.name").toLowerCase().contains("win");
     private static final String WIN_DIR = "C:/Data/UNSW_NB15/";
+    private static final String MAC_DIR =  FilenameUtils.concat(System.getProperty("user.dir"),"src/main/resources/");
 
-    private static final String DIR = WIN ? WIN_DIR : null;
+    private static final String DIR = WIN ? WIN_DIR : MAC_DIR;
     private static final String MODEL_DIR = FilenameUtils.concat(DIR,"Trained/");
 
 
-    private static final String CONF_FILE = FileNameUtil.concat(MODEL_DIR,"config.json");
-    private static final String PARAMS_FILE = FileNameUtil.concat(MODEL_DIR,"params.bin");
+    private static final String CONF_FILE = FileNameUtil.concat(MODEL_DIR, "config.json");
+    private static final String PARAMS_FILE = FileNameUtil.concat(MODEL_DIR, "params.bin");
     private static final String TEST_DATA_FILE = FilenameUtils.concat(DIR,"Out/test/normalized0.csv");
 
 

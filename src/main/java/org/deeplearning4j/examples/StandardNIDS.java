@@ -19,7 +19,8 @@ public class StandardNIDS extends NIDSMain{
     protected MultipleEpochsIterator loadData(int batchSize, String dataPath, int labelIdx, int numEpochs, int numBatches) throws Exception{
         CSVRecordReader rr = new CSVRecordReader(0,",");
         rr.initialize(new FileSplit(new File(dataPath)));
-        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
+//        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
+        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut);
         return new MultipleEpochsIterator(numEpochs, iter);
 
     }
@@ -50,9 +51,9 @@ public class StandardNIDS extends NIDSMain{
 
     protected void evaluatePerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
         startTime = System.currentTimeMillis();
-        Evaluation eval = net.evaluate(iter, labels);
+//        Evaluation eval = net.evaluate(iter, labels);
         endTime = System.currentTimeMillis();
-        System.out.println(eval.stats());
+//        System.out.println(eval.stats());
         testTime = (int) (endTime - startTime) / 60000;
 
     }
