@@ -23,7 +23,7 @@ public class AnalysisISCX {
     public static final boolean win = false;
 
     public static final String WIN_DIR = "C:/Data/ISCX/CSV/";
-    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/input/");
+    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/convert/");
 
     public static final String DATA_DIR = (win ? WIN_DIR : MAC_DIR);
 

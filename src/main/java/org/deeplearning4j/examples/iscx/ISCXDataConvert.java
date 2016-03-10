@@ -24,11 +24,13 @@ import java.util.List;
  */
 public class ISCXDataConvert {
 
-    public static boolean isWin = true;
+    public static boolean isWin = false;
 
 //    public static final String windowsPath = "C:/Data/ISCX/labeled_flows_xml/TestbedMonJun14Flows.xml";  //Only a subset of the data
     public static final String windowsPath = "C:/Data/ISCX/labeled_flows_xml/";  //Only a subset of the data
     public static final String windowsExport = "C:/Data/ISCX/CSV/";
+    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/input/");
+    public static final String MAC_DIR_OUT = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/convert/");
 
     public static final String[] fileNames = {
             "TestbedMonJun14Flows.xml",
@@ -44,9 +46,9 @@ public class ISCXDataConvert {
             "TestbedWedJun16-2Flows.xml",
             "TestbedWedJun16-3Flows.xml"};
 
-    public static final String DATA_DIR = (isWin ? windowsPath : null);
+    public static final String DATA_DIR = (isWin ? windowsPath : MAC_DIR);
 
-    public static final String EXPORT_PATH = (isWin ? windowsExport : null);
+    public static final String EXPORT_PATH = (isWin ? windowsExport : MAC_DIR_OUT);
 
     public static void main(String[] args) throws Exception {
 
