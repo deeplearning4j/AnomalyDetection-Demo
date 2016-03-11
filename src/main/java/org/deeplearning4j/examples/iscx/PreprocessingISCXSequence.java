@@ -39,6 +39,12 @@ public class PreprocessingISCXSequence {
 
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "ISCX";
+    protected static final DataPath PATH = new DataPath(dataSet);
+    public static final String IN_DIRECTORY = PATH.IN_DIR;
+    public static final String OUT_DIRECTORY = PATH.PRE_DIR;
+    public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
+    public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
+
 
     public static void main(String[] args) throws Exception {
 
@@ -85,7 +91,7 @@ public class PreprocessingISCXSequence {
                 .build();
 
         Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
-        FileUtils.writeStringToFile(new File(new DataPath(dataSet).PRE_DIR,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
+        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
         sparkConf.setMaster("local[*]");
@@ -93,7 +99,7 @@ public class PreprocessingISCXSequence {
         sparkConf.set("spark.driver.maxResultSize", "2G");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        JavaRDD<String> rawData = sc.textFile(new DataPath(dataSet).IN_DIR);
+        JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();

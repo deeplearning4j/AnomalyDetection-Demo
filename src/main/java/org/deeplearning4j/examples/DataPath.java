@@ -13,6 +13,7 @@ public class DataPath {
     public static final String WIN_DIR = "C:/Data/";
     public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/");
 
+    protected static String rawFilePath = WIN? "labeled_flows_xml/" : "raw/";
     protected static String inputFilePath = WIN? "CSV/" : "input/";
     protected static String preprocessedFilePath = WIN? "Out/": "preprocessed/";
     protected static String outputFilePath = WIN? "Out/": "out/";
@@ -20,6 +21,7 @@ public class DataPath {
     protected final String dataSet;
 
     public final String DATA_BASE_DIR;
+    public final String RAW_DIR;
     public final String IN_DIR;
     public final String PRE_DIR;
     public final String OUT_DIR;
@@ -40,6 +42,7 @@ public class DataPath {
     public DataPath(String dataSet){
         this.dataSet = dataSet;
         this.DATA_BASE_DIR = WIN ? FilenameUtils.concat(WIN_DIR, dataSet) : FilenameUtils.concat(MAC_DIR, dataSet);
+        this.RAW_DIR = FilenameUtils.concat(DATA_BASE_DIR, rawFilePath);
         this.IN_DIR = FilenameUtils.concat(DATA_BASE_DIR, inputFilePath);
         this.PRE_DIR = FilenameUtils.concat(DATA_BASE_DIR, preprocessedFilePath);
         this.OUT_DIR = FilenameUtils.concat(DATA_BASE_DIR, outputFilePath);

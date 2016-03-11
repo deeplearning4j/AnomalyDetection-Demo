@@ -49,8 +49,11 @@ public class PreprocessingNB15 {
 
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
-    protected static final String INPUT_DIRECTORY = new DataPath(dataSet).IN_DIR;
-    protected static final String OUT_DIRECTORY = new DataPath(dataSet).PRE_DIR;
+    protected static final DataPath PATH = new DataPath(dataSet);
+    public static final String IN_DIRECTORY = PATH.IN_DIR;
+    public static final String OUT_DIRECTORY = PATH.PRE_DIR;
+    public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
+    public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
 
     public static void main(String[] args) throws Exception {
         // For AWS
@@ -99,7 +102,7 @@ public class PreprocessingNB15 {
         sparkConf.set("spark.driver.maxResultSize", "2G");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        JavaRDD<String> rawData = sc.textFile(INPUT_DIRECTORY);
+        JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
 
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
@@ -169,8 +172,8 @@ public class PreprocessingNB15 {
         System.out.println(trainDataAnalyis);
 
         //analysis and histograms
-        plot(preprocessedSchema, da, new DataPath(dataSet).CHART_DIR_ORIG);
-        plot(normSchema, trainDataAnalyis, new DataPath(dataSet).CHART_DIR_NORM);
+        plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
+        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORM);
 
         System.out.println();
     }
