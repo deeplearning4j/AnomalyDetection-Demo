@@ -12,7 +12,7 @@ import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
 import org.deeplearning4j.examples.data.analysis.DataAnalysis;

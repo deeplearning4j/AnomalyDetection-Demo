@@ -1,15 +1,15 @@
 package org.deeplearning4j.examples.data.transform.column;
 
 import lombok.Data;
-import org.apache.commons.lang3.ArrayUtils;
+import lombok.EqualsAndHashCode;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 import org.deeplearning4j.examples.data.transform.BaseTransform;
 
 import java.util.*;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class RemoveColumnsTransform extends BaseTransform {
 
@@ -74,7 +74,7 @@ public class RemoveColumnsTransform extends BaseTransform {
             }
         }
 
-        return new Schema(newNames,newMeta);
+        return schema.newSchema(newNames,newMeta);
     }
 
     @Override

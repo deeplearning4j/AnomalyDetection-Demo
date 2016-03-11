@@ -3,17 +3,18 @@ package org.deeplearning4j.examples.data.transform.string;
 import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.Transform;
 import org.deeplearning4j.examples.data.meta.CategoricalMetaData;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
+import org.deeplearning4j.examples.data.transform.BaseTransform;
 
 import java.util.*;
 
 /**
  * Created by Alex on 9/03/2016.
  */
-public class StringListToCategoricalSetTransform implements Transform {
+public class StringListToCategoricalSetTransform extends BaseTransform {
 
     private final String columnName;
     private final List<String> newColumnNames;
@@ -22,7 +23,6 @@ public class StringListToCategoricalSetTransform implements Transform {
 
     private final Map<String,Integer> map;
 
-    private Schema inputSchema;
     private int columIdx = -1;
 
 
@@ -72,7 +72,7 @@ public class StringListToCategoricalSetTransform implements Transform {
             }
         }
 
-        return new Schema(newNames,newMeta);
+        return inputSchema.newSchema(newNames, newMeta);
 
     }
 

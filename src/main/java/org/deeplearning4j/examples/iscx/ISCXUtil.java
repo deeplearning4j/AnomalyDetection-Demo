@@ -1,6 +1,6 @@
 package org.deeplearning4j.examples.iscx;
 
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 
 /**
  * Created by Alex on 5/03/2016.

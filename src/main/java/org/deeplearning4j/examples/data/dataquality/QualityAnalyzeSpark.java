@@ -2,10 +2,8 @@ package org.deeplearning4j.examples.data.dataquality;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectColumnFunction;
-import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.columns.*;
 import org.deeplearning4j.examples.data.dataquality.spark.categorical.CategoricalQualityAddFunction;
 import org.deeplearning4j.examples.data.dataquality.spark.categorical.CategoricalQualityMergeFunction;

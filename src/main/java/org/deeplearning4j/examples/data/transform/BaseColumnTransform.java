@@ -1,8 +1,9 @@
 package org.deeplearning4j.examples.data.transform;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.Transform;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 
@@ -14,12 +15,12 @@ import java.util.List;
 /**Map the values in a single column to new values.
  * For example: string -> string, or empty -> x type transforms for a single column
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-public abstract class BaseColumnTransform implements Transform {
+public abstract class BaseColumnTransform extends BaseTransform {
 
     protected final String columnName;
     protected int columnNumber = -1;
-    protected Schema inputSchema;
 
     public BaseColumnTransform(String columnName) {
         this.columnName = columnName;
@@ -48,7 +49,7 @@ public abstract class BaseColumnTransform implements Transform {
             }
         }
 
-        return new Schema(new ArrayList<>(schema.getColumnNames()),newMeta);
+        return schema.newSchema(new ArrayList<>(schema.getColumnNames()),newMeta);
     }
 
     public abstract ColumnMetaData getNewColumnMetaData(ColumnMetaData oldColumnType);
@@ -70,6 +71,8 @@ public abstract class BaseColumnTransform implements Transform {
 
         return out;
     }
+
+
 
     public abstract Writable map(Writable columnWritable);
 

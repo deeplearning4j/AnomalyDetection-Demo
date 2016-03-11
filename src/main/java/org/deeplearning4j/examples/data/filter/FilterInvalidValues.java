@@ -1,9 +1,8 @@
 package org.deeplearning4j.examples.data.filter;
 
-import lombok.AllArgsConstructor;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.Filter;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 
 import java.util.ArrayList;
@@ -40,6 +39,15 @@ public class FilterInvalidValues implements Filter {
         for( int i : columnIdxs){
             ColumnMetaData meta = schema.getMetaData(i);
             if(!meta.isValid(list.get(i))) return true; //Remove if not valid
+        }
+        return false;
+    }
+
+    @Override
+    public boolean removeSequenceExample(Collection<Collection<Writable>> sequence) {
+        //If _any_ of the values are invalid, remove the entire sequence
+        for(Collection<Writable> c : sequence ){
+            if(removeExample(c)) return true;
         }
         return false;
     }

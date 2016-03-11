@@ -1,5 +1,6 @@
-package org.deeplearning4j.examples.data;
+package org.deeplearning4j.examples.data.schema;
 
+import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.meta.*;
 
 import java.io.Serializable;
@@ -24,7 +25,7 @@ public class Schema implements Serializable {
         }
     }
 
-    public Schema(List<String> columnNames, List<ColumnMetaData> columnMetaData){
+    protected Schema(List<String> columnNames, List<ColumnMetaData> columnMetaData){
         if(columnNames == null || columnMetaData == null) throw new IllegalArgumentException("Input cannot be null");
         if(columnNames.size() == 0 || columnNames.size() != columnMetaData.size()) throw new IllegalArgumentException("List sizes must match (and be non-zero)");
         this.columnNames = columnNames;
@@ -33,6 +34,10 @@ public class Schema implements Serializable {
         for(int i=0; i<columnNames.size(); i++ ){
             columnNamesIndex.put(columnNames.get(i),i);
         }
+    }
+
+    public Schema newSchema(List<String> columnNames, List<ColumnMetaData> columnMetaData){
+        return new Schema(columnNames,columnMetaData);
     }
 
     public int numColumns(){
@@ -86,6 +91,7 @@ public class Schema implements Serializable {
         }
 
         //Header:
+        sb.append("Schema():\n");
         sb.append(String.format("%-6s","idx")).append(String.format("%-"+(maxNameLength+8)+"s","name"))
                 .append(String.format("%-15s","type")).append("meta data").append("\n");
 

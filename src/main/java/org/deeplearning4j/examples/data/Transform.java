@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.data;
 
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.schema.Schema;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -19,5 +20,8 @@ public interface Transform extends Serializable {
     void setInputSchema(Schema inputSchema);
 
     Collection<Writable> map(Collection<Writable> writables);
+
+    /** Transform a sequence */
+    Collection<Collection<Writable>> mapSequence(Collection<Collection<Writable>> sequence);
 
 }

@@ -1,12 +1,11 @@
 package org.deeplearning4j.examples.data.analysis;
 
 import org.apache.spark.api.java.JavaDoubleRDD;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.util.StatCounter;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.analysis.columns.*;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.*;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.integer.IntegerAnalysisAddFunction;
@@ -18,7 +17,6 @@ import org.deeplearning4j.examples.data.analysis.sparkfunctions.longa.LongAnalys
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.real.RealAnalysisAddFunction;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.real.RealAnalysisCounter;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.real.RealAnalysisMergeFunction;
-import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 import scala.Tuple2;
 
 import java.util.ArrayList;

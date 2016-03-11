@@ -5,6 +5,7 @@ import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.LongAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.RealAnalysis;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToOneHotTransform;
 import org.deeplearning4j.examples.data.transform.column.RemoveColumnsTransform;
 import org.deeplearning4j.examples.data.transform.normalize.Normalize;

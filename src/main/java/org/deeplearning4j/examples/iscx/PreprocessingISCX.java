@@ -9,7 +9,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
 import org.deeplearning4j.examples.data.analysis.DataAnalysis;
@@ -20,26 +20,14 @@ import org.deeplearning4j.examples.data.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
-import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
-import org.deeplearning4j.examples.data.split.RandomSplit;
-import org.deeplearning4j.examples.data.transform.ConditionalTransform;
-import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
-import org.deeplearning4j.examples.data.transform.categorical.IntegerToCategoricalTransform;
 import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
-import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
-import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithIntegerTransform;
-import org.deeplearning4j.examples.data.transform.normalize.Normalize;
 import org.deeplearning4j.examples.data.transform.string.*;
 import org.deeplearning4j.examples.misc.Histograms;
-import org.deeplearning4j.examples.misc.SparkExport;
-import org.deeplearning4j.examples.misc.SparkUtils;
-import org.deeplearning4j.examples.nb15.NB15Util;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**

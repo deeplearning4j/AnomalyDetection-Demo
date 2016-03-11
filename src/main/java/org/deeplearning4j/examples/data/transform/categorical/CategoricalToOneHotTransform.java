@@ -1,9 +1,10 @@
 package org.deeplearning4j.examples.data.transform.categorical;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.canova.api.io.data.IntWritable;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.meta.CategoricalMetaData;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 import org.deeplearning4j.examples.data.meta.IntegerMetaData;
@@ -14,6 +15,7 @@ import java.util.*;
 /**
  * Created by Alex on 4/03/2016.
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class CategoricalToOneHotTransform extends BaseTransform {
 
@@ -74,7 +76,7 @@ public class CategoricalToOneHotTransform extends BaseTransform {
             }
         }
 
-        return new Schema(outNames,newMeta);
+        return schema.newSchema(outNames,newMeta);
     }
 
     @Override

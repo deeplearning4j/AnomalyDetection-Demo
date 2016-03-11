@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.data;
 
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.schema.Schema;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -11,6 +12,8 @@ import java.util.Collection;
 public interface Filter extends Serializable {
 
     boolean removeExample(Collection<Writable> writables);
+
+    boolean removeSequenceExample(Collection<Collection<Writable>> sequence);
 
     void setSchema(Schema schema);
 

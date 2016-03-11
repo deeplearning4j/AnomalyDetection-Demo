@@ -3,7 +3,7 @@ package org.deeplearning4j.examples.data.dataquality;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.Schema;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.dataquality.columns.ColumnQuality;
 
 import java.util.List;
