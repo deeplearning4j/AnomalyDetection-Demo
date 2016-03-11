@@ -6,6 +6,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.DataPath;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
@@ -18,13 +19,9 @@ import java.util.Collection;
  */
 public class AnalysisISCX {
 
-    public static final boolean win = System.getProperty("os.name").toLowerCase().contains("win");
-
-    public static final String WIN_DIR = "C:/Data/ISCX/CSV/";
-    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/convert/");
-
-    public static final String DATA_DIR = (win ? WIN_DIR : MAC_DIR);
-
+    protected static String dataSet = "ISCX";
+    protected static final DataPath PATH = new DataPath(dataSet);
+    public static final String IN_DIRECTORY = PATH.IN_DIR;
 
     public static void main(String[] args) throws Exception {
         Schema csvSchema = ISCXUtil.getCsvSchema();
@@ -34,7 +31,7 @@ public class AnalysisISCX {
         sparkConf.setAppName("ISCX");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        JavaRDD<String> rawData = sc.textFile(DATA_DIR);
+        JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
 
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 

@@ -1,6 +1,5 @@
 package org.deeplearning4j.examples;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
@@ -21,7 +20,6 @@ import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.canova.api.util.ClassPathResource;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -86,18 +84,11 @@ public class NIDSMain {
     protected int totalTrainNumExamples = batchSize * numBatches;
     protected int totalTestNumExamples = testBatchSize * numTestBatches;
 
-    public static boolean isWin = false;
     protected static String outputFilePath = "src/main/resources/";
     protected String confPath = this.toString() + "conf.yaml";
     protected String paramPath = this.toString() + "param.bin";
     protected Map<String, String> paramPaths = new HashMap<>();
 
-    public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
-            FilenameUtils.concat(System.getProperty("user.dir"), outputFilePath);
-    public String TRAIN_DATA_PATH = (isWin) ? FilenameUtils.concat(OUT_DIRECTORY,"train/normalized0.csv"):
-            FilenameUtils.concat(OUT_DIRECTORY, trainFile);
-    public String TEST_DATA_PATH = (isWin) ? FilenameUtils.concat(OUT_DIRECTORY,"test/normalized0.csv"):
-            FilenameUtils.concat(OUT_DIRECTORY, testFile);
 
     protected List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
     protected int labelIdx = 66;
@@ -121,8 +112,8 @@ public class NIDSMain {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
                 System.out.println("\nLoad data....");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, TRAIN_DATA_PATH, labelIdx, numEpochs, numBatches);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, TEST_DATA_PATH, labelIdx, 1, numTestBatches);
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPath.TRAIN_DATA_PATH + trainFile, labelIdx, numEpochs, numBatches);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPath.TEST_DATA_PATH + testFile, labelIdx, 1, numTestBatches);
                 network = standard.trainModel(network, trainData, testData);
                 System.out.println("\nFinal evaluation....");
                 standard.evaluatePerformance(network, testData);
@@ -132,13 +123,13 @@ public class NIDSMain {
                 SparkNIDS spark = new SparkNIDS();
                 JavaSparkContext sc = (version == "SparkStandAlone")? spark.setupLocalSpark(): spark.setupClusterSpark();
                 System.out.println("\nLoad data....");
-                JavaRDD<DataSet> trainSparkData = spark.loadData(sc, TRAIN_DATA_PATH);
+                JavaRDD<DataSet> trainSparkData = spark.loadData(sc, DataPath.TRAIN_DATA_PATH + trainFile);
                 SparkDl4jMultiLayer sparkNetwork = new SparkDl4jMultiLayer(sc, network);
                 network = spark.trainModel(sparkNetwork, trainSparkData);
                 trainSparkData.unpersist();
 
                 sparkNetwork = new SparkDl4jMultiLayer(sc, network);
-                JavaRDD<DataSet> testSparkData = spark.loadData(sc, TEST_DATA_PATH);
+                JavaRDD<DataSet> testSparkData = spark.loadData(sc, DataPath.TEST_DATA_PATH + testFile);
                 System.out.println("\nFinal evaluation....");
                 spark.evaluatePerformance(sparkNetwork, testSparkData);
                 testSparkData.unpersist();
@@ -200,7 +191,7 @@ public class NIDSMain {
         System.out.println("\n============================Time========================================");
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
-        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIRECTORY.toString());
+        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, new DataPath("UNSW").OUT_DIR.toString());
     }
 
 

@@ -8,6 +8,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.DataPath;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.misc.Histograms;
@@ -47,40 +48,17 @@ import java.util.*;
 public class PreprocessingNB15 {
 
     protected static double FRACTION_TRAIN = 0.75;
-
-    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
-    protected static String inputFilePath = "data/NIDS/UNSW/input/";
-    protected static String outputFilePath = "data/NIDS/UNSW/preprocessed/";
-    protected static String chartFilePath = "charts/";
-
-    public static final String IN_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
-            FilenameUtils.concat(System.getProperty("user.home"), inputFilePath);
-    public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath);
-    public static final String CHART_DIRECTORY_ORIG = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Orig/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
-    public static final String CHART_DIRECTORY_NORMALIZED = (isWin) ? "C:/Data/UNSW_NB15/Out/Charts/Norm/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
-
-    static{
-        File outDir = new File(OUT_DIRECTORY);
-        if(!outDir.exists()) outDir.mkdirs();
-        File chartsOrig = new File(CHART_DIRECTORY_ORIG);
-        if(!chartsOrig.mkdirs()) chartsOrig.mkdirs();
-        File chartsNorm = new File(CHART_DIRECTORY_NORMALIZED);
-        if(!chartsNorm.exists()) chartsNorm.mkdirs();
-    }
-
-    protected static boolean aws = false;
-    protected static String s3Bucket = "anomaly-data";
-    protected static String s3KeyPrefixIn = "/nids/UNSW/";
-    protected static String s3KeyPrefixOut = "nids/UNSW/preprocessed";
+    protected static String dataSet = "UNSW_NB15";
+    protected static final DataPath PATH = new DataPath(dataSet);
+    public static final String IN_DIRECTORY = PATH.IN_DIR;
+    public static final String OUT_DIRECTORY = PATH.PRE_DIR;
+    public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
+    public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
 
     public static void main(String[] args) throws Exception {
         // For AWS
-        if(aws) {
+        if(DataPath.AWS) {
             // pull down raw
-            throw new UnsupportedOperationException();  //I was having issues with the downloadFolder method not being found
 //            S3Downloader s3Down = new S3Downloader();
 //            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
 //            mlpDown.waitForCompletion();
@@ -124,10 +102,7 @@ public class PreprocessingNB15 {
         sparkConf.set("spark.driver.maxResultSize", "2G");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-//        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";   //Subset of data
-//        String dataDir = (isWin) ? "C:/Data/UNSW_NB15/CSV/" : new ClassPathResource(inputName).getFile().getAbsolutePath();
-        String dataDir = (isWin)?  "C:/Data/UNSW_NB15/CSV/": IN_DIRECTORY;
-        JavaRDD<String> rawData = sc.textFile(dataDir);
+        JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
 
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
@@ -170,7 +145,7 @@ public class PreprocessingNB15 {
         sc.close();
 
 
-        if(aws) {
+        if(DataPath.AWS) {
             // load preprocessed
             throw new UnsupportedOperationException();
 //            S3Uploader s3Up = new S3Uploader();
@@ -198,7 +173,7 @@ public class PreprocessingNB15 {
 
         //analysis and histograms
         plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
-        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORMALIZED);
+        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORM);
 
         System.out.println();
     }

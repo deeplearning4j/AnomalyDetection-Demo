@@ -8,6 +8,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.DataPath;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.TransformSequence;
@@ -36,44 +37,15 @@ import java.util.List;
 public class PreprocessingISCX {
 
     protected static double FRACTION_TRAIN = 0.75;
+    protected static String dataSet = "ISCX";
 
-    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
-    protected static String inputFilePath = "data/NIDS/ISCX/input/";
-    protected static String outputFilePath = "data/NIDS/ISCX/preprocessed/";
-    protected static String chartFilePath = "charts/";
-
-    public static final String IN_DIRECTORY = (isWin) ? "C:/Data/ISCX/CSV/" :
-            FilenameUtils.concat(System.getProperty("user.home"), inputFilePath);
-    public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/ISCX/Out/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath);
-    public static final String CHART_DIRECTORY_ORIG = (isWin) ? "C:/Data/ISCX/Out/Charts/Orig/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
-    public static final String CHART_DIRECTORY_NORMALIZED = (isWin) ? "C:/Data/ISCX/Out/Charts/Norm/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
-
-    static{
-        File outDir = new File(OUT_DIRECTORY);
-        if(!outDir.exists()) outDir.mkdirs();
-        File chartsOrig = new File(CHART_DIRECTORY_ORIG);
-        if(!chartsOrig.mkdirs()) chartsOrig.mkdirs();
-        File chartsNorm = new File(CHART_DIRECTORY_NORMALIZED);
-        if(!chartsNorm.exists()) chartsNorm.mkdirs();
-    }
-
-    protected static boolean aws = false;
-    protected static String s3Bucket = "anomaly-data";
-    protected static String s3KeyPrefixIn = "/nids/ISCX/";
-    protected static String s3KeyPrefixOut = "nids/ISCX/preprocessed";
+    protected static final DataPath PATH = new DataPath(dataSet);
+    public static final String IN_DIRECTORY = PATH.IN_DIR;
+    public static final String OUT_DIRECTORY = PATH.PRE_DIR;
+    public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
+    public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
 
     public static void main(String[] args) throws Exception {
-        // For AWS
-        if(aws) {
-            // pull down raw
-            throw new UnsupportedOperationException();  //I was having issues with the downloadFolder method not being found
-//            S3Downloader s3Down = new S3Downloader();
-//            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
-//            mlpDown.waitForCompletion();
-        }
 
         //Get the initial schema
         Schema csvSchema = ISCXUtil.getCsvSchema();
@@ -125,8 +97,7 @@ public class PreprocessingISCX {
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
 //        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";   //Subset of data
-        String dataDir = (isWin)?  "C:/Data/ISCX/CSV/": IN_DIRECTORY;
-        JavaRDD<String> rawData = sc.textFile(dataDir);
+        JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
 
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
@@ -168,17 +139,6 @@ public class PreprocessingISCX {
 ////        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
 //        sc.close();
 //
-//
-//        if(aws) {
-//            // load preprocessed
-//            throw new UnsupportedOperationException();
-////            S3Uploader s3Up = new S3Uploader();
-////            MultipleFileUpload mlpUp = s3Up.uploadFolder(s3Bucket, s3KeyPrefixIn, new File(System.getProperty("user.home") + outputFilePath), true);
-////            mlpUp.waitForCompletion();
-//
-//        }
-
-
 //        List<Writable> samplesDirection = AnalyzeSpark.sampleFromColumn(100,"direction",preprocessedSchema,processedData);
 //        List<Writable> samplesUnique = AnalyzeSpark.getUnique("source TCP flags",preprocessedSchema,processedData);
 

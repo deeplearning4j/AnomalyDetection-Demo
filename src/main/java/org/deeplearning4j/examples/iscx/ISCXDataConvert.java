@@ -13,6 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.DataPath;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,14 +24,6 @@ import java.util.List;
  * Created by Alex on 8/03/2016.
  */
 public class ISCXDataConvert {
-
-    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
-
-//    public static final String windowsPath = "C:/Data/ISCX/labeled_flows_xml/TestbedMonJun14Flows.xml";  //Only a subset of the data
-    public static final String windowsPath = "C:/Data/ISCX/labeled_flows_xml/";  //Only a subset of the data
-    public static final String windowsExport = "C:/Data/ISCX/CSV/";
-    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/input/");
-    public static final String MAC_DIR_OUT = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/ISCX/convert/");
 
     public static final String[] fileNames = {
             "TestbedMonJun14Flows.xml",
@@ -46,9 +39,11 @@ public class ISCXDataConvert {
             "TestbedWedJun16-2Flows.xml",
             "TestbedWedJun16-3Flows.xml"};
 
-    public static final String DATA_DIR = (isWin ? windowsPath : MAC_DIR);
 
-    public static final String EXPORT_PATH = (isWin ? windowsExport : MAC_DIR_OUT);
+    protected static String dataSet = "ISCX";
+    protected static final DataPath PATH = new DataPath(dataSet);
+    public static final String IN_DIRECTORY = PATH.RAW_DIR;
+    public static final String OUT_DIRECTORY = PATH.IN_DIR;
 
     public static void main(String[] args) throws Exception {
 
@@ -61,7 +56,7 @@ public class ISCXDataConvert {
 
 
         for( int i=0; i<fileNames.length; i++ ) {
-            String thisPath = FilenameUtils.concat(DATA_DIR, fileNames[i]);
+            String thisPath = FilenameUtils.concat(IN_DIRECTORY, fileNames[i]);
 //            RootClass root = xmlMapper.readValue(new File(DATA_DIR,fileNames[i]),RootClass.class);
             String fileAsString = FileUtils.readFileToString(new File(thisPath));
             fileAsString = fileAsString.replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1"); //Some of the files contain invalid (non-escaped) '&' characters
@@ -79,7 +74,7 @@ public class ISCXDataConvert {
             }
 
             String newFileName = fileNames[i].substring(0,fileNames[i].length()-3) + "csv";
-            String outputFile = FilenameUtils.concat(EXPORT_PATH,newFileName);
+            String outputFile = FilenameUtils.concat(OUT_DIRECTORY,newFileName);
             FileUtils.writeStringToFile(new File(outputFile),sb.toString());
         }
     }
@@ -101,7 +96,7 @@ public class ISCXDataConvert {
         ObjectMapper xmlMapper = new XmlMapper();
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false);
 
-        String thisPath = FilenameUtils.concat(DATA_DIR, fileNames[i]);
+        String thisPath = FilenameUtils.concat(IN_DIRECTORY, fileNames[i]);
 //            RootClass root = xmlMapper.readValue(new File(DATA_DIR,fileNames[i]),RootClass.class);
         String fileAsString = FileUtils.readFileToString(new File(thisPath));
         fileAsString = fileAsString.replaceAll("&([^;]+(?!(?:\\w|;)))", "&amp;$1"); //Some of the files contain invalid (non-escaped) '&' characters

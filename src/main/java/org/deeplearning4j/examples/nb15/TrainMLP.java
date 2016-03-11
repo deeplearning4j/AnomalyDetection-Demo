@@ -2,11 +2,13 @@ package org.deeplearning4j.examples.nb15;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.spark.mllib.classification.impl.GLMClassificationModel;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.util.ClassPathResource;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.examples.DataPath;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -36,21 +38,9 @@ public class TrainMLP {
 
     private static final Logger log = LoggerFactory.getLogger(TrainMLP.class);
 
-
-    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
-    protected static String outputFilePath = "src/main/resources/";
-
-    public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/UNSW_NB15/Out/" :
-            FilenameUtils.concat(System.getProperty("user.dir"), outputFilePath);
-
-    public static final String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"train/normalized0.csv");
-    public static final String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"test/normalized0.csv");
-
-    public static final String NETWORK_SAVE_DIR = (isWin) ? "C:/Data/UNSW_NB15/Trained/" :
-            FilenameUtils.concat(System.getProperty("user.dir"), outputFilePath);
-
-//    public static String TRAIN_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY, "csv_100_preprocessed.csv");
-//    public static String TEST_DATA_PATH = FilenameUtils.concat(OUT_DIRECTORY,"csv_100_test_preprocessed.csv");
+    public static final String trainFile = "normalized0.csv";  // "csv_preprocessed.csv"
+    public static final String testFile = "normalized0.csv"; // "csv_test_preprocessed.csv"
+    public static final String NETWORK_SAVE_DIR = new DataPath("UNSW_NB15").OUT_DIR;
 
     public static void main(String[] args) throws Exception {
 
@@ -64,11 +54,11 @@ public class TrainMLP {
         List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
 
         CSVRecordReader rr = new CSVRecordReader(0,",");
-        rr.initialize(new FileSplit(new File(TRAIN_DATA_PATH)));
+        rr.initialize(new FileSplit(new File(DataPath.TRAIN_DATA_PATH, trainFile)));
         DataSetIterator iterTrain = new RecordReaderDataSetIterator(rr,minibatchSize,labelIdx,nOut);
 
         CSVRecordReader rrTest = new CSVRecordReader(0,",");
-        rrTest.initialize(new FileSplit(new File(TEST_DATA_PATH)));
+        rrTest.initialize(new FileSplit(new File(DataPath.TEST_DATA_PATH, testFile)));
         DataSetIterator iterTest = new RecordReaderDataSetIterator(rrTest,minibatchSize,labelIdx,nOut);
 
         int MAX_TRAIN_MINIBATCHES = 20000;
@@ -117,7 +107,7 @@ public class TrainMLP {
 
                 log.info("--- Evaluation after {} examples ---",countTrain*minibatchSize);
                 log.info(evaluation.stats());
-//                log.info("False Alarm Rate: {}", evaluation.falseAlarmRate());
+                log.info("False Alarm Rate: {}", evaluation.falseAlarmRate());
             }
 
             if(!iterTrain.hasNext()) iterTrain.reset();
