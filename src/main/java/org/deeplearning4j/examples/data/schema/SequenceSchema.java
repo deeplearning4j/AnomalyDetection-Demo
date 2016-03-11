@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.data.schema;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 
@@ -9,6 +10,7 @@ import java.util.List;
 /**
  * Created by Alex on 11/03/2016.
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class SequenceSchema extends Schema {
 
@@ -17,6 +19,10 @@ public class SequenceSchema extends Schema {
     private final SequenceType sequenceType;
     private final int minSequenceLength;
     private final int maxSequenceLength;
+
+    public SequenceSchema(List<String> columnNames, List<ColumnMetaData> columnMetaData, SequenceType sequenceType){
+        this(columnNames,columnMetaData,sequenceType,0,Integer.MAX_VALUE);
+    }
 
     public SequenceSchema(List<String> columnNames, List<ColumnMetaData> columnMetaData, SequenceType sequenceType,
                           int minSequenceLength, int maxSequenceLength) {

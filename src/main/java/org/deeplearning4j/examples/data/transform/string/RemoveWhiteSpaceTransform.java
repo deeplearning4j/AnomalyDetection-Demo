@@ -1,11 +1,13 @@
 package org.deeplearning4j.examples.data.transform.string;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
 
 /**
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class RemoveWhiteSpaceTransform extends BaseStringTransform {
 

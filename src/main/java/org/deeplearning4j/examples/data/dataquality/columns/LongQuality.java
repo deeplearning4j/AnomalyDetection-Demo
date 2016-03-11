@@ -1,10 +1,12 @@
 package org.deeplearning4j.examples.data.dataquality.columns;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created by Alex on 5/03/2016.
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class LongQuality extends ColumnQuality {
 

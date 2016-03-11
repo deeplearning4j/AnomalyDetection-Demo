@@ -237,4 +237,12 @@ public class AnalyzeSpark {
         return ithColumn.distinct().collect();
     }
 
+    public static List<Collection<Writable>> sample(int count, JavaRDD<Collection<Writable>> data){
+        return data.takeSample(false,count);
+    }
+
+    public static List<Collection<Collection<Writable>>> sampleSequence(int count, JavaRDD<Collection<Collection<Writable>>> data ){
+        return data.takeSample(false,count);
+    }
+
 }

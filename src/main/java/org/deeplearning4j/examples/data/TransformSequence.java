@@ -1,11 +1,16 @@
 package org.deeplearning4j.examples.data;
 
+import lombok.Data;
 import org.deeplearning4j.examples.data.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.LongAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.data.schema.Schema;
+import org.deeplearning4j.examples.data.schema.SequenceSchema;
+import org.deeplearning4j.examples.data.sequence.ConvertFromSequence;
+import org.deeplearning4j.examples.data.sequence.ConvertToSequence;
+import org.deeplearning4j.examples.data.sequence.SequenceComparator;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToOneHotTransform;
 import org.deeplearning4j.examples.data.transform.column.RemoveColumnsTransform;
 import org.deeplearning4j.examples.data.transform.normalize.Normalize;
@@ -19,9 +24,10 @@ import java.util.List;
 /**
  * Created by Alex on 4/03/2016.
  */
+@Data
 public class TransformSequence implements Serializable {
 
-    private Schema initialSchema;
+    private final Schema initialSchema;
     private List<DataAction> actionList;
 
     private TransformSequence(Builder builder){
@@ -29,18 +35,32 @@ public class TransformSequence implements Serializable {
         initialSchema = builder.initialSchema;
 
         //Calculate and set the schemas for each tranformation:
-        Schema currInputSchema = initialSchema;
+        Schema currInputSchema = builder.initialSchema;
 //        for(Transform t : transformationList){
         for(DataAction d : actionList){
-            Transform t = d.getTransform();
-            if(t == null){
-                //Filter -> doesn't change schema, but it does need to know the schema of the data it is filtering...
-                Filter f = d.getFilter();
-                f.setSchema(currInputSchema);
-                continue;
+            if(d.getTransform() != null){
+                Transform t = d.getTransform();
+                t.setInputSchema(currInputSchema);
+                currInputSchema = t.transform(currInputSchema);
+            } else if(d.getFilter() != null){
+                continue; //Filter -> doesn't change schema
+            } else if(d.getConvertToSequence() != null) {
+                if(currInputSchema instanceof SequenceSchema){
+                    throw new RuntimeException("Cannot convert to sequence: schema is already a sequence schema: " + currInputSchema);
+                }
+                ConvertToSequence cts = d.getConvertToSequence();
+                cts.setInputSchema(currInputSchema);
+                currInputSchema = cts.transform(currInputSchema);
+            } else if(d.getConvertFromSequence() != null){
+                ConvertFromSequence cfs = d.getConvertFromSequence();
+                if(!(currInputSchema instanceof SequenceSchema)){
+                    throw new RuntimeException("Cannot convert from sequence: schema is not a sequence schema: " + currInputSchema);
+                }
+                cfs.setInputSchema((SequenceSchema)currInputSchema);
+                currInputSchema = cfs.transform((SequenceSchema) currInputSchema);
+            } else {
+                throw new RuntimeException("Unknown action: " + d);
             }
-            t.setInputSchema(currInputSchema);
-            currInputSchema = t.transform(currInputSchema);
         }
     }
 
@@ -51,10 +71,26 @@ public class TransformSequence implements Serializable {
     public Schema getFinalSchema(Schema input){
         Schema currInputSchema = input;
         for(DataAction d : actionList){
-            Transform t = d.getTransform();
-            if(t == null) continue; //Filter -> doesn't change schema
-            t.setInputSchema(currInputSchema);
-            currInputSchema = t.transform(currInputSchema);
+            if(d.getTransform() != null){
+                Transform t = d.getTransform();
+                currInputSchema = t.transform(currInputSchema);
+            } else if(d.getFilter() != null){
+                continue; //Filter -> doesn't change schema
+            } else if(d.getConvertToSequence() != null) {
+                if(currInputSchema instanceof SequenceSchema){
+                    throw new RuntimeException("Cannot convert to sequence: schema is already a sequence schema: " + currInputSchema);
+                }
+                ConvertToSequence cts = d.getConvertToSequence();
+                currInputSchema = cts.transform(currInputSchema);
+            } else if(d.getConvertFromSequence() != null){
+                ConvertFromSequence cfs = d.getConvertFromSequence();
+                if(!(currInputSchema instanceof SequenceSchema)){
+                    throw new RuntimeException("Cannot convert from sequence: schema is not a sequence schema: " + currInputSchema);
+                }
+                currInputSchema = cfs.transform((SequenceSchema) currInputSchema);
+            } else {
+                throw new RuntimeException("Unknown action: " + d);
+            }
         }
         return currInputSchema;
     }
@@ -123,7 +159,11 @@ public class TransformSequence implements Serializable {
                 default:
                     throw new RuntimeException("Unknown/not implemented normalization type: " + type);
             }
+        }
 
+        public Builder convertToSequence(String keyColumn, SequenceComparator comparator, SequenceSchema.SequenceType sequenceType){
+            actionList.add(new DataAction(new ConvertToSequence(keyColumn,comparator,sequenceType)));
+            return this;
         }
 
         public TransformSequence build(){

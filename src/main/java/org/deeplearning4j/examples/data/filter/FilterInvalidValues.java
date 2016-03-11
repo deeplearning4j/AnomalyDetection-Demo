@@ -44,7 +44,7 @@ public class FilterInvalidValues implements Filter {
     }
 
     @Override
-    public boolean removeSequenceExample(Collection<Collection<Writable>> sequence) {
+    public boolean removeSequence(Collection<Collection<Writable>> sequence) {
         //If _any_ of the values are invalid, remove the entire sequence
         for(Collection<Writable> c : sequence ){
             if(removeExample(c)) return true;

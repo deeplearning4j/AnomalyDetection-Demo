@@ -13,7 +13,7 @@ public interface Filter extends Serializable {
 
     boolean removeExample(Collection<Writable> writables);
 
-    boolean removeSequenceExample(Collection<Collection<Writable>> sequence);
+    boolean removeSequence(Collection<Collection<Writable>> sequence);
 
     void setSchema(Schema schema);
 
