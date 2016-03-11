@@ -117,6 +117,7 @@ public class TrainMLP {
 
                 log.info("--- Evaluation after {} examples ---",countTrain*minibatchSize);
                 log.info(evaluation.stats());
+                log.info("False Alarm Rate: {}", evaluation.falseAlarmRate());
             }
 
             if(!iterTrain.hasNext()) iterTrain.reset();

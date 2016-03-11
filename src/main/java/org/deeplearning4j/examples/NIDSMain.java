@@ -4,6 +4,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
+import org.deeplearning4j.examples.Models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.Models.BasicMLPModel;
 import org.deeplearning4j.examples.Models.BasicRNNModel;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -40,7 +41,7 @@ public class NIDSMain {
 
     // values to pass in from command line when compiled, esp running remotely
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
-    protected String version = "SparkStandAlone";
+    protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
     protected String modelType = "MLP";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
@@ -178,6 +179,17 @@ public class NIDSMain {
                         1,
                         truncatedBPTTLength,
                         123
+                        ).buildModel();
+                break;
+            case "Auto":
+                network = new BasicAutoEncoderModel(
+                        new int[]{nIn, 500, 100},
+                        new int[]{500, 100, nOut},
+                        iterations,
+                        "relu",
+                        WeightInit.XAVIER,
+                        1e-1,
+                        1e-3
                         ).buildModel();
                 break;
         }

@@ -53,8 +53,10 @@ public class StandardNIDS extends NIDSMain{
         Evaluation eval = net.evaluate(iter, labels);
         endTime = System.currentTimeMillis();
         System.out.println(eval.stats());
+        System.out.print("False Alarm Rate: " + eval.falseAlarmRate());
         testTime = (int) (endTime - startTime) / 60000;
 
     }
+
 
 }
