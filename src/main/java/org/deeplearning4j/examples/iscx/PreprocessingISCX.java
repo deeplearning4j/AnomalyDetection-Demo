@@ -60,20 +60,8 @@ public class PreprocessingISCX {
         if(!chartsNorm.exists()) chartsNorm.mkdirs();
     }
 
-    protected static boolean aws = false;
-    protected static String s3Bucket = "anomaly-data";
-    protected static String s3KeyPrefixIn = "/nids/ISCX/";
-    protected static String s3KeyPrefixOut = "nids/ISCX/preprocessed";
 
     public static void main(String[] args) throws Exception {
-        // For AWS
-        if(aws) {
-            // pull down raw
-            throw new UnsupportedOperationException();  //I was having issues with the downloadFolder method not being found
-//            S3Downloader s3Down = new S3Downloader();
-//            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
-//            mlpDown.waitForCompletion();
-        }
 
         //Get the initial schema
         Schema csvSchema = ISCXUtil.getCsvSchema();
@@ -168,17 +156,6 @@ public class PreprocessingISCX {
 ////        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
 //        sc.close();
 //
-//
-//        if(aws) {
-//            // load preprocessed
-//            throw new UnsupportedOperationException();
-////            S3Uploader s3Up = new S3Uploader();
-////            MultipleFileUpload mlpUp = s3Up.uploadFolder(s3Bucket, s3KeyPrefixIn, new File(System.getProperty("user.home") + outputFilePath), true);
-////            mlpUp.waitForCompletion();
-//
-//        }
-
-
 //        List<Writable> samplesDirection = AnalyzeSpark.sampleFromColumn(100,"direction",preprocessedSchema,processedData);
 //        List<Writable> samplesUnique = AnalyzeSpark.getUnique("source TCP flags",preprocessedSchema,processedData);
 

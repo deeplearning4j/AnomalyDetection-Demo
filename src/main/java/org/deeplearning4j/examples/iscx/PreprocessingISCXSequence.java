@@ -8,6 +8,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.DataPath;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
@@ -37,44 +38,9 @@ import java.util.List;
 public class PreprocessingISCXSequence {
 
     protected static double FRACTION_TRAIN = 0.75;
-
-    public static boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
-    protected static String inputFilePath = "data/NIDS/ISCX/input/";
-    protected static String outputFilePath = "data/NIDS/ISCX/preprocessed/";
-    protected static String chartFilePath = "charts/";
-
-    public static final String IN_DIRECTORY = (isWin) ? "C:/Data/ISCX/CSV/" :
-            FilenameUtils.concat(System.getProperty("user.home"), inputFilePath);
-    public static final String OUT_DIRECTORY = (isWin) ? "C:/Data/ISCX/Out/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath);
-    public static final String CHART_DIRECTORY_ORIG = (isWin) ? "C:/Data/ISCX/Out/Charts/Orig/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
-    public static final String CHART_DIRECTORY_NORMALIZED = (isWin) ? "C:/Data/ISCX/Out/Charts/Norm/" :
-            FilenameUtils.concat(System.getProperty("user.home"), outputFilePath + chartFilePath);
-
-    static{
-        File outDir = new File(OUT_DIRECTORY);
-        if(!outDir.exists()) outDir.mkdirs();
-        File chartsOrig = new File(CHART_DIRECTORY_ORIG);
-        if(!chartsOrig.mkdirs()) chartsOrig.mkdirs();
-        File chartsNorm = new File(CHART_DIRECTORY_NORMALIZED);
-        if(!chartsNorm.exists()) chartsNorm.mkdirs();
-    }
-
-    protected static boolean aws = false;
-    protected static String s3Bucket = "anomaly-data";
-    protected static String s3KeyPrefixIn = "/nids/ISCX/";
-    protected static String s3KeyPrefixOut = "nids/ISCX/preprocessed";
+    protected static String dataSet = "ISCX";
 
     public static void main(String[] args) throws Exception {
-        // For AWS
-        if(aws) {
-            // pull down raw
-            throw new UnsupportedOperationException();  //I was having issues with the downloadFolder method not being found
-//            S3Downloader s3Down = new S3Downloader();
-//            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
-//            mlpDown.waitForCompletion();
-        }
 
         //Get the initial schema
         Schema csvSchema = ISCXUtil.getCsvSchema();
@@ -119,7 +85,7 @@ public class PreprocessingISCXSequence {
                 .build();
 
         Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
-        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
+        FileUtils.writeStringToFile(new File(new DataPath(dataSet).PRE_DIR,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
         sparkConf.setMaster("local[*]");
@@ -127,10 +93,7 @@ public class PreprocessingISCXSequence {
         sparkConf.set("spark.driver.maxResultSize", "2G");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-//        String dataDir = "C:/DL4J/Git/AnomalyDetection-Demo/src/main/resources/";   //Subset of data
-        String dataDir = (isWin)?  "C:/Data/ISCX/CSV/": IN_DIRECTORY;
-        JavaRDD<String> rawData = sc.textFile(dataDir);
-
+        JavaRDD<String> rawData = sc.textFile(new DataPath(dataSet).IN_DIR);
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
