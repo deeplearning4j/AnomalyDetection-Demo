@@ -43,7 +43,7 @@ public class PreprocessingISCX {
     public static final String IN_DIRECTORY = PATH.IN_DIR;
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
-    public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
+    public static final String CHART_DIRECTORY_NORM =PATH.CHART_DIR_NORM;
 
     public static void main(String[] args) throws Exception {
 

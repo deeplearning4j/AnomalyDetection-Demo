@@ -103,8 +103,8 @@ public class PreprocessingISCXSequence {
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
-//        JavaRDD<Collection<Writable>> processedData = executor.execute(data, seq);
-//        processedData.cache();
+        JavaRDD<Collection<Writable>> processedData = executor.execute(data, seq);
+        processedData.cache();
 
         JavaRDD<Collection<Collection<Writable>>> sequenceData = executor.executeToSequence(data, seq);
         sequenceData.cache();
@@ -113,10 +113,8 @@ public class PreprocessingISCXSequence {
 
         List<Collection<Collection<Writable>>> sample = AnalyzeSpark.sampleSequence(20,sequenceData);
 
-
-
 //        //Analyze the quality of the columns (missing values, etc), on a per column basis
-//        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, processedData);
+        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, sequenceData);
 //
 //        //Do analysis, on a per-column basis
 //        DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);

@@ -16,6 +16,7 @@ import org.deeplearning4j.examples.data.dataquality.spark.real.RealQualityMergeF
 import org.deeplearning4j.examples.data.dataquality.spark.string.StringQualityAddFunction;
 import org.deeplearning4j.examples.data.dataquality.spark.string.StringQualityMergeFunction;
 import org.deeplearning4j.examples.data.meta.*;
+import org.deeplearning4j.examples.data.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.spark.FilterWritablesBySchemaFunction;
 
 import java.util.ArrayList;
@@ -27,60 +28,73 @@ import java.util.List;
  */
 public class QualityAnalyzeSpark {
 
+    protected static List<ColumnQuality> list;
+
+    private static void analyze(ColumnMetaData meta, JavaRDD<Writable> ithColumn){
+
+        switch(meta.getColumnType()){
+            case String:
+                ithColumn.cache();
+                long countUnique = ithColumn.distinct().count();
+
+                StringQuality initialString = new StringQuality();
+                StringQuality stringQuality = ithColumn.aggregate(initialString,new StringQualityAddFunction((StringMetaData)meta),new StringQualityMergeFunction());
+
+                list.add(stringQuality.add(new StringQuality(0,0,0,0,0,0,0,0,0,countUnique)));
+                break;
+            case Integer:
+                IntegerQuality initialInt = new IntegerQuality(0,0,0,0,0);
+                IntegerQuality integerQuality = ithColumn.aggregate(initialInt,new IntegerQualityAddFunction((IntegerMetaData)meta),new IntegerQualityMergeFunction());
+                list.add(integerQuality);
+                break;
+            case Long:
+                LongQuality initialLong = new LongQuality();
+                LongQuality longQuality = ithColumn.aggregate(initialLong,new LongQualityAddFunction((LongMetaData)meta),new LongQualityMergeFunction());
+                list.add(longQuality);
+                break;
+            case Double:
+                RealQuality initialReal = new RealQuality();
+                RealQuality realQuality = ithColumn.aggregate(initialReal,new RealQualityAddFunction((DoubleMetaData)meta), new RealQualityMergeFunction());
+                list.add(realQuality);
+                break;
+            case Categorical:
+                CategoricalQuality initialCat = new CategoricalQuality();
+                CategoricalQuality categoricalQuality = ithColumn.aggregate(initialCat,new CategoricalQualityAddFunction((CategoricalMetaData)meta),new CategoricalQualityMergeFunction());
+
+                list.add(categoricalQuality);
+
+
+                break;
+            case BLOB:
+                list.add(new BlobQuality());    //TODO
+                break;
+        }
+    }
+
+    public static DataQualityAnalysis analyzeQuality(SequenceSchema schema, JavaRDD<Collection<Collection<Writable>>> data){
+        int nColumns = schema.numColumns();
+        new ArrayList<>(nColumns);
+        for( int i=0; i<nColumns; i++ ) {
+            ColumnMetaData meta = schema.getMetaData(i);
+            JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(i));
+            analyze(meta, ithColumn);
+        }
+    }
+
     public static DataQualityAnalysis analyzeQuality(Schema schema, JavaRDD<Collection<Writable>> data){
 
         data.cache();
-
         int nColumns = schema.numColumns();
 
         //This is inefficient, but it's easy to implement. Good enough for now!
-        List<ColumnQuality> list = new ArrayList<>(nColumns);
-        for( int i=0; i<nColumns; i++ ){
+        list = new ArrayList<>(nColumns);
 
-
+        for( int i=0; i<nColumns; i++ ) {
             ColumnMetaData meta = schema.getMetaData(i);
-
             JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(i));
-
-            switch(meta.getColumnType()){
-                case String:
-
-                    ithColumn.cache();
-                    long countUnique = ithColumn.distinct().count();
-
-                    StringQuality initialString = new StringQuality();
-                    StringQuality stringQuality = ithColumn.aggregate(initialString,new StringQualityAddFunction((StringMetaData)meta),new StringQualityMergeFunction());
-
-                    list.add(stringQuality.add(new StringQuality(0,0,0,0,0,0,0,0,0,countUnique)));
-                    break;
-                case Integer:
-                    IntegerQuality initialInt = new IntegerQuality(0,0,0,0,0);
-                    IntegerQuality integerQuality = ithColumn.aggregate(initialInt,new IntegerQualityAddFunction((IntegerMetaData)meta),new IntegerQualityMergeFunction());
-                    list.add(integerQuality);
-                    break;
-                case Long:
-                    LongQuality initialLong = new LongQuality();
-                    LongQuality longQuality = ithColumn.aggregate(initialLong,new LongQualityAddFunction((LongMetaData)meta),new LongQualityMergeFunction());
-                    list.add(longQuality);
-                    break;
-                case Double:
-                    RealQuality initialReal = new RealQuality();
-                    RealQuality realQuality = ithColumn.aggregate(initialReal,new RealQualityAddFunction((DoubleMetaData)meta), new RealQualityMergeFunction());
-                    list.add(realQuality);
-                    break;
-                case Categorical:
-                    CategoricalQuality initialCat = new CategoricalQuality();
-                    CategoricalQuality categoricalQuality = ithColumn.aggregate(initialCat,new CategoricalQualityAddFunction((CategoricalMetaData)meta),new CategoricalQualityMergeFunction());
-
-                    list.add(categoricalQuality);
-
-
-                    break;
-                case BLOB:
-                    list.add(new BlobQuality());    //TODO
-                    break;
-            }
+            analyze(meta, ithColumn);
         }
+
 
 
         return new DataQualityAnalysis(schema,list);
