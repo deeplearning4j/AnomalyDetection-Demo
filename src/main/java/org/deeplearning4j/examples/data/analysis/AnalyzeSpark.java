@@ -6,6 +6,11 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.util.StatCounter;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.ColumnType;
+import org.deeplearning4j.examples.data.analysis.sequence.SequenceLengthAnalysis;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.seqlength.IntToDoubleFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.seqlength.SequenceLengthAnalysisAddFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.seqlength.SequenceLengthAnalysisCounter;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.seqlength.SequenceLengthAnalysisMergeFunction;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.analysis.columns.*;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.*;
@@ -33,8 +38,49 @@ public class AnalyzeSpark {
     public static final int DEFAULT_HISTOGRAM_BUCKETS = 30;
 
     public static DataAnalysis analyze(JavaRDD<Collection<Collection<Writable>>> data, Schema schema) {
+        return analyze(data,schema,DEFAULT_HISTOGRAM_BUCKETS);
+    }
+
+    public static DataAnalysis analyze(JavaRDD<Collection<Collection<Writable>>> data, Schema schema, int maxHistogramBuckets) {
+        data.cache();
         JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
-        return analyze(schema, fmSeq);
+        DataAnalysis da = analyze(schema, fmSeq);
+        //Analyze the length of the sequences:
+        JavaRDD<Integer> seqLengths = data.map(new SequenceLengthFunction());
+        seqLengths.cache();
+        SequenceLengthAnalysisCounter counter = new SequenceLengthAnalysisCounter();
+        counter = seqLengths.aggregate(counter,new SequenceLengthAnalysisAddFunction(), new SequenceLengthAnalysisMergeFunction());
+
+        int max = counter.getMaxLengthSeen();
+        int min = counter.getMinLengthSeen();
+        int nBuckets = counter.getMaxLengthSeen() - counter.getMinLengthSeen();
+
+        Tuple2<double[],long[]> hist;
+        if(max == min){
+            //Edge case that spark doesn't like
+            hist = new Tuple2<>(new double[]{min},new long[]{counter.getCountTotal()});
+        } else if(nBuckets < maxHistogramBuckets){
+            JavaDoubleRDD drdd = seqLengths.mapToDouble(new IntToDoubleFunction());
+            hist = drdd.histogram(nBuckets);
+        } else {
+            JavaDoubleRDD drdd = seqLengths.mapToDouble(new IntToDoubleFunction());
+            hist = drdd.histogram(maxHistogramBuckets);
+        }
+        seqLengths.unpersist();
+
+
+        SequenceLengthAnalysis lengthAnalysis = SequenceLengthAnalysis.builder()
+                .totalNumSequences(counter.getCountTotal())
+                .minSeqLength(counter.getMinLengthSeen())
+                .maxSeqLength(counter.getMaxLengthSeen())
+                .countZeroLength(counter.getCountZeroLength())
+                .countOneLength(counter.getCountOneLength())
+                .meanLength(counter.getMean())
+                .histogramBuckets(hist._1())
+                .histogramBucketCounts(hist._2())
+                .build();
+
+        return new SequenceDataAnalysis(schema,da.getColumnAnalysis(),lengthAnalysis);
     }
 
 

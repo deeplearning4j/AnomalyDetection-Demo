@@ -14,6 +14,7 @@ import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
 import org.deeplearning4j.examples.data.analysis.DataAnalysis;
+import org.deeplearning4j.examples.data.analysis.SequenceDataAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.LongAnalysis;
@@ -213,6 +214,16 @@ public class PreprocessingISCXSequence {
             Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
         }
 
+        if(da instanceof SequenceDataAnalysis){
+            SequenceDataAnalysis sda = (SequenceDataAnalysis)da;
+            double[] bins = sda.getSequenceLengthAnalysis().getHistogramBuckets();
+            long[] counts = sda.getSequenceLengthAnalysis().getHistogramBucketCounts();
+
+            Histograms.plot(bins,counts,"Sequence Lengths");
+            File f = new File(directory, "SequenceLengths.png");
+            if (f.exists()) f.delete();
+            Histograms.exportHistogramImage(f, bins, counts, "Sequence Lengths", 1000, 650);
+        }
 
     }
 
