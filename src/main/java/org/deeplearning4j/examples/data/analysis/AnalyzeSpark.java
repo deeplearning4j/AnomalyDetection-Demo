@@ -2,6 +2,7 @@ package org.deeplearning4j.examples.data.analysis;
 
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.util.StatCounter;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.ColumnType;
@@ -30,6 +31,12 @@ import java.util.Map;
 public class AnalyzeSpark {
 
     public static final int DEFAULT_HISTOGRAM_BUCKETS = 30;
+
+    public static DataAnalysis analyze(JavaRDD<Collection<Collection<Writable>>> data, Schema schema) {
+        JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
+        return analyze(schema, fmSeq);
+    }
+
 
     public static DataAnalysis analyze(Schema schema, JavaRDD<Collection<Writable>> data) {
         return analyze(schema,data,DEFAULT_HISTOGRAM_BUCKETS);

@@ -3,7 +3,7 @@ package org.deeplearning4j.examples.data.dataquality;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectSequenceFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.SequenceFlatMapFunction;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectColumnFunction;
 import org.deeplearning4j.examples.data.dataquality.columns.*;
@@ -61,10 +61,7 @@ public class QualityAnalyzeSpark {
             case Categorical:
                 CategoricalQuality initialCat = new CategoricalQuality();
                 CategoricalQuality categoricalQuality = ithColumn.aggregate(initialCat,new CategoricalQualityAddFunction((CategoricalMetaData)meta),new CategoricalQualityMergeFunction());
-
                 list.add(categoricalQuality);
-
-
                 break;
             case BLOB:
                 list.add(new BlobQuality());    //TODO
@@ -73,13 +70,8 @@ public class QualityAnalyzeSpark {
     }
 
     public static DataQualityAnalysis analyzeQuality(JavaRDD<Collection<Collection<Writable>>> data, Schema schema){
-        JavaRDD<Collection<Writable>> ithSeq = data.flatMap(new FlatMapFunction<Collection<Collection<Writable>>, Collection<Writable>>() {
-            @Override
-            public Iterable<Collection<Writable>> call(Collection<Collection<Writable>> collections) throws Exception {
-                return collections;
-            }
-        });
-        return analyzeQuality(schema, ithSeq);
+        JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
+        return analyzeQuality(schema, fmSeq);
     }
 
     public static DataQualityAnalysis analyzeQuality(Schema schema, JavaRDD<Collection<Writable>> data){

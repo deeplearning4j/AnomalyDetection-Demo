@@ -42,7 +42,7 @@ public class PreprocessingISCXSequence {
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "ISCX";
     protected static final DataPath PATH = new DataPath(dataSet);
-    public static final String IN_DIRECTORY = DataPath.REPO_BASE_DIR + "TestbedMonJun14Flows.csv";
+    public static final String IN_DIRECTORY = PATH.IN_DIR; // DataPath.REPO_BASE_DIR + "TestbedMonJun14Flows.csv";
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
     public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
@@ -119,7 +119,7 @@ public class PreprocessingISCXSequence {
         DataQualityAnalysis seqDQA = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
 //
 //        //Do analysis, on a per-column basis
-//        DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
+        DataAnalysis da = AnalyzeSpark.analyze(sequenceData, preprocessedSchema);
 
 
 //        List<Writable> samplesDirection = AnalyzeSpark.sampleFromColumn(100,"direction",preprocessedSchema,processedData);
@@ -145,22 +145,19 @@ public class PreprocessingISCXSequence {
         System.out.println(seqDQA);
 
         System.out.println("\n\n");
+        System.out.println("------------------------------------------");
 
+        System.out.println("Processed data summary:");
+        System.out.println(da);
 
+        System.out.println("------------------------------------------");
 
-//        System.out.println("------------------------------------------");
-////
-//        System.out.println("Processed data summary:");
-//        System.out.println(da);
-////
-////        System.out.println("------------------------------------------");
-////
-////        System.out.println("Normalized data summary: (train)");
-////        System.out.println(trainDataAnalyis);
-////
-////        //analysis and histograms
-//        plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
-////        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORMALIZED);
+        System.out.println("Normalized data summary: (train)");
+//        System.out.println(trainDataAnalyis);
+
+//        //analysis and histograms
+        plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
+//        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORMALIZED);
 ////
 ////        System.out.println();
     }
