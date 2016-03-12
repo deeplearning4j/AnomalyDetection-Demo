@@ -142,19 +142,19 @@ public class PreprocessingISCXSequence {
             trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
 
             //Same normalization scheme for both. Normalization scheme based only on test data, however
-            Pair<Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
-            Pair<Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
+            Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
+            Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
 
             sequenceData.unpersist();
             trainDataNormalized.getSecond().cache();
             testDataNormalized.getSecond().cache();
             normSchema = trainDataNormalized.getFirst();
-            trainDataAnalysis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getSecond());
+            trainDataAnalysis = AnalyzeSpark.analyze(trainDataNormalized.getSecond(), normSchema);
 
             //Save as CSV file
             int nSplits = 1;
-            SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-            SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+//            SparkExport.exportCSVLocal(trainDataNormalized.getSecond(), OUT_DIRECTORY + "train/", dataSet + "normalized", nSplits, ",", 12345);
+//            SparkExport.exportCSVLocal(testDataNormalized.getSecond(), OUT_DIRECTORY + "test/", dataSet + "normalized", nSplits, ",", 12345);
             FileUtils.writeStringToFile(new File(OUT_DIRECTORY, dataSet + "normDataSchema.txt"), normSchema.toString());
         }
         sc.close();
@@ -197,7 +197,7 @@ public class PreprocessingISCXSequence {
         }
     }
 
-    public static Pair<Schema, JavaRDD<Collection<Writable>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
+    public static Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
                                                                         SparkTransformExecutor executor) {
         TransformSequence norm = new TransformSequence.Builder(schema)
                 .normalize("totalSourceBytes", Normalize.Log2Mean, da)
@@ -209,7 +209,7 @@ public class PreprocessingISCXSequence {
                 .build();
 
         Schema normSchema = norm.getFinalSchema(schema);
-        JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
+        JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeToSequence(input, norm);
         return new Pair<>(normSchema, normalizedData);
     }
 
