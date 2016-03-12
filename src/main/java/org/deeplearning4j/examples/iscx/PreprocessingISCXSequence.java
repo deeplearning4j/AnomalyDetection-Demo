@@ -27,6 +27,7 @@ import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
 import org.deeplearning4j.examples.data.transform.string.StringListToCategoricalSetTransform;
 import org.deeplearning4j.examples.misc.Histograms;
+import scala.collection.Seq;
 
 import java.io.File;
 import java.util.Arrays;
@@ -114,11 +115,10 @@ public class PreprocessingISCXSequence {
         List<Collection<Collection<Writable>>> sample = AnalyzeSpark.sampleSequence(20,sequenceData);
 
 //        //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, sequenceData);
+        List<DataQualityAnalysis> timeStepDQA = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
 //
 //        //Do analysis, on a per-column basis
 //        DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
-
 
 
 //        List<Writable> samplesDirection = AnalyzeSpark.sampleFromColumn(100,"direction",preprocessedSchema,processedData);
@@ -139,11 +139,21 @@ public class PreprocessingISCXSequence {
             System.out.println("\n\n");
         }
 
+        System.out.println("------------------------------------------");
+        count = 0;
+        while(count < 20) {
+            for (DataQualityAnalysis dqa : timeStepDQA) {
+                System.out.println("Data quality:");
+                System.out.println(dqa);
+
+            }
+            count++;
+        }
+        System.out.println("\n\n");
+
+
+
 //        System.out.println("------------------------------------------");
-//        System.out.println("Data quality:");
-//        System.out.println(dqa);
-//
-////        System.out.println("------------------------------------------");
 ////
 //        System.out.println("Processed data summary:");
 //        System.out.println(da);

@@ -6,6 +6,7 @@ import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.meta.ColumnMetaData;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Alex on 11/03/2016.

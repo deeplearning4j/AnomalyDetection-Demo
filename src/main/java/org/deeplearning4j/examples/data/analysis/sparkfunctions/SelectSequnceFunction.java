@@ -5,19 +5,20 @@ import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by Alex on 4/03/2016.
  */
 @AllArgsConstructor
-public class SelectSequnceColumnFunction implements Function<Collection<Collection<Writable>>,Writable> {
+public class SelectSequnceFunction implements Function<Collection<Collection<Writable>>,Collection<Writable>> {
 
-    private final int column;
+    private final int timestep;
 
     @Override
-    public Writable call(Collection<Collection<Writable>> writables) throws Exception {
-        return new SelectColumnFunction(writables);
+    public Collection<Writable> call(Collection<Collection<Writable>> writables) throws Exception {
+        return ((List<Collection<Writable>>) writables).get(timestep);
+
     }
+
 }

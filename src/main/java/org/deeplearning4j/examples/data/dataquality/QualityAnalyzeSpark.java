@@ -2,6 +2,7 @@ package org.deeplearning4j.examples.data.dataquality;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectSequnceFunction;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectColumnFunction;
 import org.deeplearning4j.examples.data.dataquality.columns.*;
@@ -71,14 +72,14 @@ public class QualityAnalyzeSpark {
         }
     }
 
-    public static DataQualityAnalysis analyzeQuality(SequenceSchema schema, JavaRDD<Collection<Collection<Writable>>> data){
-        int nColumns = schema.numColumns();
-        new ArrayList<>(nColumns);
-        for( int i=0; i<nColumns; i++ ) {
-            ColumnMetaData meta = schema.getMetaData(i);
-            JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(i));
-            analyze(meta, ithColumn);
+    public static List<DataQualityAnalysis> analyzeQuality(JavaRDD<Collection<Collection<Writable>>> data, Schema schema){
+        int nTimeSteps = schema.numColumns();
+        List<DataQualityAnalysis> timeStepDQA = new ArrayList<>(nTimeSteps);
+        for( int i=0; i < nTimeSteps; i++ ) {
+            JavaRDD<Collection<Writable>> ithStep = data.map(new SelectSequnceFunction(i));
+            timeStepDQA.add(analyzeQuality(schema, ithStep));
         }
+        return timeStepDQA;
     }
 
     public static DataQualityAnalysis analyzeQuality(Schema schema, JavaRDD<Collection<Writable>> data){
