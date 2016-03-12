@@ -6,6 +6,7 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.mllib.classification.impl.GLMClassificationModel;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
@@ -41,7 +42,7 @@ public class PreprocessingISCXSequence {
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "ISCX";
     protected static final DataPath PATH = new DataPath(dataSet);
-    public static final String IN_DIRECTORY = PATH.IN_DIR;
+    public static final String IN_DIRECTORY = DataPath.REPO_BASE_DIR + "TestbedMonJun14Flows.csv";
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
     public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
@@ -104,8 +105,8 @@ public class PreprocessingISCXSequence {
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<Collection<Writable>> processedData = executor.execute(data, seq);
-        processedData.cache();
+//        JavaRDD<Collection<Writable>> processedData = executor.execute(data, seq);
+//        processedData.cache();
 
         JavaRDD<Collection<Collection<Writable>>> sequenceData = executor.executeToSequence(data, seq);
         sequenceData.cache();
@@ -115,7 +116,7 @@ public class PreprocessingISCXSequence {
         List<Collection<Collection<Writable>>> sample = AnalyzeSpark.sampleSequence(20,sequenceData);
 
 //        //Analyze the quality of the columns (missing values, etc), on a per column basis
-        List<DataQualityAnalysis> timeStepDQA = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
+        DataQualityAnalysis seqDQA = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
 //
 //        //Do analysis, on a per-column basis
 //        DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
@@ -140,15 +141,9 @@ public class PreprocessingISCXSequence {
         }
 
         System.out.println("------------------------------------------");
-        count = 0;
-        while(count < 20) {
-            for (DataQualityAnalysis dqa : timeStepDQA) {
-                System.out.println("Data quality:");
-                System.out.println(dqa);
+        System.out.println("Data quality:");
+        System.out.println(seqDQA);
 
-            }
-            count++;
-        }
         System.out.println("\n\n");
 
 

@@ -1,8 +1,9 @@
 package org.deeplearning4j.examples.data.dataquality;
 
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectSequnceFunction;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectSequenceFunction;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.analysis.sparkfunctions.SelectColumnFunction;
 import org.deeplearning4j.examples.data.dataquality.columns.*;
@@ -17,7 +18,6 @@ import org.deeplearning4j.examples.data.dataquality.spark.real.RealQualityMergeF
 import org.deeplearning4j.examples.data.dataquality.spark.string.StringQualityAddFunction;
 import org.deeplearning4j.examples.data.dataquality.spark.string.StringQualityMergeFunction;
 import org.deeplearning4j.examples.data.meta.*;
-import org.deeplearning4j.examples.data.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.spark.FilterWritablesBySchemaFunction;
 
 import java.util.ArrayList;
@@ -72,14 +72,14 @@ public class QualityAnalyzeSpark {
         }
     }
 
-    public static List<DataQualityAnalysis> analyzeQuality(JavaRDD<Collection<Collection<Writable>>> data, Schema schema){
-        int nTimeSteps = schema.numColumns();
-        List<DataQualityAnalysis> timeStepDQA = new ArrayList<>(nTimeSteps);
-        for( int i=0; i < nTimeSteps; i++ ) {
-            JavaRDD<Collection<Writable>> ithStep = data.map(new SelectSequnceFunction(i));
-            timeStepDQA.add(analyzeQuality(schema, ithStep));
-        }
-        return timeStepDQA;
+    public static DataQualityAnalysis analyzeQuality(JavaRDD<Collection<Collection<Writable>>> data, Schema schema){
+        JavaRDD<Collection<Writable>> ithSeq = data.flatMap(new FlatMapFunction<Collection<Collection<Writable>>, Collection<Writable>>() {
+            @Override
+            public Iterable<Collection<Writable>> call(Collection<Collection<Writable>> collections) throws Exception {
+                return collections;
+            }
+        });
+        return analyzeQuality(schema, ithSeq);
     }
 
     public static DataQualityAnalysis analyzeQuality(Schema schema, JavaRDD<Collection<Writable>> data){
