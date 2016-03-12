@@ -2,6 +2,7 @@ package org.deeplearning4j.examples.misc;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.SequenceFlatMapFunction;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.split.SplitStrategy;
 
@@ -35,6 +36,12 @@ public class SparkUtils {
         } else {
             throw new RuntimeException("Not yet implemented");
         }
+
+    }
+    public static List<JavaRDD<Collection<Writable>>> splitData(JavaRDD<Collection<Collection<Writable>>> data, SplitStrategy splitStrategy){
+        JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
+        List<JavaRDD<Collection<Writable>>> seqSplit = splitData(splitStrategy, fmSeq);
+        return seqSplit;
 
     }
 

@@ -26,9 +26,14 @@ import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.sequence.comparator.StringComparator;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.split.RandomSplit;
+import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
+import org.deeplearning4j.examples.data.transform.normalize.Normalize;
 import org.deeplearning4j.examples.data.transform.string.StringListToCategoricalSetTransform;
 import org.deeplearning4j.examples.misc.Histograms;
+import org.deeplearning4j.examples.misc.SparkExport;
+import org.deeplearning4j.examples.misc.SparkUtils;
 import scala.collection.Seq;
 
 import java.io.File;
@@ -47,6 +52,8 @@ public class PreprocessingISCXSequence {
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
     public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
+    protected static final boolean analysis = true;
+    protected static final boolean trainSplit = true;
 
 
     public static void main(String[] args) throws Exception {
@@ -56,7 +63,7 @@ public class PreprocessingISCXSequence {
 
         //Set up the sequence of transforms:
         TransformSequence seq = new TransformSequence.Builder(csvSchema)
-                .removeColumns("source payload base64", "destination payload base64")
+                .removeColumns("source payload base64", "destination payload base64")  // TODO use in nlp approach for attacks that need payload to id
                 .transform(new StringToCategoricalTransform("direction", "L2L", "L2R", "R2L", "R2R"))
                 .transform(new StringToCategoricalTransform("protocol name", "icmp_ip", "udp_ip", "ip", "ipv6icmp", "tcp_ip", "igmp"))
                 .transform(new StringToCategoricalTransform("label", "Attack", "Normal"))
@@ -116,57 +123,89 @@ public class PreprocessingISCXSequence {
 
         List<Collection<Collection<Writable>>> sample = AnalyzeSpark.sampleSequence(20,sequenceData);
 
-//        //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis seqDQA = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
-//
-//        //Do analysis, on a per-column basis
-        DataAnalysis da = AnalyzeSpark.analyze(sequenceData, preprocessedSchema);
+        DataQualityAnalysis dqa = null;
+        DataAnalysis da = null;
+        if(analysis) {
+            //Analyze the quality of the columns (missing values, etc), on a per column basis
+            dqa = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
+            //Do analysis, on a per-column basis
+             da = AnalyzeSpark.analyze(sequenceData, preprocessedSchema);
+        }
 
+        DataAnalysis trainDataAnalysis = null;
+        Schema normSchema = null;
+        if(trainSplit) {
+            //Do train/test split:
+            List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(sequenceData, new RandomSplit(FRACTION_TRAIN));
+            JavaRDD<Collection<Writable>> trainData = allData.get(0);
+            JavaRDD<Collection<Writable>> testData = allData.get(1);
+            trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
+
+            //Same normalization scheme for both. Normalization scheme based only on test data, however
+            Pair<Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
+            Pair<Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
+
+            sequenceData.unpersist();
+            trainDataNormalized.getSecond().cache();
+            testDataNormalized.getSecond().cache();
+            normSchema = trainDataNormalized.getFirst();
+            trainDataAnalysis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getSecond());
+
+            //Save as CSV file
+            int nSplits = 1;
+            SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+            SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+            FileUtils.writeStringToFile(new File(OUT_DIRECTORY, dataSet + "normDataSchema.txt"), normSchema.toString());
+        }
+        sc.close();
 
 //        List<Writable> samplesDirection = AnalyzeSpark.sampleFromColumn(100,"direction",preprocessedSchema,processedData);
 //        List<Writable> samplesUnique = AnalyzeSpark.getUnique("source TCP flags",preprocessedSchema,processedData);
 
         //Wait for spark to stop its console spam before printing analysis
         Thread.sleep(2000);
+        if(analysis) {
 
-        System.out.println("NUMBER OF SEQUENCES: " + count);
-        System.out.println("-------------------------------------\nSamples:");
-
-
-        for(Collection<Collection<Writable>> s : sample ){
-            for(Collection<Writable> c : s){
-                System.out.println(c);
+            System.out.println("NUMBER OF SEQUENCES: " + count);
+            System.out.println("-------------------------------------\nSamples:");
+            for(Collection<Collection<Writable>> s : sample ){
+                for(Collection<Writable> c : s){
+                    System.out.println(c);
+                }
+                System.out.println("\n\n");
             }
 
-            System.out.println("\n\n");
+            System.out.println("------------------------------------------");
+            System.out.println("Data quality:");
+            System.out.println(dqa);
+            System.out.println("------------------------------------------");
+            System.out.println("Processed data summary:");
+            System.out.println(da);
+            System.out.println("------------------------------------------");
+            System.out.println("Plot data:");
+            plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
         }
 
-        System.out.println("------------------------------------------");
-        System.out.println("Data quality:");
-        System.out.println(seqDQA);
-
-        System.out.println("\n\n");
-        System.out.println("------------------------------------------");
-
-        System.out.println("Processed data summary:");
-        System.out.println(da);
-
-        System.out.println("------------------------------------------");
-
-        System.out.println("Normalized data summary: (train)");
-//        System.out.println(trainDataAnalyis);
-
-//        //analysis and histograms
-        plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
-//        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORMALIZED);
-////
-////        System.out.println();
+        if(trainSplit) {
+            System.out.println("------------------------------------------");
+            System.out.println("Normalized data summary: (train)");
+            System.out.println(trainDataAnalysis);
+            System.out.println("------------------------------------------");
+            System.out.println("Plot normalized data:");
+            plot(normSchema, trainDataAnalysis, CHART_DIRECTORY_NORM);
+            System.out.println();
+        }
     }
 
     public static Pair<Schema, JavaRDD<Collection<Writable>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
                                                                         SparkTransformExecutor executor) {
         TransformSequence norm = new TransformSequence.Builder(schema)
-
+                .normalize("totalSourceBytes", Normalize.Log2Mean, da)
+                .normalize("totalDestinationBytes", Normalize.Log2Mean, da)
+                .normalize("totalDestinationPackets", Normalize.Log2Mean, da)
+                //Do conversion of categorical fields to a set of one-hot columns, ready for network training:
+                .categoricalToOneHot("direction", "protocol name", "appName", "sourceTCP_F", "destinationTCP_F")
+                .transform(new CategoricalToIntegerTransform("label"))
                 .build();
 
         Schema normSchema = norm.getFinalSchema(schema);
