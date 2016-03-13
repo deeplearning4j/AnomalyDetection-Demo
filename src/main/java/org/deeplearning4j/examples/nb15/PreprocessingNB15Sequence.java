@@ -143,8 +143,8 @@ public class PreprocessingNB15Sequence {
 
         //Save as CSV file  -> TODO for sequences
         int nSplits = 1;
-//        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-//        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+//        SparkExport.exportCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+//        SparkExport.exportCSVLocal(DataPath.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
 //        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);

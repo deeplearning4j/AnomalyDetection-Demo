@@ -94,7 +94,7 @@ public class PreprocessingNB15PreSplit {
 
         //Save normalized training data as CSV file
         int nSplits = 1;
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
         //Save the normalizer transform sequence:

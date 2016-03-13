@@ -54,7 +54,7 @@ public class PreprocessingNB15 {
     protected static String dataSet = "UNSW_NB15";
     protected static final DataPath PATH = new DataPath(dataSet);
     public static final String IN_DIRECTORY = PATH.IN_DIR;
-    public static final String OUT_DIRECTORY = PATH.PRE_DIR;
+    public static final String OUT_DIRECTORY = DataPath.REPO_BASE_DIR + dataSet;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
     public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
 
@@ -114,8 +114,8 @@ public class PreprocessingNB15 {
 
         //Save as CSV file
         int nSplits = 1;
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(DataPath.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getThird(), 12345);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
         //Save the normalizer transform sequence:

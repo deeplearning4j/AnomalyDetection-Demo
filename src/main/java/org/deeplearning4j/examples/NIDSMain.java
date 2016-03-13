@@ -84,7 +84,6 @@ public class NIDSMain {
     protected int totalTrainNumExamples = batchSize * numBatches;
     protected int totalTestNumExamples = testBatchSize * numTestBatches;
 
-    public static final String TRAIN_DIR = new DataPath("UNSW_NB15").PRE_DIR;
     protected static String outputFilePath = DataPath.REPO_BASE_DIR;
     protected String confPath = this.toString() + "conf.yaml";
     protected String paramPath = this.toString() + "param.bin";
@@ -113,8 +112,8 @@ public class NIDSMain {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
                 System.out.println("\nLoad data....");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, TRAIN_DIR + trainFile, labelIdx, numEpochs, numBatches);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, TRAIN_DIR + testFile, labelIdx, 1, numTestBatches);
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPath.TRAIN_DATA_PATH + trainFile, labelIdx, numEpochs, numBatches);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPath.TEST_DATA_PATH + testFile, labelIdx, 1, numTestBatches);
                 network = standard.trainModel(network, trainData, testData);
                 System.out.println("\nFinal evaluation....");
                 standard.evaluatePerformance(network, testData);

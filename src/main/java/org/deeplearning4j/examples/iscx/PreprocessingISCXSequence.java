@@ -150,8 +150,8 @@ public class PreprocessingISCXSequence {
 
             //Save as CSV file
             int nSplits = 1;
-            SparkExport.exportSequenceCSVLocal(OUT_DIRECTORY + "train/", dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-            SparkExport.exportSequenceCSVLocal(OUT_DIRECTORY + "test/", dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+            SparkExport.exportSequenceCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+            SparkExport.exportSequenceCSVLocal(DataPath.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
             FileUtils.writeStringToFile(new File(OUT_DIRECTORY, dataSet + "normDataSchema.txt"), normSchema.toString());
         }
         sc.close();
