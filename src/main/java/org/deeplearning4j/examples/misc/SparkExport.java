@@ -20,7 +20,7 @@ import java.util.Random;
 public class SparkExport {
 
     //Quick and dirty CSV export (using Spark). Eventually, rework this to use Canova record writers on Spark
-    public static void exportCSVSpark(String directory, String delimiter, int outputSplits, JavaRDD<Collection<Writable>> data){
+    public static void exportCSVSpark(String directory, String delimiter, int outputSplits, JavaRDD<Collection<Writable>> data) {
 
         //NOTE: Order is probably not random here...
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
@@ -34,7 +34,7 @@ public class SparkExport {
 
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
         List<String> linesList = lines.collect();   //Requires all data in memory
-        Collections.shuffle(linesList,new Random(rngSeed));
+        Collections.shuffle(linesList, new Random(rngSeed));
 
         FileUtils.writeLines(outputFile, linesList);
     }
@@ -45,20 +45,24 @@ public class SparkExport {
 
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
         double[] split = new double[numFiles];
-        for( int i=0; i<split.length; i++ ) split[i] = 1.0 / numFiles;
+        for (int i = 0; i < split.length; i++) split[i] = 1.0 / numFiles;
         JavaRDD<String>[] splitData = lines.randomSplit(split);
 
         int count = 0;
         Random r = new Random(rngSeed);
-        for(JavaRDD<String> subset : splitData){
-            String path = FilenameUtils.concat(outputDir,baseFileName + (count++) + ".csv");
+        for (JavaRDD<String> subset : splitData) {
+            String path = FilenameUtils.concat(outputDir, baseFileName + (count++) + ".csv");
             List<String> linesList = subset.collect();
-            Collections.shuffle(linesList,r);
-            FileUtils.writeLines(new File(path),linesList);
+            Collections.shuffle(linesList, r);
+            FileUtils.writeLines(new File(path), linesList);
         }
     }
 
+    public static void exportCSVLocal(JavaRDD<Collection<Collection<Writable>>> data, String outputDir, String baseFileName, int numFiles, String delimiter,
+                                      int rngSeed) throws Exception {
+        throw new RuntimeException("Not yet implemented");
 
+    }
 
     @AllArgsConstructor
     private static class ToStringFunction implements Function<Collection<Writable>,String> {

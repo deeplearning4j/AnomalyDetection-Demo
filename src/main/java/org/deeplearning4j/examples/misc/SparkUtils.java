@@ -2,6 +2,7 @@ package org.deeplearning4j.examples.misc;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.SequenceFlatMapFunction;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.split.SplitStrategy;
 
