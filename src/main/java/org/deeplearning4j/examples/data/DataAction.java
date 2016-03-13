@@ -4,11 +4,13 @@ import lombok.Data;
 import org.deeplearning4j.examples.data.sequence.ConvertFromSequence;
 import org.deeplearning4j.examples.data.sequence.ConvertToSequence;
 
+import java.io.Serializable;
+
 /**
  * Created by Alex on 5/03/2016.
  */
 @Data
-public class DataAction {
+public class DataAction implements Serializable {
 
     private final Transform transform;
     private final Filter filter;

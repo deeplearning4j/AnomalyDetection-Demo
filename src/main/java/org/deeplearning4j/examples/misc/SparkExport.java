@@ -85,4 +85,12 @@ public class SparkExport {
         }
     }
 
+    //Another quick and dirty CSV export (local). Dumps all values into a single file
+    public static void exportStringLocal(File outputFile, JavaRDD<String> data, int rngSeed) throws Exception {
+        List<String> linesList = data.collect();   //Requires all data in memory
+        Collections.shuffle(linesList, new Random(rngSeed));
+
+        FileUtils.writeLines(outputFile, linesList);
+    }
+
 }

@@ -94,7 +94,7 @@ public class PreprocessingISCX {
                         ";"))
                 .build();
 
-        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+        Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,dataSet + "preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
@@ -187,7 +187,7 @@ public class PreprocessingISCX {
                 .transform(new CategoricalToIntegerTransform("label"))
                 .build();
 
-        Schema normSchema = norm.getFinalSchema(schema);
+        Schema normSchema = norm.getFinalSchema();
         JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
         return new Pair<>(normSchema, normalizedData);
     }

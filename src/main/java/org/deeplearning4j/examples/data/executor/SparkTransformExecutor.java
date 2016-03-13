@@ -23,15 +23,16 @@ public class SparkTransformExecutor {
 
 
     public JavaRDD<Collection<Writable>> execute(JavaRDD<Collection<Writable>> inputWritables, TransformSequence sequence ) {
-        if(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema){
+        if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
 
         return execute(inputWritables,null,sequence).getFirst();
+//        return inputWritables.flatMap(new SparkTransformSequenceFunction(sequence));    //Only works if no toSequence or FromSequence ops are in the TransformSequenc...
     }
 
     public JavaRDD<Collection<Collection<Writable>>> executeToSequence(JavaRDD<Collection<Writable>> inputWritables, TransformSequence sequence ) {
-        if(!(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema)){
+        if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
 
@@ -39,7 +40,7 @@ public class SparkTransformExecutor {
     }
 
     public JavaRDD<Collection<Writable>> executeSequenceToSeparate(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformSequence sequence ) {
-        if(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema){
+        if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
 
@@ -47,7 +48,7 @@ public class SparkTransformExecutor {
     }
 
     public JavaRDD<Collection<Collection<Writable>>> executeSequenceToSequence(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformSequence sequence ) {
-        if(!(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema)){
+        if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
 
@@ -59,7 +60,7 @@ public class SparkTransformExecutor {
         execute(JavaRDD<Collection<Writable>> inputWritables, JavaRDD<Collection<Collection<Writable>>> inputSequence,
                 TransformSequence sequence ){
         JavaRDD<Collection<Writable>> currentWritables = inputWritables;
-        JavaRDD<Collection<Collection<Writable>>> currentSequence = null;
+        JavaRDD<Collection<Collection<Writable>>> currentSequence = inputSequence;
 
         List<DataAction> list = sequence.getActionList();
 

@@ -37,11 +37,11 @@ public class AnalyzeSpark {
 
     public static final int DEFAULT_HISTOGRAM_BUCKETS = 30;
 
-    public static DataAnalysis analyze(JavaRDD<Collection<Collection<Writable>>> data, Schema schema) {
-        return analyze(data,schema,DEFAULT_HISTOGRAM_BUCKETS);
+    public static SequenceDataAnalysis analyzeSequence(Schema schema, JavaRDD<Collection<Collection<Writable>>> data) {
+        return analyzeSequence(schema,data,DEFAULT_HISTOGRAM_BUCKETS);
     }
 
-    public static DataAnalysis analyze(JavaRDD<Collection<Collection<Writable>>> data, Schema schema, int maxHistogramBuckets) {
+    public static SequenceDataAnalysis analyzeSequence(Schema schema, JavaRDD<Collection<Collection<Writable>>> data, int maxHistogramBuckets) {
         data.cache();
         JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
         DataAnalysis da = analyze(schema, fmSeq);

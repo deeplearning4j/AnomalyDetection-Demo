@@ -69,7 +69,7 @@ public class QualityAnalyzeSpark {
         }
     }
 
-    public static DataQualityAnalysis analyzeQuality(JavaRDD<Collection<Collection<Writable>>> data, Schema schema){
+    public static DataQualityAnalysis analyzeQualitySequence(Schema schema, JavaRDD<Collection<Collection<Writable>>> data){
         JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
         return analyzeQuality(schema, fmSeq);
     }

@@ -1,12 +1,10 @@
 package org.deeplearning4j.examples.iscx;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.mllib.classification.impl.GLMClassificationModel;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
@@ -97,10 +95,12 @@ public class PreprocessingISCXSequence {
                         Arrays.asList("F", "S", "R", "A", "P", "U", "Illegal7", "Illegal8", "N/A"),
                         ";"))
                 //aggregate into time series by source IP, then order by start time (as String field)
-                .convertToSequence("source ip",new StringComparator("start time"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+//                .convertToSequence("source ip",new StringComparator("start time"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+                .convertToSequence("destination ip",new StringComparator("start time"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
                 .build();
 
-        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+//        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+        Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
@@ -124,9 +124,9 @@ public class PreprocessingISCXSequence {
         DataAnalysis da;
         if(analysis) {
             //Analyze the quality of the columns (missing values, etc), on a per column basis
-            dqa = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
+            dqa = QualityAnalyzeSpark.analyzeQualitySequence(preprocessedSchema, sequenceData);
             //Do analysis, on a per-column basis
-            da = AnalyzeSpark.analyze(sequenceData, preprocessedSchema);
+            da = AnalyzeSpark.analyzeSequence(preprocessedSchema, sequenceData);
         }
 
         DataAnalysis trainDataAnalysis;
@@ -135,10 +135,10 @@ public class PreprocessingISCXSequence {
         Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized;
         if(trainSplit) {
             //Do train/test split:
-            List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(sequenceData, new RandomSplit(FRACTION_TRAIN));
-            JavaRDD<Collection<Writable>> trainData = allData.get(0);
-            JavaRDD<Collection<Writable>> testData = allData.get(1);
-            trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
+            List<JavaRDD<Collection<Collection<Writable>>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), sequenceData);
+            JavaRDD<Collection<Collection<Writable>>> trainData = allData.get(0);
+            JavaRDD<Collection<Collection<Writable>>> testData = allData.get(1);
+            trainDataAnalysis = AnalyzeSpark.analyzeSequence(preprocessedSchema, trainData);
 
             //Same normalization scheme for both. Normalization scheme based only on test data, however
             trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
@@ -146,7 +146,7 @@ public class PreprocessingISCXSequence {
 
             sequenceData.unpersist();
             normSchema = trainDataNormalized.getFirst();
-            trainDataAnalysis = AnalyzeSpark.analyze(trainDataNormalized.getSecond(), normSchema);
+            trainDataAnalysis = AnalyzeSpark.analyzeSequence(normSchema,trainDataNormalized.getSecond());
 
             //Save as CSV file
             int nSplits = 1;
@@ -198,7 +198,7 @@ public class PreprocessingISCXSequence {
 
     }
 
-    public static Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
+    public static Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Collection<Writable>>> input,
                                                                         SparkTransformExecutor executor) {
         TransformSequence norm = new TransformSequence.Builder(schema)
                 .normalize("totalSourceBytes", Normalize.Log2Mean, da)
@@ -209,8 +209,8 @@ public class PreprocessingISCXSequence {
                 .transform(new CategoricalToIntegerTransform("label"))
                 .build();
 
-        Schema normSchema = norm.getFinalSchema(schema);
-        JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeToSequence(input, norm);
+        Schema normSchema = norm.getFinalSchema();
+        JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
         normalizedData.cache();
         return new Pair<>(normSchema, normalizedData);
     }
@@ -260,7 +260,6 @@ public class PreprocessingISCXSequence {
             double[] bins = sda.getSequenceLengthAnalysis().getHistogramBuckets();
             long[] counts = sda.getSequenceLengthAnalysis().getHistogramBucketCounts();
 
-            Histograms.plot(bins,counts,"Sequence Lengths");
             File f = new File(directory, "SequenceLengths.png");
             if (f.exists()) f.delete();
             Histograms.exportHistogramImage(f, bins, counts, "Sequence Lengths", 1000, 650);

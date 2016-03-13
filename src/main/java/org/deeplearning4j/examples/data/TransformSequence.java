@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.data;
 
 import lombok.Data;
+import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
@@ -19,6 +20,7 @@ import org.deeplearning4j.examples.data.transform.real.DoubleMinMaxNormalizer;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,7 +45,8 @@ public class TransformSequence implements Serializable {
                 t.setInputSchema(currInputSchema);
                 currInputSchema = t.transform(currInputSchema);
             } else if(d.getFilter() != null){
-                continue; //Filter -> doesn't change schema
+                //Filter -> doesn't change schema. But we DO need to set the schema in the filter...
+                d.getFilter().setSchema(currInputSchema);
             } else if(d.getConvertToSequence() != null) {
                 if(currInputSchema instanceof SequenceSchema){
                     throw new RuntimeException("Cannot convert to sequence: schema is already a sequence schema: " + currInputSchema);
@@ -68,8 +71,9 @@ public class TransformSequence implements Serializable {
         return actionList;
     }
 
-    public Schema getFinalSchema(Schema input){
-        Schema currInputSchema = input;
+//    public Schema getFinalSchema(Schema input){
+    public Schema getFinalSchema(){
+        Schema currInputSchema = initialSchema;
         for(DataAction d : actionList){
             if(d.getTransform() != null){
                 Transform t = d.getTransform();
@@ -94,6 +98,46 @@ public class TransformSequence implements Serializable {
         }
         return currInputSchema;
     }
+
+
+    /** Execute the full sequence of transformations for a single example. May return null if example is filtered
+     * <b>NOTE:</b> Some TransformSequence operations cannot be done on examples individually. Most notably, ConvertToSequence
+     * and ConvertFromSequence operations require the full data set to be processed at once
+     * @param input
+     * @return
+     */
+    public Collection<Writable> execute(Collection<Writable> input){
+        Collection<Writable> currValues = input;
+
+        for(DataAction d : actionList){
+            if(d.getTransform() != null){
+                Transform t = d.getTransform();
+                currValues = t.map(currValues);
+
+            } else if(d.getFilter() != null){
+                Filter f = d.getFilter();
+                if(f.removeExample(currValues)) return null;
+            } else if(d.getConvertToSequence() != null ) {
+                throw new RuntimeException("Cannot execute examples individually: TransformSequence contains a ConvertToSequence operation");
+            } else if(d.getConvertFromSequence() != null){
+                throw new RuntimeException("Unexpected operation: TransformSequence contains a ConvertFromSequence operation");
+            } else {
+                throw new RuntimeException("Unknown action: " + d);
+            }
+        }
+
+        return currValues;
+    }
+
+    /** Execute the full sequence of transformations for a single time series (sequence). May return null if example is filtered
+     */
+    public Collection<Collection<Writable>> executeSequence(Collection<Collection<Writable>> inputSequence ){
+
+
+
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
 
     public static class Builder {
 

@@ -16,7 +16,29 @@ import java.util.List;
  */
 public class SparkUtils {
 
-    public static List<JavaRDD<Collection<Writable>>> splitData(SplitStrategy splitStrategy, JavaRDD<Collection<Writable>> data){
+//    public static List<JavaRDD<Collection<Writable>>> splitData(SplitStrategy splitStrategy, JavaRDD<Collection<Writable>> data){
+//
+//        //So this is kinda ugly, but whatever.
+//        if(splitStrategy instanceof RandomSplit){
+//
+//            RandomSplit rs = (RandomSplit)splitStrategy;
+//
+//            double fractionTrain = rs.getFractionTrain();
+//
+//            double[] splits = new double[]{fractionTrain,1.0-fractionTrain};
+//
+//            JavaRDD<Collection<Writable>>[] split = data.randomSplit(splits);
+//            List<JavaRDD<Collection<Writable>>> list = new ArrayList<>(2);
+//            Collections.addAll(list, split);
+//
+//            return list;
+//
+//        } else {
+//            throw new RuntimeException("Not yet implemented");
+//        }
+//    }
+
+    public static <T> List<JavaRDD<T>> splitData(SplitStrategy splitStrategy, JavaRDD<T> data){
 
         //So this is kinda ugly, but whatever.
         if(splitStrategy instanceof RandomSplit){
@@ -27,8 +49,8 @@ public class SparkUtils {
 
             double[] splits = new double[]{fractionTrain,1.0-fractionTrain};
 
-            JavaRDD<Collection<Writable>>[] split = data.randomSplit(splits);
-            List<JavaRDD<Collection<Writable>>> list = new ArrayList<>(2);
+            JavaRDD<T>[] split = data.randomSplit(splits);
+            List<JavaRDD<T>> list = new ArrayList<>(2);
             Collections.addAll(list, split);
 
             return list;
@@ -36,13 +58,5 @@ public class SparkUtils {
         } else {
             throw new RuntimeException("Not yet implemented");
         }
-
     }
-    public static List<JavaRDD<Collection<Writable>>> splitData(JavaRDD<Collection<Collection<Writable>>> data, SplitStrategy splitStrategy){
-        JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
-        List<JavaRDD<Collection<Writable>>> seqSplit = splitData(splitStrategy, fmSeq);
-        return seqSplit;
-
-    }
-
 }

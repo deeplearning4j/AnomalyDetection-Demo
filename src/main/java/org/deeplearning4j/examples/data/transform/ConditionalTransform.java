@@ -19,11 +19,13 @@ public class ConditionalTransform extends BaseTransform {
 
     protected int newVal1;
     protected int newVal2;
-    protected int filterCol;
+//    protected int filterCol;
+    protected int filterColIdx;
+    protected final String filterCol;
     protected List<String> filterVal;
 
 
-    public ConditionalTransform(String column, int newVal1, int newVal2, int filterCol, List<String> filterVal) {
+    public ConditionalTransform(String column, int newVal1, int newVal2, String filterCol, List<String> filterVal) {
         this.column = column;
         this.newVal1 = newVal1;
         this.newVal2 = newVal2;
@@ -34,6 +36,12 @@ public class ConditionalTransform extends BaseTransform {
     @Override
     public Schema transform(Schema schema) {
         return schema;
+    }
+
+    @Override
+    public void setInputSchema(Schema inputSchema){
+        super.setInputSchema(inputSchema);
+        this.filterColIdx = inputSchema.getIndexOfColumn(filterCol);
     }
 
     @Override
@@ -48,7 +56,7 @@ public class ConditionalTransform extends BaseTransform {
 
         }
         if( Double.isNaN(val) || val > 1) {
-            if (filterVal.contains(out.get(filterCol).toString()))
+            if (filterVal.contains(out.get(filterColIdx).toString()))
                 out.set(idx, new IntWritable(newVal1));
             else
                 out.set(idx, new IntWritable(newVal2));
