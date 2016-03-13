@@ -5,6 +5,7 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
@@ -98,7 +99,7 @@ public class PreprocessingNB15Sequence {
                 .convertToSequence("destination ip",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
                 .build();
 
-        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+        Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
@@ -129,16 +130,16 @@ public class PreprocessingNB15Sequence {
         DataAnalysis trainDataAnalysis = AnalyzeSpark.analyzeSequence(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
-        Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
+        Triple<TransformSequence, Schema, JavaRDD<Collection<Collection<Writable>>>> trainDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Triple<TransformSequence, Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
-        trainDataNormalized.getSecond().cache();
-        testDataNormalized.getSecond().cache();
-        Schema normSchema = trainDataNormalized.getFirst();
+        trainDataNormalized.getThird().cache();
+        testDataNormalized.getThird().cache();
+        Schema normSchema = trainDataNormalized.getSecond();
 
 
-        SequenceDataAnalysis trainDataAnalyis = AnalyzeSpark.analyzeSequence(normSchema, trainDataNormalized.getSecond());
+        SequenceDataAnalysis trainDataAnalyis = AnalyzeSpark.analyzeSequence(normSchema, trainDataNormalized.getThird());
 
         //Save as CSV file  -> TODO for sequences
         int nSplits = 1;
@@ -177,104 +178,9 @@ public class PreprocessingNB15Sequence {
         System.out.println(trainDataAnalyis);
 
         //analysis and histograms
-        plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
-        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORM);
+        Histograms.exportPlots(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
+        Histograms.exportPlots(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORM);
 
         System.out.println();
     }
-
-    public static Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Collection<Writable>>> input,
-                                                                        SparkTransformExecutor executor) {
-        TransformSequence norm = new TransformSequence.Builder(schema)
-                .normalize("source port", Normalize.MinMax, da)
-                .normalize("destination port", Normalize.MinMax, da)
-                .normalize("total duration", Normalize.Log2Mean, da)
-                .normalize("source-dest bytes", Normalize.Log2Mean, da)
-                .normalize("dest-source bytes", Normalize.Log2Mean, da)
-                .normalize("source-dest time to live", Normalize.MinMax, da)
-                .normalize("dest-source time to live", Normalize.MinMax, da)
-                .normalize("source packets lost", Normalize.Log2Mean, da)
-                .normalize("destination packets lost", Normalize.Log2Mean, da)
-                .normalize("source bits per second", Normalize.Log2Mean, da)
-                .normalize("destination bits per second", Normalize.Log2Mean, da)
-                .normalize("source-destination packet count", Normalize.Log2Mean, da)
-                .normalize("dest-source packet count", Normalize.Log2Mean, da)
-                .normalize("source TCP window adv", Normalize.MinMax, da)           //raw data: 0 or 255 -> 0 or 1
-                .normalize("dest TCP window adv", Normalize.MinMax, da)
-                .normalize("source mean flow packet size", Normalize.Log2Mean, da)
-                .normalize("dest mean flow packet size", Normalize.Log2Mean, da)
-                .normalize("transaction pipelined depth", Normalize.Log2MeanExcludingMin, da)   //2.33M are 0
-                .normalize("content size", Normalize.Log2Mean, da)
-
-                .normalize("source jitter ms", Normalize.Log2MeanExcludingMin, da)      //963k are 0
-                .normalize("dest jitter ms", Normalize.Log2MeanExcludingMin, da)        //900k are 0
-                .normalize("source interpacket arrival time", Normalize.Log2MeanExcludingMin, da)       //OK, but just to keep in line with the below
-                .normalize("destination interpacket arrival time", Normalize.Log2MeanExcludingMin, da)  //500k are 0
-                .normalize("tcp setup round trip time", Normalize.Log2MeanExcludingMin, da)     //1.05M are 0
-                .normalize("tcp setup time syn syn_ack", Normalize.Log2MeanExcludingMin, da)    //1.05M are 0
-                .normalize("tcp setup time syn_ack ack", Normalize.Log2MeanExcludingMin, da)    //1.06M are 0
-                .normalize("count time to live", Normalize.MinMax, da)  //0 to 6 in data
-                .normalize("count flow http methods", Normalize.Log2MeanExcludingMin, da) //0 to 37; vast majority (2.33M of 2.54M) are 0
-                .normalize("count ftp commands", Normalize.MinMax, da)  //0 to 8; only 43k are non-zero
-                .normalize("count same service and source", Normalize.Log2Mean, da)
-                .normalize("count same service and dest", Normalize.Log2Mean, da)
-                .normalize("count same dest", Normalize.Log2Mean, da)
-                .normalize("count same source", Normalize.Log2Mean, da)
-                .normalize("count same source addr dest port", Normalize.Log2MeanExcludingMin, da)              //1.69M ore the min value of 1.0
-                .normalize("count same dest addr source port", Normalize.Log2MeanExcludingMin, da) //1.97M of 2.54M are the minimum value of 1.0
-                .normalize("count same source dest address", Normalize.Log2Mean, da)
-
-                //Do conversion of categorical fields to a set of one-hot columns, ready for network training:
-                .categoricalToOneHot("transaction protocol", "state", "service", "equal ips and ports", "is ftp login")
-                .transform(new CategoricalToIntegerTransform("attack category"))
-                .build();
-
-        Schema normSchema = norm.getFinalSchema(schema);
-        JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
-        return new Pair<>(normSchema, normalizedData);
-    }
-
-    public static void plot(Schema finalSchema, DataAnalysis da, String directory) throws Exception {
-        //Plots!
-        List<ColumnAnalysis> analysis = da.getColumnAnalysis();
-        List<String> names = finalSchema.getColumnNames();
-        List<ColumnType> types = finalSchema.getColumnTypes();
-
-        for (int i = 0; i < analysis.size(); i++) {
-            ColumnType type = types.get(i);
-            ColumnAnalysis a = analysis.get(i);
-            double[] bins;
-            long[] counts;
-            switch (type) {
-                case Integer:
-                    IntegerAnalysis ia = (IntegerAnalysis) a;
-                    bins = ia.getHistogramBuckets();
-                    counts = ia.getHistogramBucketCounts();
-                    break;
-                case Long:
-                    LongAnalysis la = (LongAnalysis) a;
-                    bins = la.getHistogramBuckets();
-                    counts = la.getHistogramBucketCounts();
-                    break;
-                case Double:
-                    RealAnalysis ra = (RealAnalysis) a;
-                    bins = ra.getHistogramBuckets();
-                    counts = ra.getHistogramBucketCounts();
-                    break;
-                default:
-                    continue;
-            }
-
-            String colName = names.get(i);
-
-
-//            Histograms.plot(bins,counts,colName);
-            File f = new File(directory, colName + ".png");
-            if (f.exists()) f.delete();
-            Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
-        }
-
-
-    }
-
 }

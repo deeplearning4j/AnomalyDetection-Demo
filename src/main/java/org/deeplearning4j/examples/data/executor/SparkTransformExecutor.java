@@ -23,7 +23,7 @@ public class SparkTransformExecutor {
 
 
     public JavaRDD<Collection<Writable>> execute(JavaRDD<Collection<Writable>> inputWritables, TransformSequence sequence ) {
-        if(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema){
+        if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
 
@@ -32,7 +32,7 @@ public class SparkTransformExecutor {
     }
 
     public JavaRDD<Collection<Collection<Writable>>> executeToSequence(JavaRDD<Collection<Writable>> inputWritables, TransformSequence sequence ) {
-        if(!(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema)){
+        if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
 
@@ -40,7 +40,7 @@ public class SparkTransformExecutor {
     }
 
     public JavaRDD<Collection<Writable>> executeSequenceToSeparate(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformSequence sequence ) {
-        if(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema){
+        if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
 
@@ -48,7 +48,7 @@ public class SparkTransformExecutor {
     }
 
     public JavaRDD<Collection<Collection<Writable>>> executeSequenceToSequence(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformSequence sequence ) {
-        if(!(sequence.getFinalSchema(sequence.getInitialSchema()) instanceof SequenceSchema)){
+        if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
 
@@ -64,9 +64,7 @@ public class SparkTransformExecutor {
 
         List<DataAction> list = sequence.getActionList();
 
-        int stepCount = 0;
         for(DataAction d : list ){
-            System.out.println("Step count: " + stepCount++);
 
             if(d.getTransform() != null) {
                 Transform t = d.getTransform();

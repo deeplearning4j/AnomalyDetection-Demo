@@ -1,12 +1,10 @@
 package org.deeplearning4j.examples.iscx;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.mllib.classification.impl.GLMClassificationModel;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
@@ -101,7 +99,8 @@ public class PreprocessingISCXSequence {
                 .convertToSequence("destination ip",new StringComparator("start time"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
                 .build();
 
-        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+//        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+        Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
@@ -206,7 +205,7 @@ public class PreprocessingISCXSequence {
                 .transform(new CategoricalToIntegerTransform("label"))
                 .build();
 
-        Schema normSchema = norm.getFinalSchema(schema);
+        Schema normSchema = norm.getFinalSchema();
         JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
         return new Pair<>(normSchema, normalizedData);
     }

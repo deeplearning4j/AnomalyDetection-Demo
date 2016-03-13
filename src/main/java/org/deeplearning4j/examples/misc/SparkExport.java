@@ -61,7 +61,6 @@ public class SparkExport {
     public static void exportCSVLocal(JavaRDD<Collection<Collection<Writable>>> data, String outputDir, String baseFileName, int numFiles, String delimiter,
                                       int rngSeed) throws Exception {
         throw new RuntimeException("Not yet implemented");
-
     }
 
     @AllArgsConstructor
@@ -82,6 +81,14 @@ public class SparkExport {
 
             return sb.toString();
         }
+    }
+
+    //Another quick and dirty CSV export (local). Dumps all values into a single file
+    public static void exportStringLocal(File outputFile, JavaRDD<String> data, int rngSeed) throws Exception {
+        List<String> linesList = data.collect();   //Requires all data in memory
+        Collections.shuffle(linesList, new Random(rngSeed));
+
+        FileUtils.writeLines(outputFile, linesList);
     }
 
 }

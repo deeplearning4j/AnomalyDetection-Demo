@@ -1,6 +1,28 @@
 package org.deeplearning4j.examples.nb15;
 
+import org.apache.spark.api.java.JavaRDD;
+import org.canova.api.berkeley.Triple;
+import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.TransformSequence;
+import org.deeplearning4j.examples.data.analysis.DataAnalysis;
+import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
+import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.schema.Schema;
+import org.deeplearning4j.examples.data.transform.ConditionalTransform;
+import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
+import org.deeplearning4j.examples.data.transform.categorical.IntegerToCategoricalTransform;
+import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
+import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
+import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithIntegerTransform;
+import org.deeplearning4j.examples.data.transform.normalize.Normalize;
+import org.deeplearning4j.examples.data.transform.string.MapAllStringsExceptListTransform;
+import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
+import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
+import org.deeplearning4j.examples.data.transform.string.StringMapTransform;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Created by Alex on 5/03/2016.
@@ -37,6 +59,103 @@ public class NB15Util {
                 .build();
 
         return csvSchema;
+    }
+
+
+    public static TransformSequence getNB15PreProcessingSequence(){
+
+        TransformSequence seq = new TransformSequence.Builder(getNB15CsvSchema())
+//                .removeColumns("timestamp start", "timestamp end", //Don't need timestamps, we have duration. Can't really use IPs here.
+//                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
+                .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip",  //Don't need timestamps, we have duration. Can't really use IPs here.
+                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
+                .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these columns
+                .transform(new RemoveWhiteSpaceTransform("attack category"))
+                .transform(new ReplaceEmptyStringTransform("attack category", "none"))  //Replace empty strings in "attack category"
+                .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
+                .transform(new ReplaceInvalidWithIntegerTransform("count ftp commands", 0)) //Only invalid ones here are whitespace
+                .transform(new ConditionalTransform("is ftp login", 1, 0, "service", Arrays.asList("ftp", "ftp-data")))
+                .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
+                .transform(new StringMapTransform("attack category", Collections.singletonMap("Backdoors", "Backdoor"))) //Replace all instances of "Backdoors" with "Backdoor"
+                .transform(new StringToCategoricalTransform("attack category", "none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"))
+                .transform(new StringToCategoricalTransform("service", "-", "dns", "http", "smtp", "ftp-data", "ftp", "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp"))
+                .transform(new MapAllStringsExceptListTransform("transaction protocol", "other", Arrays.asList("unas", "sctp", "ospf", "tcp", "udp", "arp"))) //Map all protocols except these to "other" (all others have <<1000 examples)
+                .transform(new StringToCategoricalTransform("transaction protocol", "unas", "sctp", "ospf", "tcp", "udp", "arp", "other"))
+                .transform(new MapAllStringsExceptListTransform("state", "other", Arrays.asList("FIN", "CON", "INT", "RST", "REQ")))  //Before: CategoricalAnalysis(CategoryCounts={CLO=161, FIN=1478689, ECR=8, PAR=26, MAS=7, URN=7, ECO=96, TXD=5, CON=560588, INT=490469, RST=528, TST=8, ACC=43, REQ=9043, no=7, URH=54})
+                .transform(new StringToCategoricalTransform("state", "FIN", "CON", "INT", "RST", "REQ", "other"))
+                .transform(new IntegerToCategoricalTransform("label", Arrays.asList("normal", "attack")))
+                .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
+                .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
+
+                .removeColumns("label") //leave attack category
+                .build();
+
+        return seq;
+    }
+
+    public static Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>>
+            normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input, SparkTransformExecutor executor) {
+
+        TransformSequence norm = getNormalizerSequence(schema,da);
+        Schema normSchema = norm.getFinalSchema();
+        JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
+        return new Triple<>(norm, normSchema, normalizedData);
+    }
+
+    public static Triple<TransformSequence, Schema, JavaRDD<Collection<Collection<Writable>>>>
+        normalizeSequence(Schema schema, DataAnalysis da, JavaRDD<Collection<Collection<Writable>>> input, SparkTransformExecutor executor) {
+
+        TransformSequence norm = getNormalizerSequence(schema,da);
+        Schema normSchema = norm.getFinalSchema();
+        JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
+        return new Triple<>(norm, normSchema, normalizedData);
+    }
+
+    private static TransformSequence getNormalizerSequence(Schema schema, DataAnalysis da){
+        TransformSequence norm = new TransformSequence.Builder(schema)
+                .normalize("source port", Normalize.MinMax, da)
+                .normalize("destination port", Normalize.MinMax, da)
+                .normalize("total duration", Normalize.Log2Mean, da)
+                .normalize("source-dest bytes", Normalize.Log2Mean, da)
+                .normalize("dest-source bytes", Normalize.Log2Mean, da)
+                .normalize("source-dest time to live", Normalize.MinMax, da)
+                .normalize("dest-source time to live", Normalize.MinMax, da)
+                .normalize("source packets lost", Normalize.Log2Mean, da)
+                .normalize("destination packets lost", Normalize.Log2Mean, da)
+                .normalize("source bits per second", Normalize.Log2Mean, da)
+                .normalize("destination bits per second", Normalize.Log2Mean, da)
+                .normalize("source-destination packet count", Normalize.Log2Mean, da)
+                .normalize("dest-source packet count", Normalize.Log2Mean, da)
+                .normalize("source TCP window adv", Normalize.MinMax, da)           //raw data: 0 or 255 -> 0 or 1
+                .normalize("dest TCP window adv", Normalize.MinMax, da)
+                .normalize("source mean flow packet size", Normalize.Log2Mean, da)
+                .normalize("dest mean flow packet size", Normalize.Log2Mean, da)
+                .normalize("transaction pipelined depth", Normalize.Log2MeanExcludingMin, da)   //2.33M are 0
+                .normalize("content size", Normalize.Log2Mean, da)
+
+                .normalize("source jitter ms", Normalize.Log2MeanExcludingMin, da)      //963k are 0
+                .normalize("dest jitter ms", Normalize.Log2MeanExcludingMin, da)        //900k are 0
+                .normalize("source interpacket arrival time", Normalize.Log2MeanExcludingMin, da)       //OK, but just to keep in line with the below
+                .normalize("destination interpacket arrival time", Normalize.Log2MeanExcludingMin, da)  //500k are 0
+                .normalize("tcp setup round trip time", Normalize.Log2MeanExcludingMin, da)     //1.05M are 0
+                .normalize("tcp setup time syn syn_ack", Normalize.Log2MeanExcludingMin, da)    //1.05M are 0
+                .normalize("tcp setup time syn_ack ack", Normalize.Log2MeanExcludingMin, da)    //1.06M are 0
+                .normalize("count time to live", Normalize.MinMax, da)  //0 to 6 in data
+                .normalize("count flow http methods", Normalize.Log2MeanExcludingMin, da) //0 to 37; vast majority (2.33M of 2.54M) are 0
+                .normalize("count ftp commands", Normalize.MinMax, da)  //0 to 8; only 43k are non-zero
+                .normalize("count same service and source", Normalize.Log2Mean, da)
+                .normalize("count same service and dest", Normalize.Log2Mean, da)
+                .normalize("count same dest", Normalize.Log2Mean, da)
+                .normalize("count same source", Normalize.Log2Mean, da)
+                .normalize("count same source addr dest port", Normalize.Log2MeanExcludingMin, da)              //1.69M ore the min value of 1.0
+                .normalize("count same dest addr source port", Normalize.Log2MeanExcludingMin, da) //1.97M of 2.54M are the minimum value of 1.0
+                .normalize("count same source dest address", Normalize.Log2Mean, da)
+
+                //Do conversion of categorical fields to a set of one-hot columns, ready for network training:
+                .categoricalToOneHot("transaction protocol", "state", "service", "equal ips and ports", "is ftp login")
+                .transform(new CategoricalToIntegerTransform("attack category"))
+                .build();
+        return norm;
     }
 
 }

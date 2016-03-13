@@ -1,5 +1,12 @@
 package org.deeplearning4j.examples.misc;
 
+import org.deeplearning4j.examples.data.ColumnType;
+import org.deeplearning4j.examples.data.analysis.DataAnalysis;
+import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
+import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
+import org.deeplearning4j.examples.data.analysis.columns.LongAnalysis;
+import org.deeplearning4j.examples.data.analysis.columns.RealAnalysis;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -9,9 +16,11 @@ import org.jfree.data.xy.DefaultIntervalXYDataset;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.List;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.*;
 
 /**
  * Created by Alex on 6/03/2016.
@@ -87,6 +96,48 @@ public class Histograms {
         chart.draw(g2d, area);
 
         ImageIO.write(bImg, "png", file );
+    }
+
+
+    public static void exportPlots(Schema finalSchema, DataAnalysis da, String directory) throws Exception {
+        //Plots!
+        java.util.List<ColumnAnalysis> analysis = da.getColumnAnalysis();
+        java.util.List<String> names = finalSchema.getColumnNames();
+        java.util.List<ColumnType> types = finalSchema.getColumnTypes();
+
+        for (int i = 0; i < analysis.size(); i++) {
+            ColumnType type = types.get(i);
+            ColumnAnalysis a = analysis.get(i);
+            double[] bins;
+            long[] counts;
+            switch (type) {
+                case Integer:
+                    IntegerAnalysis ia = (IntegerAnalysis) a;
+                    bins = ia.getHistogramBuckets();
+                    counts = ia.getHistogramBucketCounts();
+                    break;
+                case Long:
+                    LongAnalysis la = (LongAnalysis) a;
+                    bins = la.getHistogramBuckets();
+                    counts = la.getHistogramBucketCounts();
+                    break;
+                case Double:
+                    RealAnalysis ra = (RealAnalysis) a;
+                    bins = ra.getHistogramBuckets();
+                    counts = ra.getHistogramBucketCounts();
+                    break;
+                default:
+                    continue;
+            }
+
+            String colName = names.get(i);
+
+
+//            Histograms.plot(bins,counts,colName);
+            File f = new File(directory, colName + ".png");
+            if (f.exists()) f.delete();
+            Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
+        }
     }
 
 }

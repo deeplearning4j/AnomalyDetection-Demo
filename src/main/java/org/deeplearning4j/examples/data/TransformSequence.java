@@ -71,8 +71,9 @@ public class TransformSequence implements Serializable {
         return actionList;
     }
 
-    public Schema getFinalSchema(Schema input){
-        Schema currInputSchema = input;
+//    public Schema getFinalSchema(Schema input){
+    public Schema getFinalSchema(){
+        Schema currInputSchema = initialSchema;
         for(DataAction d : actionList){
             if(d.getTransform() != null){
                 Transform t = d.getTransform();

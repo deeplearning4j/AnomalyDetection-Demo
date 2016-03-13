@@ -6,6 +6,7 @@ import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
@@ -40,6 +41,8 @@ import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.*;
 
 /**
@@ -64,37 +67,10 @@ public class PreprocessingNB15 {
 //            mlpDown.waitForCompletion();
         }
 
-        //Get the initial schema
-        Schema csvSchema = NB15Util.getNB15CsvSchema();
+        //Get the sequence of transformations to make on the original data:
+        TransformSequence seq = NB15Util.getNB15PreProcessingSequence();
 
-        //Set up the sequence of transforms:
-        TransformSequence seq = new TransformSequence.Builder(csvSchema)
-//                .removeColumns("timestamp start", "timestamp end", //Don't need timestamps, we have duration. Can't really use IPs here.
-//                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
-                .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip",  //Don't need timestamps, we have duration. Can't really use IPs here.
-                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
-                .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these columns
-                .transform(new RemoveWhiteSpaceTransform("attack category"))
-                .transform(new ReplaceEmptyStringTransform("attack category", "none"))  //Replace empty strings in "attack category"
-                .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
-                .transform(new ReplaceInvalidWithIntegerTransform("count ftp commands", 0)) //Only invalid ones here are whitespace
-                .transform(new ConditionalTransform("is ftp login", 1, 0, "service", Arrays.asList("ftp", "ftp-data")))
-                .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
-                .transform(new StringMapTransform("attack category", Collections.singletonMap("Backdoors", "Backdoor"))) //Replace all instances of "Backdoors" with "Backdoor"
-                .transform(new StringToCategoricalTransform("attack category", "none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"))
-                .transform(new StringToCategoricalTransform("service", "-", "dns", "http", "smtp", "ftp-data", "ftp", "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp"))
-                .transform(new MapAllStringsExceptListTransform("transaction protocol", "other", Arrays.asList("unas", "sctp", "ospf", "tcp", "udp", "arp"))) //Map all protocols except these to "other" (all others have <<1000 examples)
-                .transform(new StringToCategoricalTransform("transaction protocol", "unas", "sctp", "ospf", "tcp", "udp", "arp", "other"))
-                .transform(new MapAllStringsExceptListTransform("state", "other", Arrays.asList("FIN", "CON", "INT", "RST", "REQ")))  //Before: CategoricalAnalysis(CategoryCounts={CLO=161, FIN=1478689, ECR=8, PAR=26, MAS=7, URN=7, ECO=96, TXD=5, CON=560588, INT=490469, RST=528, TST=8, ACC=43, REQ=9043, no=7, URH=54})
-                .transform(new StringToCategoricalTransform("state", "FIN", "CON", "INT", "RST", "REQ", "other"))
-                .transform(new IntegerToCategoricalTransform("label", Arrays.asList("normal", "attack")))
-                .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
-                .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
-
-                .removeColumns("label") //leave attack category
-                .build();
-
-        Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
+        Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
@@ -125,22 +101,27 @@ public class PreprocessingNB15 {
         DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Pair<Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
-        Pair<Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
+        Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
-        trainDataNormalized.getSecond().cache();
-        testDataNormalized.getSecond().cache();
-        Schema normSchema = trainDataNormalized.getFirst();
+        trainDataNormalized.getThird().cache();
+        testDataNormalized.getThird().cache();
+        Schema normSchema = trainDataNormalized.getSecond();
 
 
-        DataAnalysis trainDataAnalyis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getSecond());
+        DataAnalysis trainDataAnalyis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getThird());
 
         //Save as CSV file
         int nSplits = 1;
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getThird(), 12345);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
+
+        //Save the normalizer transform sequence:
+        try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(PATH.NORMALIZER_FILE)))){
+            oos.writeObject(trainDataNormalized.getFirst());
+        }
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
         sc.close();
@@ -179,8 +160,8 @@ public class PreprocessingNB15 {
         System.out.println();
     }
 
-    public static Pair<Schema, JavaRDD<Collection<Writable>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
-                                                                        SparkTransformExecutor executor) {
+    public static Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>>
+                normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input, SparkTransformExecutor executor) {
         TransformSequence norm = new TransformSequence.Builder(schema)
                 .normalize("source port", Normalize.MinMax, da)
                 .normalize("destination port", Normalize.MinMax, da)
@@ -225,9 +206,9 @@ public class PreprocessingNB15 {
                 .transform(new CategoricalToIntegerTransform("attack category"))
                 .build();
 
-        Schema normSchema = norm.getFinalSchema(schema);
+        Schema normSchema = norm.getFinalSchema();
         JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
-        return new Pair<>(normSchema, normalizedData);
+        return new Triple<>(norm, normSchema, normalizedData);
     }
 
     public static void plot(Schema finalSchema, DataAnalysis da, String directory) throws Exception {
