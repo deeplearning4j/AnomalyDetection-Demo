@@ -7,6 +7,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.analysis.sparkfunctions.SequenceFlatMapFunction;
 
 import java.io.File;
 import java.util.Collection;
@@ -60,8 +61,8 @@ public class SparkExport {
 
     public static void exportCSVLocal(JavaRDD<Collection<Collection<Writable>>> data, String outputDir, String baseFileName, int numFiles, String delimiter,
                                       int rngSeed) throws Exception {
-        throw new RuntimeException("Not yet implemented");
-
+        JavaRDD<Collection<Writable>> seq = data.flatMap(new SequenceFlatMapFunction());
+        exportCSVLocal(outputDir, baseFileName, numFiles, delimiter, seq, rngSeed);
     }
 
     @AllArgsConstructor
