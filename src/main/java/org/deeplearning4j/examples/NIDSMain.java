@@ -55,9 +55,9 @@ public class NIDSMain {
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 2;
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
-    protected String trainFile = "csv_preprocessed.csv";
+    protected String trainFile = "normalized0.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
-    protected String testFile = "csv_test_preprocessed.csv";
+    protected String testFile = "normalized0.csv";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
 
@@ -84,7 +84,8 @@ public class NIDSMain {
     protected int totalTrainNumExamples = batchSize * numBatches;
     protected int totalTestNumExamples = testBatchSize * numTestBatches;
 
-    protected static String outputFilePath = "src/main/resources/";
+    public static final String TRAIN_DIR = new DataPath("UNSW_NB15").PRE_DIR;
+    protected static String outputFilePath = DataPath.REPO_BASE_DIR;
     protected String confPath = this.toString() + "conf.yaml";
     protected String paramPath = this.toString() + "param.bin";
     protected Map<String, String> paramPaths = new HashMap<>();
@@ -112,8 +113,8 @@ public class NIDSMain {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
                 System.out.println("\nLoad data....");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPath.TRAIN_DATA_PATH + trainFile, labelIdx, numEpochs, numBatches);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPath.TEST_DATA_PATH + testFile, labelIdx, 1, numTestBatches);
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, TRAIN_DIR + trainFile, labelIdx, numEpochs, numBatches);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, TRAIN_DIR + testFile, labelIdx, 1, numTestBatches);
                 network = standard.trainModel(network, trainData, testData);
                 System.out.println("\nFinal evaluation....");
                 standard.evaluatePerformance(network, testData);
@@ -147,10 +148,10 @@ public class NIDSMain {
                         new int[]{nIn, 500, 100},
                         new int[]{500, 100, nOut},
                         iterations,
-                        "sigmoid",
+                        "leakyrelu",
                         WeightInit.XAVIER,
-                        5e-1, // standard works with 1e-2
-                        1 // standard works with 1e-6
+                        1e-2,
+                        1e-6
                 ).buildModel();
                 break;
             case "RNN":
