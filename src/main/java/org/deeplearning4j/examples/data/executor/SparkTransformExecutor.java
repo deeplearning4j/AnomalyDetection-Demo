@@ -28,6 +28,7 @@ public class SparkTransformExecutor {
         }
 
         return execute(inputWritables,null,sequence).getFirst();
+//        return inputWritables.flatMap(new SparkTransformSequenceFunction(sequence));    //Only works if no toSequence or FromSequence ops are in the TransformSequenc...
     }
 
     public JavaRDD<Collection<Collection<Writable>>> executeToSequence(JavaRDD<Collection<Writable>> inputWritables, TransformSequence sequence ) {
