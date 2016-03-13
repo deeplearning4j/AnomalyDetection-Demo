@@ -90,7 +90,8 @@ public class PreprocessingISCXSequence {
                         Arrays.asList("F", "S", "R", "A", "P", "U", "Illegal7", "Illegal8", "N/A"),
                         ";"))
                 //aggregate into time series by source IP, then order by start time (as String field)
-                .convertToSequence("source ip",new StringComparator("start time"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+//                .convertToSequence("source ip",new StringComparator("start time"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+                .convertToSequence("destination ip",new StringComparator("start time"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
                 .build();
 
         Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
@@ -117,10 +118,10 @@ public class PreprocessingISCXSequence {
         List<Collection<Collection<Writable>>> sample = AnalyzeSpark.sampleSequence(20,sequenceData);
 
 //        //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis seqDQA = QualityAnalyzeSpark.analyzeQuality(sequenceData, preprocessedSchema);
+        DataQualityAnalysis seqDQA = QualityAnalyzeSpark.analyzeQualitySequence(preprocessedSchema, sequenceData);
 //
 //        //Do analysis, on a per-column basis
-        DataAnalysis da = AnalyzeSpark.analyze(sequenceData, preprocessedSchema);
+        SequenceDataAnalysis da = AnalyzeSpark.analyzeSequence(preprocessedSchema,sequenceData);
 
 
 //        List<Writable> samplesDirection = AnalyzeSpark.sampleFromColumn(100,"direction",preprocessedSchema,processedData);
@@ -219,7 +220,6 @@ public class PreprocessingISCXSequence {
             double[] bins = sda.getSequenceLengthAnalysis().getHistogramBuckets();
             long[] counts = sda.getSequenceLengthAnalysis().getHistogramBucketCounts();
 
-            Histograms.plot(bins,counts,"Sequence Lengths");
             File f = new File(directory, "SequenceLengths.png");
             if (f.exists()) f.delete();
             Histograms.exportHistogramImage(f, bins, counts, "Sequence Lengths", 1000, 650);

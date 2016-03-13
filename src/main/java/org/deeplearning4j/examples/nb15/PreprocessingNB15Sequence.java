@@ -1,7 +1,6 @@
 package org.deeplearning4j.examples.nb15;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
@@ -9,14 +8,11 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
-import org.deeplearning4j.examples.data.split.RandomSplit;
-import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
-import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
 import org.deeplearning4j.examples.data.analysis.DataAnalysis;
+import org.deeplearning4j.examples.data.analysis.SequenceDataAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.data.analysis.columns.LongAnalysis;
@@ -25,27 +21,36 @@ import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
+import org.deeplearning4j.examples.data.schema.Schema;
+import org.deeplearning4j.examples.data.schema.SequenceSchema;
+import org.deeplearning4j.examples.data.sequence.comparator.StringComparator;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.split.RandomSplit;
+import org.deeplearning4j.examples.data.transform.ConditionalTransform;
+import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.data.transform.categorical.IntegerToCategoricalTransform;
 import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
 import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithIntegerTransform;
-import org.deeplearning4j.examples.data.transform.ConditionalTransform;
 import org.deeplearning4j.examples.data.transform.normalize.Normalize;
 import org.deeplearning4j.examples.data.transform.string.MapAllStringsExceptListTransform;
 import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
 import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
 import org.deeplearning4j.examples.data.transform.string.StringMapTransform;
+import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by Alex on 5/03/2016.
  */
-public class PreprocessingNB15 {
+public class PreprocessingNB15Sequence {
 
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
@@ -69,10 +74,10 @@ public class PreprocessingNB15 {
 
         //Set up the sequence of transforms:
         TransformSequence seq = new TransformSequence.Builder(csvSchema)
-//                .removeColumns("timestamp start", "timestamp end", //Don't need timestamps, we have duration. Can't really use IPs here.
-//                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
-                .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip",  //Don't need timestamps, we have duration. Can't really use IPs here.
-                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
+//                .removeColumns("timestamp start", "timestamp end", //Don't need timestamps, we have duration
+                .removeColumns(
+                        "source TCP base sequence num", "dest TCP base sequence num",       //Sequence numbers are essentially random between 0 and 4.29 billion
+                        "label")    //leave attack category
                 .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these columns
                 .transform(new RemoveWhiteSpaceTransform("attack category"))
                 .transform(new ReplaceEmptyStringTransform("attack category", "none"))  //Replace empty strings in "attack category"
@@ -87,11 +92,10 @@ public class PreprocessingNB15 {
                 .transform(new StringToCategoricalTransform("transaction protocol", "unas", "sctp", "ospf", "tcp", "udp", "arp", "other"))
                 .transform(new MapAllStringsExceptListTransform("state", "other", Arrays.asList("FIN", "CON", "INT", "RST", "REQ")))  //Before: CategoricalAnalysis(CategoryCounts={CLO=161, FIN=1478689, ECR=8, PAR=26, MAS=7, URN=7, ECO=96, TXD=5, CON=560588, INT=490469, RST=528, TST=8, ACC=43, REQ=9043, no=7, URH=54})
                 .transform(new StringToCategoricalTransform("state", "FIN", "CON", "INT", "RST", "REQ", "other"))
-                .transform(new IntegerToCategoricalTransform("label", Arrays.asList("normal", "attack")))
+//                .transform(new IntegerToCategoricalTransform("label", Arrays.asList("normal", "attack")))
                 .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
                 .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
-
-                .removeColumns("label") //leave attack category
+                .convertToSequence("destination ip",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
                 .build();
 
         Schema preprocessedSchema = seq.getFinalSchema(csvSchema);
@@ -108,25 +112,25 @@ public class PreprocessingNB15 {
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<Collection<Writable>> processedData = executor.execute(data, seq);
+        JavaRDD<Collection<Collection<Writable>>> processedData = executor.executeToSequence(data, seq);
         processedData.cache();
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, processedData);
+        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQualitySequence(preprocessedSchema, processedData);
 
         //Do analysis, on a per-column basis
-        DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
+        DataAnalysis da = AnalyzeSpark.analyzeSequence(preprocessedSchema, processedData);
 
         //Do train/test split:
-        List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData);
-        JavaRDD<Collection<Writable>> trainData = allData.get(0);
-        JavaRDD<Collection<Writable>> testData = allData.get(1);
+        List<JavaRDD<Collection<Collection<Writable>>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData);
+        JavaRDD<Collection<Collection<Writable>>> trainData = allData.get(0);
+        JavaRDD<Collection<Collection<Writable>>> testData = allData.get(1);
 
-        DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
+        DataAnalysis trainDataAnalysis = AnalyzeSpark.analyzeSequence(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Pair<Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
-        Pair<Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
+        Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
         trainDataNormalized.getSecond().cache();
@@ -134,13 +138,13 @@ public class PreprocessingNB15 {
         Schema normSchema = trainDataNormalized.getFirst();
 
 
-        DataAnalysis trainDataAnalyis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getSecond());
+        SequenceDataAnalysis trainDataAnalyis = AnalyzeSpark.analyzeSequence(normSchema, trainDataNormalized.getSecond());
 
-        //Save as CSV file
+        //Save as CSV file  -> TODO for sequences
         int nSplits = 1;
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
-        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
+//        SparkExport.exportCSVLocal(OUT_DIRECTORY + "train/", "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+//        SparkExport.exportCSVLocal(OUT_DIRECTORY + "test/", "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+//        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
 //        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
         sc.close();
@@ -179,7 +183,7 @@ public class PreprocessingNB15 {
         System.out.println();
     }
 
-    public static Pair<Schema, JavaRDD<Collection<Writable>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
+    public static Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Collection<Writable>>> input,
                                                                         SparkTransformExecutor executor) {
         TransformSequence norm = new TransformSequence.Builder(schema)
                 .normalize("source port", Normalize.MinMax, da)
@@ -226,7 +230,7 @@ public class PreprocessingNB15 {
                 .build();
 
         Schema normSchema = norm.getFinalSchema(schema);
-        JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
+        JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
         return new Pair<>(normSchema, normalizedData);
     }
 

@@ -43,7 +43,8 @@ public class TransformSequence implements Serializable {
                 t.setInputSchema(currInputSchema);
                 currInputSchema = t.transform(currInputSchema);
             } else if(d.getFilter() != null){
-                continue; //Filter -> doesn't change schema
+                //Filter -> doesn't change schema. But we DO need to set the schema in the filter...
+                d.getFilter().setSchema(currInputSchema);
             } else if(d.getConvertToSequence() != null) {
                 if(currInputSchema instanceof SequenceSchema){
                     throw new RuntimeException("Cannot convert to sequence: schema is already a sequence schema: " + currInputSchema);

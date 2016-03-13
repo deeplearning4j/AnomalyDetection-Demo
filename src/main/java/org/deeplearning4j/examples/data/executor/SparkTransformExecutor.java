@@ -59,11 +59,13 @@ public class SparkTransformExecutor {
         execute(JavaRDD<Collection<Writable>> inputWritables, JavaRDD<Collection<Collection<Writable>>> inputSequence,
                 TransformSequence sequence ){
         JavaRDD<Collection<Writable>> currentWritables = inputWritables;
-        JavaRDD<Collection<Collection<Writable>>> currentSequence = null;
+        JavaRDD<Collection<Collection<Writable>>> currentSequence = inputSequence;
 
         List<DataAction> list = sequence.getActionList();
 
+        int stepCount = 0;
         for(DataAction d : list ){
+            System.out.println("Step count: " + stepCount++);
 
             if(d.getTransform() != null) {
                 Transform t = d.getTransform();
