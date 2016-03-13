@@ -59,8 +59,8 @@ public class SparkExport {
         }
     }
 
-    public static void exportCSVLocal(JavaRDD<Collection<Collection<Writable>>> data, String outputDir, String baseFileName, int numFiles, String delimiter,
-                                      int rngSeed) throws Exception {
+    public static void exportSequenceCSVLocal(String outputDir, String baseFileName, int numFiles, String delimiter,
+                                      JavaRDD<Collection<Collection<Writable>>> data, int rngSeed) throws Exception {
         JavaRDD<Collection<Writable>> seq = data.flatMap(new SequenceFlatMapFunction());
         exportCSVLocal(outputDir, baseFileName, numFiles, delimiter, seq, rngSeed);
     }

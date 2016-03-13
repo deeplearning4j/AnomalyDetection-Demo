@@ -46,7 +46,7 @@ public class PreprocessingISCXSequence {
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "ISCX";
     protected static final DataPath PATH = new DataPath(dataSet);
-    public static final String IN_DIRECTORY = DataPath.REPO_BASE_DIR + "TestbedMonJun14Flows.csv";
+    public static final String IN_DIRECTORY = PATH.IN_DIR; //DataPath.REPO_BASE_DIR + "TestbedMonJun14Flows.csv";
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
     public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
@@ -150,8 +150,8 @@ public class PreprocessingISCXSequence {
 
             //Save as CSV file
             int nSplits = 1;
-            SparkExport.exportCSVLocal(trainDataNormalized.getSecond(), OUT_DIRECTORY + "train/", dataSet + "normalized", nSplits, ",", 12345);
-            SparkExport.exportCSVLocal(testDataNormalized.getSecond(), OUT_DIRECTORY + "test/", dataSet + "normalized", nSplits, ",", 12345);
+            SparkExport.exportSequenceCSVLocal(OUT_DIRECTORY + "train/", dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+            SparkExport.exportSequenceCSVLocal(OUT_DIRECTORY + "test/", dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
             FileUtils.writeStringToFile(new File(OUT_DIRECTORY, dataSet + "normDataSchema.txt"), normSchema.toString());
         }
         sc.close();
