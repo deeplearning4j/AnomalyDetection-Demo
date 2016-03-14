@@ -57,7 +57,7 @@ public class NSLKDDUtil {
         return csvSchema;
     }
 
-    public static TransformSequence getNLSKDDPreProcessingSequence(){
+    public static TransformSequence getpreProcessingSequence(){
         TransformSequence seq = new TransformSequence.Builder(getNLSKDDCsvSchema())
                 .transform(new StringToCategoricalTransform("transaction_protocol", "udp", "tcp", "icmp"))
                 .transform(new MapAllStringsExceptListTransform("service", "other",  Arrays.asList("other", "private", "http", "ftp_data","name",

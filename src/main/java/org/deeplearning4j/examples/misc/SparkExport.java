@@ -59,6 +59,24 @@ public class SparkExport {
         }
     }
 
+    // No shuffling
+    public static void exportCSVLocal(String outputDir, String baseFileName, int numFiles, String delimiter,
+                                      JavaRDD<Collection<Writable>> data) throws Exception {
+
+        JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
+        double[] split = new double[numFiles];
+        for (int i = 0; i < split.length; i++) split[i] = 1.0 / numFiles;
+        JavaRDD<String>[] splitData = lines.randomSplit(split);
+
+        int count = 0;
+        for (JavaRDD<String> subset : splitData) {
+            String path = FilenameUtils.concat(outputDir, baseFileName + (count++) + ".csv");
+//            subset.saveAsTextFile(path);
+            List<String> linesList = subset.collect();
+            FileUtils.writeLines(new File(path), linesList);
+        }
+    }
+
     public static void exportSequenceCSVLocal(String outputDir, String baseFileName, int numFiles, String delimiter,
                                       JavaRDD<Collection<Collection<Writable>>> data, int rngSeed) throws Exception {
         JavaRDD<Collection<Writable>> seq = data.flatMap(new SequenceFlatMapFunction());
