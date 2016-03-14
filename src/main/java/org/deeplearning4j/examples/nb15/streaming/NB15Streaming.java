@@ -1,7 +1,5 @@
 package org.deeplearning4j.examples.nb15.streaming;
 
-import jodd.io.FileNameUtil;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Durations;
@@ -11,12 +9,11 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.nb15.NB15Util;
+import org.deeplearning4j.examples.nb15.ui.NB15TableConverter;
+import org.deeplearning4j.examples.ui.UIDriver;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
-import scala.Tuple2;
 import scala.Tuple3;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
@@ -37,8 +34,8 @@ public class NB15Streaming {
     private static final String MODEL_DIR = FilenameUtils.concat(DIR, "Trained/");
 
 
-    private static final String CONF_FILE = FileNameUtil.concat(MODEL_DIR, "config.json");
-    private static final String PARAMS_FILE = FileNameUtil.concat(MODEL_DIR, "params.bin");
+    private static final String CONF_FILE = FilenameUtils.concat(MODEL_DIR, "config.json");
+    private static final String PARAMS_FILE = FilenameUtils.concat(MODEL_DIR, "params.bin");
 //    private static final String TEST_DATA_FILE = FilenameUtils.concat(DIR, "Out/test/normalized0.csv");
 
 
@@ -52,6 +49,9 @@ public class NB15Streaming {
 
     public static void main(String[] args) throws Exception {
 
+        UIDriver.setTableConverter(new NB15TableConverter(NB15Util.getNB15CsvSchema()));
+        UIDriver uiDriver = UIDriver.getInstance();
+
 
         //Load config and parameters:
 //        String conf = FileUtils.readFileToString(new File(PARAMS_PATH));
@@ -60,6 +60,8 @@ public class NB15Streaming {
 //        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(CONF_PATH)))){
 //            params = Nd4j.read(dis);
 //        }
+
+        Thread.sleep(3000);
 
         TransformSequence preproc = NB15Util.getNB15PreProcessingSequence();
         TransformSequence norm;
@@ -75,14 +77,16 @@ public class NB15Streaming {
         sc.checkpoint(CHECKPOINT_DIR);
 
 
-        //Register our streaming object:
+        //Register our streaming object for receiving data into the system:
+        //FromRawCsvReceiver handles loading raw data, normalization, and conversion of normalized training data to INDArrays
         JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> dataStream = sc.receiverStream(
                 new FromRawCsvReceiver(PATH.RAW_TEST_PATH, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, 10));
 
-        dataStream.print();
+        //Pass each instance through the network:
+        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream;    //TODO
 
-//        JavaDStream<Tuple2<Long,INDArray>> predictions = dataStream.mapPartitions(new PredictFunction(sc.sc().broadcast(conf),sc.sc().broadcast(params)));
-//        predictions.print();
+        //And finally push the predictions to the UI driver so they can be displayed:
+        predictionStream.foreachRDD(new CollectAtUIDriverFunction());
 
         //Start streaming:
         sc.start();
