@@ -8,6 +8,7 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.DataPath;
 import org.deeplearning4j.examples.data.TransformSequence;
+import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.nb15.NB15Util;
 import org.deeplearning4j.examples.nb15.ui.NB15TableConverter;
 import org.deeplearning4j.examples.ui.UIDriver;
@@ -18,6 +19,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Alex on 10/03/2016.
@@ -47,9 +50,18 @@ public class NB15Streaming {
     private static final int CSV_LABEL_IDX = 66;
     private static final int CSV_NOUT = 10;
 
+
+    public static final int GENERATION_RATE = 20;   //connections per second
+
     public static void main(String[] args) throws Exception {
 
+        Schema schema = NB15Util.getNB15CsvSchema();
         UIDriver.setTableConverter(new NB15TableConverter(NB15Util.getNB15CsvSchema()));
+        Map<String,Integer> columnMap = new HashMap<>();
+        columnMap.put("source-dest bytes",schema.getIndexOfColumn("source-dest bytes"));
+        columnMap.put("dest-source bytes",schema.getIndexOfColumn("dest-source bytes"));
+        UIDriver.setColumnsMap(columnMap);
+
         UIDriver uiDriver = UIDriver.getInstance();
 
 
@@ -80,7 +92,7 @@ public class NB15Streaming {
         //Register our streaming object for receiving data into the system:
         //FromRawCsvReceiver handles loading raw data, normalization, and conversion of normalized training data to INDArrays
         JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> dataStream = sc.receiverStream(
-                new FromRawCsvReceiver(PATH.RAW_TEST_PATH, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, 10));
+                new FromRawCsvReceiver(PATH.RAW_TEST_PATH, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, GENERATION_RATE));
 
         //Pass each instance through the network:
         JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream;    //TODO
@@ -91,7 +103,9 @@ public class NB15Streaming {
         //Start streaming:
         sc.start();
 
-        sc.awaitTermination(10000);     //For testing: only run for short period of time
+        sc.awaitTermination(60000);     //For testing: only run for short period of time
+
+        sc.close();
 
         System.out.println("DONE");
 

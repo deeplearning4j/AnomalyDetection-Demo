@@ -65,7 +65,7 @@ public class FromCsvReceiver extends Receiver<Tuple2<Long,INDArray>> {
         iterator = new RecordReaderDataSetIterator(rr,1,labelIdx,nOut);
 
         //Start a thread:
-        new Thread(new Runnable() {
+        Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 while(!stop.get() && iterator.hasNext()){
@@ -94,7 +94,9 @@ public class FromCsvReceiver extends Receiver<Tuple2<Long,INDArray>> {
 
                 log.info("Receiver shutting down: stop = {}, iterator.hasNext() = {}",stop.get(), iterator.hasNext());
             }
-        }).start();
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     @Override

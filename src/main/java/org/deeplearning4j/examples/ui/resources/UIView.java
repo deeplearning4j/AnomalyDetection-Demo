@@ -1,4 +1,4 @@
-package org.deeplearning4j.examples.ui;
+package org.deeplearning4j.examples.ui.resources;
 
 import io.dropwizard.views.View;
 

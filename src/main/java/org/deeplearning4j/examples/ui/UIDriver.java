@@ -6,11 +6,15 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
+import io.dropwizard.views.ViewMessageBodyWriter;
+import org.canova.api.berkeley.Pair;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.RenderElements;
 import org.deeplearning4j.examples.ui.components.RenderableComponent;
+import org.deeplearning4j.examples.ui.components.RenderableComponentLineChart;
 import org.deeplearning4j.examples.ui.config.NIDSConfig;
 import org.deeplearning4j.examples.ui.resources.FlowDetailsResource;
+import org.deeplearning4j.examples.ui.resources.LineChartResource;
 import org.deeplearning4j.examples.ui.resources.UIResource;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
@@ -22,9 +26,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,18 +36,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class UIDriver extends Application<NIDSConfig> {
 
+    public static final double CHART_HISTORY_SECONDS = 20.0;   //N seconds of chart history for UI
+
     private static volatile UIDriver instance;
 
     private static final Logger log = LoggerFactory.getLogger(UIDriver.class);
 
     private static TableConverter tableConverter;
+    private static Map<String,Integer> columnsMap;
 
     private LinkedBlockingQueue<Tuple3<Long,INDArray,Collection<Writable>>> predictions = new LinkedBlockingQueue<>();
     private AtomicBoolean shutdown = new AtomicBoolean(false);
 
     //Web targets: for posting results
     private final Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-//    private final WebTarget targetFlowResourceUpdate = client.target("http://localhost:8080/flow/update")
+    private final WebTarget connectionRateChartTarget = client.target("http://localhost:8080/charts/update/connection");
+    private final WebTarget bytesRateChartTarget = client.target("http://localhost:8080/charts/update/bytes");
 
     private Thread uiThread;
 
@@ -56,6 +63,8 @@ public class UIDriver extends Application<NIDSConfig> {
         }catch(Exception e){
             throw new RuntimeException(e);
         }
+
+//        ViewMessageBodyWriter
 
         uiThread = new Thread(new UIThreadRunnable());
         uiThread.setDaemon(true);
@@ -83,10 +92,8 @@ public class UIDriver extends Application<NIDSConfig> {
 
         //Register our resources
         environment.jersey().register(new FlowDetailsResource());
-//        environment.jersey().register(new SummaryStatusResource());
-//        environment.jersey().register(new ConfigResource());
-//        environment.jersey().register(new SummaryResultsResource());
-//        environment.jersey().register(new CandidateResultsResource());
+        environment.jersey().register(new LineChartResource());
+
 //        log.info("*** UIDriver run called ***");
         System.out.println("*** UIDriver run called ***");
     }
@@ -108,6 +115,14 @@ public class UIDriver extends Application<NIDSConfig> {
         UIDriver.tableConverter = tableConverter;
     }
 
+    /**Columns map: i.e., what columns indexes for:
+     * "source-dest bytes", "dest-source bytes" for
+     *
+     */
+    public static void setColumnsMap(Map<String,Integer> map){
+        UIDriver.columnsMap = map;
+    }
+
 
     public void addPrediction(Tuple3<Long,INDArray,Collection<Writable>> prediction){
         this.predictions.add(prediction);
@@ -115,6 +130,7 @@ public class UIDriver extends Application<NIDSConfig> {
 
     public void addPredictions(List<Tuple3<Long,INDArray,Collection<Writable>>> predictions){
         this.predictions.addAll(predictions);
+        System.out.println("************ ADDED " + predictions.size() + " - TOTAL = " + this.predictions.size() + " **********");
     }
 
     public void shutdown(){
@@ -123,8 +139,22 @@ public class UIDriver extends Application<NIDSConfig> {
 
 
     private class UIThreadRunnable implements Runnable {
+
+        private long lastUpdateTime = 0;
+        private LinkedList<Pair<Long,Double>> connectionRateHistory = new LinkedList<>();
+        private LinkedList<Pair<Long,Double>> byteRateHistory = new LinkedList<>();
+
         @Override
         public void run() {
+            try{
+                runHelper();
+            }catch(Exception e){
+                //To catch any unchecked exceptions
+                e.printStackTrace();
+            }
+        }
+
+        private void runHelper(){
             log.info("Starting UI driver thread");
 
             List<Tuple3<Long,INDArray,Collection<Writable>>> list = new ArrayList<>(100);
@@ -138,22 +168,96 @@ public class UIDriver extends Application<NIDSConfig> {
                 predictions.drainTo(list);      //Doesn't block, but retrieves + removes all elements
 
                 //Do something with the list...
-                System.out.println("-----------------------------------------------");
+                double sumBytes = 0.0;
+                int sdBytesCol = (columnsMap.containsKey("source-dest bytes") ? columnsMap.get("source-dest bytes") : -1);
+                int dsBytesCol = (columnsMap.containsKey("dest-source bytes") ? columnsMap.get("dest-source bytes") : -1);
                 for(Tuple3<Long,INDArray,Collection<Writable>> t3 : list){
-                    System.out.println(t3);
+//                    System.out.println(t3);
+                    Collection<Writable> c = t3._3();
+                    List<Writable> listWritables = (c instanceof List ? ((List<Writable>)c) : new ArrayList<>(c));
 
                     //Post the details to the web server:
                     int idx = (int)((long)t3._1());
-                    Collection<Writable> c = t3._3();
 
-                    RenderableComponent rc = tableConverter.rawDataToTable(c);
-                    RenderElements re = new RenderElements(rc);
-                    WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
-                    wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                            .post(Entity.entity(re,MediaType.APPLICATION_JSON));
+                    if(sdBytesCol >= 0){
+                        try{
+                            sumBytes += listWritables.get(sdBytesCol).toDouble();
+                        }catch(Exception e){ }
+                    }
+                    if(dsBytesCol >= 0){
+                        try{
+                            sumBytes += listWritables.get(dsBytesCol).toDouble();
+                        }catch(Exception e){ }
+                    }
+
+
+                    //This appears to be a significant bottleneck... causing very significant delays, and processing to completely stop at times
+//                    RenderableComponent rc = tableConverter.rawDataToTable(c);
+//                    RenderElements re = new RenderElements(rc);
+//                    WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
+//                    wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+//                            .post(Entity.entity(re,MediaType.APPLICATION_JSON));
                 }
 
-                System.out.println("///////////////////////////////////////////////");
+
+                //Calculate the rate of updates (connections/sec). Just do delta connections / delta time for now
+                if(lastUpdateTime > 0){
+                    double connectionsPerSec = 1000.0 * list.size() / (System.currentTimeMillis() - lastUpdateTime);
+                    double bytesPerSec = 1000.0 * sumBytes / (System.currentTimeMillis() - lastUpdateTime);
+                    //1000.0 is due to time being in MS, rate being in connections/sec
+
+                    lastUpdateTime = System.currentTimeMillis();
+
+                    //Add the new instantaneous rate:
+                    connectionRateHistory.add(new Pair<>(lastUpdateTime,connectionsPerSec));
+                    byteRateHistory.add(new Pair<>(lastUpdateTime,bytesPerSec));
+                } else {
+                    lastUpdateTime = System.currentTimeMillis();
+                }
+
+                //Remove any old instantaneous rates (older than chart cutoff)
+                Pair<Long,Double> last = (connectionRateHistory.isEmpty() ? null : connectionRateHistory.getFirst());
+                long cutoff = (long)(lastUpdateTime - 1000.0*CHART_HISTORY_SECONDS);
+                while(last != null && last.getFirst() < cutoff){
+                    connectionRateHistory.removeFirst();
+                    last = connectionRateHistory.getFirst();
+                }
+                last = (byteRateHistory.isEmpty() ? null : byteRateHistory.getFirst());
+                while(last != null && last.getFirst() < cutoff){
+                    byteRateHistory.removeFirst();
+                    last = byteRateHistory.getFirst();
+                }
+
+                //Create the arrays for the charts
+                double[] time = new double[connectionRateHistory.size()];
+                double[] rate = new double[time.length];
+                int i=0;
+                for(Pair<Long,Double> p : connectionRateHistory){
+                    time[i] = (p.getFirst() - lastUpdateTime)/1000.0;
+                    rate[i++] = p.getSecond();
+                }
+
+                double[] bytesTime = new double[byteRateHistory.size()];
+                double[] bytesRate = new double[byteRateHistory.size()];
+                i=0;
+                for(Pair<Long,Double> p : byteRateHistory){
+                    bytesTime[i] = (p.getFirst() - lastUpdateTime)/1000.0;
+                    bytesRate[i++] = p.getSecond();
+                }
+
+                //And post the instantaneous connection rate and bytes/sec charts...
+                RenderableComponent connectionRate = new RenderableComponentLineChart.Builder()
+                        .addSeries("Connections/sec",time,rate).build();
+
+                connectionRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(connectionRate,MediaType.APPLICATION_JSON));
+
+                RenderableComponent byteRate = new RenderableComponentLineChart.Builder()
+                        .addSeries("Bytes/sec",bytesTime,bytesRate).build();
+
+                bytesRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(byteRate,MediaType.APPLICATION_JSON));
+
 
                 //Clear the list for the next iteration
                 list.clear();
