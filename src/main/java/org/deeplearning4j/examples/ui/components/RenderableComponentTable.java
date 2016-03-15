@@ -27,10 +27,29 @@ public class RenderableComponentTable extends RenderableComponent {
     private String title;
     private String[] header;
     private String[][] table;
+    private int padLeftPx = 0;
+    private int padRightPx = 0;
+    private int padTopPx = 0;
+    private int padBottomPx = 0;
+    private int border = 0;
+    private double[] colWidthsPercent = null;
 
     public RenderableComponentTable(){
         super(COMPONENT_TYPE);
         //No arg constructor for Jackson
+    }
+
+    public RenderableComponentTable(Builder builder){
+        super(COMPONENT_TYPE);
+        this.title = builder.title;
+        this.header = builder.header;
+        this.table = builder.table;
+        this.padLeftPx = builder.padLeftPx;
+        this.padRightPx = builder.padRightPx;
+        this.padTopPx = builder.padTopPx;
+        this.padBottomPx = builder.padBottomPx;
+        this.border = builder.border;
+        this.colWidthsPercent = builder.colWidthsPercent;
     }
 
     public RenderableComponentTable(String[] header, String[][] table){
@@ -44,6 +63,76 @@ public class RenderableComponentTable extends RenderableComponent {
         this.table = table;
     }
 
+    public static class Builder {
+
+        private String title;
+        private String[] header;
+        private String[][] table;
+        private int padLeftPx = 0;
+        private int padRightPx = 0;
+        private int padTopPx = 0;
+        private int padBottomPx = 0;
+        private int border = 0;
+        private double[] colWidthsPercent;
+
+        public Builder title(String title){
+            this.title = title;
+            return this;
+        }
+
+        public Builder header(String... header){
+            this.header = header;
+            return this;
+        }
+
+        public Builder table(String[][] table){
+            this.table = table;
+            return this;
+        }
+
+        public Builder border(int border){
+            this.border = border;
+            return this;
+        }
+
+        public Builder padLeftPx(int padLeftPx){
+            this.padLeftPx = padLeftPx;
+            return this;
+        }
+
+        public Builder padRightPx(int padRightPx){
+            this.padRightPx = padRightPx;
+            return this;
+        }
+
+        public Builder padTopPx(int padTopPx){
+            this.padTopPx = padTopPx;
+            return this;
+        }
+
+        public Builder padBottomPx(int padBottomPx){
+            this.padBottomPx = padBottomPx;
+            return this;
+        }
+
+        public Builder paddingPx(int paddingPx){
+            padLeftPx(paddingPx);
+            padRightPx(paddingPx);
+            padTopPx(paddingPx);
+            padBottomPx(paddingPx);
+            return this;
+        }
+
+        public Builder colWidthsPercent(double... colWidthsPercent){
+            this.colWidthsPercent = colWidthsPercent;
+            return this;
+        }
+
+        public RenderableComponentTable build(){
+            return new RenderableComponentTable(this);
+        }
+
+    }
 
 
 
