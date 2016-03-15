@@ -12,13 +12,35 @@
         }
 
         .bgcolor {
-            background-color: #DCEBF2;
+            /*background-color: #DCEBF2;*/
+            background-color: #FFFFFF;
         }
 
         .hd {
             background-color: #000000;
             font-size: 18px;
             color: #FFFFFF;
+        }
+
+        .sectionheader {
+            background-color: #BBBBBB;
+            font-size: 16px;
+            font-style: bold;
+            color: #FFFFFF;
+            padding-left: 8px;
+            padding-right: 8px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+
+        }
+
+        .subsectiontop {
+            background-color: #F5F5FF;
+            height:320px;
+        }
+        .subsectionbottom {
+            background-color: #F5F5FF;
+            height: 500px;
         }
 
         h1 {
@@ -97,7 +119,7 @@
             var connectionRateDiv = $('#connectionChartDiv');
             connectionRateDiv.html('');
 
-            createAndAddComponent(jsonObj,connectionRateDiv, 460, 350);
+            createAndAddComponent(jsonObj,connectionRateDiv, 460, 300);
         })
 
         $.get("/charts/bytes",function(data){
@@ -108,7 +130,7 @@
             var byteRateDiv = $('#bytesChartDiv');
             byteRateDiv.html('');
 
-            createAndAddComponent(jsonObj,byteRateDiv, 460, 350);
+            createAndAddComponent(jsonObj,byteRateDiv, 460, 300);
         })
 
 
@@ -195,7 +217,7 @@
         var title = chartObj['title'];
 
         // Set the dimensions of the canvas / graph
-        var margin = {top: 60, right: 20, bottom: 60, left: 50},
+        var margin = {top: 60, right: 20, bottom: 60, left: 60},
                 width = chartWidth - margin.left - margin.right,
                 height = chartHeight - margin.top - margin.bottom;
 
@@ -479,21 +501,36 @@
 
 <div style="width:1400px; margin:0 auto;" id="outerdiv">
     <div style="width:100%; padding-top:20px">
-        <div style="width:33.333%; height:350px; background-color:#AAAAAA; float:left;", id="connectionChartDiv">
-            Connections/sec
+        <div style="width:33.333%; float:left;" class="subsectiontop" id="connectionChartOuter">
+            <div style="width:100%;" class="sectionheader">
+                Connections/sec
+            </div>
+            <div style="width:100%; height:100%; float:left;" id="connectionChartDiv">
+            </div>
         </div>
-        <div style="width:33.333%; height:350px; background-color:#CCCCCC; float:left;", id="bytesChartDiv">
-            Bytes/sec
+        <div style="width:33.333%; float:left;" class="subsectiontop" id="bytesChartOuter">
+            <div style="width:100%;" class="sectionheader">
+                Bytes/sec
+            </div>
+            <div style="width:100%; height:100%; float:left;" id="bytesChartDiv">
+            </div>
         </div>
-        <div style="width:33.333%; height:350px; background-color:#77AACC; float:right;">
-            Graph 3
+        <div style="width:33.333%; float:right;"  class="subsectiontop">
+            <div style="width:100%;" class="sectionheader">
+                Chart 3
+            </div>
+
         </div>
 
-        <div style="width:50%; height:500px; background-color:#00AABB; float:left;">
-            Left: Table of attacks (summary)
+        <div style="width:50%; float:left;" class="subsectionbottom">
+            <div style="width:100%;" class="sectionheader">
+                Summary: Network Attacks
+            </div>
         </div>
-        <div style="width:50%; height:500px; background-color:#AA77FF; float:right;">
-            Right: details of connection/flow and predictions
+        <div style="width:50%; float:right;" class="subsectionbottom">
+            <div style="width:100%;" class="sectionheader">
+                Connection/Attack Information
+            </div>
         </div>
     </div>
 </div>
