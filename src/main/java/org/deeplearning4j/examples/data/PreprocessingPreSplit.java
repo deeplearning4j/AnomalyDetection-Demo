@@ -74,7 +74,7 @@ public class PreprocessingPreSplit {
                 oos.writeObject(dataNormalized.getFirst());
             }
 
-            Thread.sleep(2000);
+            Thread.sleep(200);
             printAnalysis(dqa, "Data quality:");
             printAnalysis(dataAnalyis, "Processed data summary:");
             printAnalysis(normDataAnalysis, "Normalized data summary:");
@@ -85,6 +85,7 @@ public class PreprocessingPreSplit {
             Histograms.plot(normSchema, normDataAnalysis, chartDirNorm);
             System.out.println();
             preprocessedData.unpersist();
+            i++;
         }
 
         sc.close();

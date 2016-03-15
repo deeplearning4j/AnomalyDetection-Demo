@@ -75,7 +75,7 @@ public class BasicAutoEncoderModel {
                 .layer(1, new AutoEncoder.Builder().nIn(nIn[1]).nOut(nOut[1])
                         .corruptionLevel(corruptionLevel).lossFunction(autoLossFunctions).build())
                 .layer(2, new OutputLayer.Builder(lossFunctions).activation("softmax").nIn(nIn[2]).nOut(nOut[2]).build())
-                .pretrain(false).backprop(true)
+                .pretrain(true).backprop(false)
                 .build();
 
         MultiLayerNetwork network = new MultiLayerNetwork(conf);

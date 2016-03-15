@@ -6,6 +6,7 @@ import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.examples.Models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.Models.BasicMLPModel;
 import org.deeplearning4j.examples.Models.BasicRNNModel;
+import org.deeplearning4j.examples.Models.MLPDenoiseModel;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -41,7 +42,7 @@ public class NIDSMain {
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
-    protected String modelType = "MLP";
+    protected String modelType = "Denoise";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
@@ -55,9 +56,9 @@ public class NIDSMain {
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 2;
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
-    protected String trainFile = "normalized0.csv";
+    protected String trainFile = "0NSL_KDDnormalized0.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
-    protected String testFile = "normalized0.csv";
+    protected String testFile = "1NSL_KDDnormalized0.csv";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
 
@@ -67,9 +68,9 @@ public class NIDSMain {
     protected String paramName = null;
 
     @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
-    protected int nIn = 66;
+    protected int nIn = 112;
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
-    protected int nOut = 10; // 2 binary or 10 classification of attack types
+    protected int nOut = 5; // 2 binary or 10 classification of attack types
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
     protected int truncatedBPTTLength = 2;
 
@@ -144,8 +145,8 @@ public class NIDSMain {
         switch (modelType) {
             case "MLP":
                 network = new BasicMLPModel(
-                        new int[]{nIn, 500, 100},
-                        new int[]{500, 100, nOut},
+                        new int[]{nIn, 512, 512},
+                        new int[]{512, 512, nOut},
                         iterations,
                         "leakyrelu",
                         WeightInit.XAVIER,
@@ -172,7 +173,7 @@ public class NIDSMain {
                         123
                         ).buildModel();
                 break;
-            case "Auto":
+            case "StackedAuto":
                 network = new BasicAutoEncoderModel(
                         new int[]{nIn, 500, 100},
                         new int[]{500, 100, nOut},
@@ -183,6 +184,18 @@ public class NIDSMain {
                         1e-3
                         ).buildModel();
                 break;
+            case "Denoise":
+                network = new MLPDenoiseModel(
+                        new int[]{nIn,50,200,300,200,50},
+                        new int[]{50,200,300,200,50,nOut},
+                        iterations,
+                        "leakyrelu",
+                        WeightInit.RELU,
+                        1e-4,
+                        1e-4
+                ).buildModel();
+                break;
+
         }
 
     }
