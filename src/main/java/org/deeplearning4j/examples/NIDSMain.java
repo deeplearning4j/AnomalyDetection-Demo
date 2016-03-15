@@ -6,6 +6,7 @@ import org.deeplearning4j.examples.Models.BasicMLPModel;
 import org.deeplearning4j.examples.Models.BasicRNNModel;
 import org.deeplearning4j.examples.Models.MLPAutoEncoderModel;
 import org.deeplearning4j.examples.utils.DataPathUtil;
+import org.deeplearning4j.examples.utils.Snapshot39Util;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -14,6 +15,8 @@ import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +41,7 @@ public class NIDSMain {
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
-    protected String modelType = "Denoise";
+    protected String modelType = "MLPAuto";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
@@ -74,7 +77,6 @@ public class NIDSMain {
     protected long endTime = 0;
     protected int trainTime = 0;
     protected int testTime = 0;
-    protected int TEST_EVERY_N_MINIBATCHES = numBatches/2;
 
     protected int seed = 123;
     protected int listenerFreq = 1;
@@ -90,6 +92,9 @@ public class NIDSMain {
     protected List<String> labels = NSLKDDUtil.LABELS;
     protected int labelIdx = 66;
     protected MultiLayerNetwork network;
+
+    protected boolean supervised = false;
+    protected int TEST_EVERY_N_MINIBATCHES = (supervised)? numBatches/2: numBatches+ 1;
 
     public void run(String[] args) throws Exception {
         // Parse command line arguments if they exist
@@ -113,7 +118,13 @@ public class NIDSMain {
                 MultipleEpochsIterator testData = standard.loadData(batchSize, DataPathUtil.TEST_DATA_PATH + testFile, labelIdx, 1, numTestBatches);
                 network = standard.trainModel(network, trainData, testData);
                 System.out.println("\nFinal evaluation....");
-                standard.evaluatePerformance(network, testData);
+                if(supervised){
+                    standard.evaluatePerformance(network, testData);
+                } else {
+                    DataSet test = testData.next(1);
+                    double result = new Snapshot39Util().scoreExample(network, test, true, LossFunctions.LossFunction.MSE);
+                    System.out.println("\nFinal evaluation score: " +  result);
+                }
                 break;
 //            case "SparkStandAlone":
 //            case "SparkCluster":
