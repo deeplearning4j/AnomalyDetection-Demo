@@ -1,4 +1,4 @@
-package org.deeplearning4j.examples;
+package org.deeplearning4j.examples.utils;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -7,7 +7,7 @@ import java.io.File;
 /**
  *
  */
-public class DataPath {
+public class DataPathUtil {
 
     public static boolean WIN = System.getProperty("os.name").toLowerCase().contains("win");
     public static final String WIN_DIR = "C:/Data/";
@@ -44,7 +44,7 @@ public class DataPath {
     protected static String S3_KEY_PREFIX_OUT = "nids/preprocessed/";
 
 
-    public DataPath(String dataSet){
+    public DataPathUtil(String dataSet){
         this.dataSet = dataSet;
         this.DATA_BASE_DIR = WIN ? FilenameUtils.concat(WIN_DIR, dataSet) : FilenameUtils.concat(MAC_DIR, dataSet);
         this.RAW_DIR = FilenameUtils.concat(DATA_BASE_DIR, rawFilePath);

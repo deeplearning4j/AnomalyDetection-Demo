@@ -1,14 +1,13 @@
 package org.deeplearning4j.examples.iscx;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.TransformSequence;
@@ -24,15 +23,12 @@ import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
-import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
 import org.deeplearning4j.examples.data.transform.normalize.Normalize;
-import org.deeplearning4j.examples.data.transform.string.*;
 import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,8 +40,8 @@ public class PreprocessingISCX {
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "ISCX";
 
-    protected static final DataPath PATH = new DataPath(dataSet);
-    public static final String IN_DIRECTORY = DataPath.REPO_BASE_DIR + "TestbedMonJun14Flows.csv"; //PATH.IN_DIR;
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
+    public static final String IN_DIRECTORY = DataPathUtil.REPO_BASE_DIR + "TestbedMonJun14Flows.csv"; //PATH.IN_DIR;
     public static final String OUT_DIRECTORY = PATH.REPO_BASE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
     public static final String CHART_DIRECTORY_NORM =PATH.CHART_DIR_NORM;
@@ -58,41 +54,7 @@ public class PreprocessingISCX {
         Schema csvSchema = ISCXUtil.getCsvSchema();
 
         //Set up the sequence of transforms:
-        TransformSequence seq = new TransformSequence.Builder(csvSchema)
-                .removeColumns("source payload base64", "destination payload base64")
-                .transform(new StringToCategoricalTransform("direction", "L2L", "L2R", "R2L", "R2R"))
-                .transform(new StringToCategoricalTransform("protocol name", "icmp_ip", "udp_ip", "ip", "ipv6icmp", "tcp_ip", "igmp"))
-                .transform(new StringToCategoricalTransform("label", "Attack", "Normal"))
-                .transform(new StringToCategoricalTransform("appName",
-                        "MiscApp", "WebFileTransfer", "rexec", "Misc-Mail-Port", "Web-Port", "HTTPWeb", "Telnet", "VNC",
-                        "NortonAntiVirus", "WindowsFileSharing", "IPX", "Kazaa", "SIP", "Ingres", "NFS", "Hotline",
-                        "ManagementServices", "TFTP", "Unknown_TCP", "Authentication", "iChat", "SNMP-Ports", "Filenet",
-                        "dsp3270", "PostgreSQL", "SNA", "IPSec", "Common-Ports", "Common-P2P-Port", "Misc-DB", "Nessus",
-                        "StreamingAudio", "IRC", "AOL-ICQ", "SSL-Shell", "rsh", "Unknown_UDP", "Tacacs", "Timbuktu",
-                        "SecureWeb", "XFER", "NETBEUI", "Anet", "TimeServer", "UpdateDaemon", "Blubster", "IMAP",
-                        "PCAnywhere", "H.323", "Printer", "MGCP", "Google", "Squid", "Oracle", "NNTPNews",
-                        "MicrosoftMediaServer", "rlogin", "OpenNap", "Citrix", "RTSP", "MDQS", "Flowgen", "MSN",
-                        "NortonGhost", "Intellex", "MiscApplication", "Real", "Network-Config-Ports", "LDAP", "MS-SQL",
-                        "NetBIOS-IP", "FTP", "GuptaSQLBase", "MSTerminalServices", "SunRPC", "ICMP", "Hosts2-Ns",
-                        "MSN-Zone", "Webmin", "DNS", "POP-port", "IGMP", "POP", "BGP", "WebMediaVideo", "SSDP", "NTP",
-                        "MSMQ", "SAP", "SMTP", "giop-ssl", "Misc-Ports", "SMS", "RPC", "PeerEnabler", "Groove", "Yahoo",
-                        "WebMediaDocuments", "WebMediaAudio", "XWindows", "DNS-Port", "BitTorrent", "OpenWindows",
-                        "PPTP", "SSH", "HTTPImageTransfer", "Gnutella"))
-
-                //Possible values for source/destination TCP flags: F, S, R, A, P, U, Illegal&, Illegal8, N/A, empty string
-                .transform(new StringListToCategoricalSetTransform(
-                        "source TCP flags",
-                        Arrays.asList("sourceTCP_F", "sourceTCP_S", "sourceTCP_R", "sourceTCP_A", "sourceTCP_P", "sourceTCP_U",
-                                "sourceTCP_Illegal7", "sourceTCP_Illegal8", "sourceTCP_N/A"),
-                        Arrays.asList("F", "S", "R", "A", "P", "U", "Illegal7", "Illegal8", "N/A"),
-                        ";"))
-                .transform(new StringListToCategoricalSetTransform(
-                        "destination TCP flags",
-                        Arrays.asList("destinationTCP_F", "destinationTCP_S", "destinationTCP_R", "destinationTCP_A", "destinationTCP_P",
-                                "destinationTCP_U", "destinationTCP_Illegal7", "destinationTCP_Illegal8", "destinationTCP_N/A"),
-                        Arrays.asList("F", "S", "R", "A", "P", "U", "Illegal7", "Illegal8", "N/A"),
-                        ";"))
-                .build();
+        TransformSequence seq = ISCXUtil.getpreProcessingSequence();
 
         Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,dataSet + "preprocessedDataSchema.txt"),preprocessedSchema.toString());
@@ -141,8 +103,8 @@ public class PreprocessingISCX {
 
             //Save as CSV file
             int nSplits = 1;
-            SparkExport.exportCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-            SparkExport.exportCSVLocal(DataPath.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+            SparkExport.exportCSVLocal(DataPathUtil.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+            SparkExport.exportCSVLocal(DataPathUtil.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
             FileUtils.writeStringToFile(new File(OUT_DIRECTORY, dataSet + "normDataSchema.txt"), normSchema.toString());
         }
 

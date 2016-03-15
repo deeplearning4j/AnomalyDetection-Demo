@@ -23,17 +23,28 @@ import org.deeplearning4j.examples.data.transform.string.StringMapTransform;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by Alex on 5/03/2016.
  */
 public class NSLKDDUtil {
 
-    public static Schema getNLSKDDCsvSchema(){
+
+    public static final List<String> LABELS = Arrays.asList("normal", "neptune", "warezclient", "ipsweep", "portsweep",
+            "teardrop", "nmap", "satan", "smurf", "pod", "back", "guess_passwd", "ftp_write", "multihop", "rootkit",
+            "buffer_overflow", "imap", "warezmaster", "phf", "land", "loadmodule", "spy", "perl", "processtable",
+            "named", "xterm", "httptunnel", "saint", "ps", "mailbomb", "sendmail", "snmpgetattack", "apache2",
+            "xlock", "xsnoop", "udpstorm", "snmpguess", "worm", "sqlattack", "mscan");
+
+    public static Schema getCsvSchema(){
 
         Schema csvSchema = new Schema.Builder()
                 .addColumnReal("duration")
-                .addColumnsString("transaction_protocol", "service", "connection_status")
+                .addColumnCategorical("transaction_protocol", "udp", "tcp", "icmp")
+                .addColumnString("service")
+                .addColumnCategorical("connection_status", "SF", "S0", "REJ", "RSTR", "SH", "RSTO",
+                        "S1", "RSTOS0", "S3", "S2", "OTH")
                 .addColumnsReal("src_bytes", "dst_bytes")
                 .addColumnInteger("land")
                 .addColumnsInteger("num_wrong_fragment", "num_urgent",
@@ -50,7 +61,7 @@ public class NSLKDDUtil {
                         "dst_host_same_src_port_rate", "dst_host_srv_diff_host_rate",
                         "dst_host_serror_rate", "dst_host_srv_serror_rate",
                         "dst_host_rerror_rate", "dst_host_srv_rerror_rate")
-                .addColumnString("attack")
+                .addColumnCategorical("attack", LABELS)
                 .addColumnInteger("other")
                 .build();
 
@@ -58,8 +69,7 @@ public class NSLKDDUtil {
     }
 
     public static TransformSequence getpreProcessingSequence(){
-        TransformSequence seq = new TransformSequence.Builder(getNLSKDDCsvSchema())
-                .transform(new StringToCategoricalTransform("transaction_protocol", "udp", "tcp", "icmp"))
+        TransformSequence seq = new TransformSequence.Builder(getCsvSchema())
                 .transform(new MapAllStringsExceptListTransform("service", "other",  Arrays.asList("other", "private", "http", "ftp_data","name",
                         "netbios_ns", "eco_i", "mtp", "telnet", "finger", "domain_u", "supdup", "uucp_path", "Z39_50",
                         "smtp", "csnet_ns", "uucp", "netbios_dgm", "urp_i", "auth", "domain", "ftp", "bgp", "ldap","ecr_i",
@@ -75,14 +85,8 @@ public class NSLKDDUtil {
                         "sunrpc", "login","kshell", "sql_net", "time", "hostnames", "exec", "ntp_u","discard", "nntp", "courier",
                         "ctf", "ssh", "daytime", "netstat", "nnsp", "IRC", "pop_3", "netbios_ssn", "remote_job","pop_2","printer",
                         "rje", "shell", "X11"))
-                .transform(new StringToCategoricalTransform("connection_status", "SF", "S0", "REJ", "RSTR", "SH", "RSTO",
-                        "S1", "RSTOS0", "S3", "S2", "OTH")) // state
-                .transform(new StringToCategoricalTransform("attack", "normal", "neptune", "warezclient", "ipsweep", "portsweep",
-                        "teardrop", "nmap", "satan", "smurf", "pod", "back", "guess_passwd", "ftp_write", "multihop", "rootkit",
-                        "buffer_overflow", "imap", "warezmaster", "phf", "land", "loadmodule", "spy", "perl", "processtable",
-                        "named", "xterm", "httptunnel", "saint", "ps", "mailbomb", "sendmail", "snmpgetattack", "apache2",
-                        "xlock", "xsnoop", "udpstorm", "snmpguess", "worm", "sqlattack", "mscan"))
                 .removeColumns("num_outbound_cmds", "other") // num_outbound_commands = 0 only not informative
+//                .removeColumns("attack") // remove for unsupervised
                 .build();
 
         return seq;

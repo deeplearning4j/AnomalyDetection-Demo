@@ -7,7 +7,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
@@ -32,7 +32,6 @@ import org.deeplearning4j.examples.data.transform.string.StringListToCategorical
 import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
-import scala.collection.Seq;
 
 import java.io.File;
 import java.util.Arrays;
@@ -45,7 +44,7 @@ public class PreprocessingISCXSequence {
 
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "ISCX";
-    protected static final DataPath PATH = new DataPath(dataSet);
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
     public static final String IN_DIRECTORY = PATH.IN_DIR; //DataPath.REPO_BASE_DIR + "TestbedMonJun14Flows.csv";
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
@@ -150,8 +149,8 @@ public class PreprocessingISCXSequence {
 
             //Save as CSV file
             int nSplits = 1;
-            SparkExport.exportSequenceCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-            SparkExport.exportSequenceCSVLocal(DataPath.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+            SparkExport.exportSequenceCSVLocal(DataPathUtil.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+            SparkExport.exportSequenceCSVLocal(DataPathUtil.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
             FileUtils.writeStringToFile(new File(OUT_DIRECTORY, dataSet + "normDataSchema.txt"), normSchema.toString());
         }
         sc.close();

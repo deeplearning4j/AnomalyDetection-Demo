@@ -13,7 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class ISCXDataConvert {
 
 
     protected static String dataSet = "ISCX";
-    protected static final DataPath PATH = new DataPath(dataSet);
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
     public static final String IN_DIRECTORY = PATH.RAW_DIR;
     public static final String OUT_DIRECTORY = PATH.IN_DIR;
 

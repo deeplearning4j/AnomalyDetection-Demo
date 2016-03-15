@@ -4,7 +4,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
@@ -19,7 +19,7 @@ public class NB15SplitTrainTestRaw {
 
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
-    protected static final DataPath PATH = new DataPath(dataSet);
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
     public static final String IN_DIRECTORY = PATH.IN_DIR;
 
     public static final String RAW_TRAIN_TEST_DIR = PATH.RAW_TRAIN_TEST_SPLIT_DIR;

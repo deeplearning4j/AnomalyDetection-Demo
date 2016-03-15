@@ -1,27 +1,24 @@
 package org.deeplearning4j.examples;
 
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.examples.Models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.Models.BasicMLPModel;
 import org.deeplearning4j.examples.Models.BasicRNNModel;
-import org.deeplearning4j.examples.Models.MLPDenoiseModel;
+import org.deeplearning4j.examples.Models.MLPAutoEncoderModel;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.deeplearning4j.examples.nslkdd.NSLKDDUtil;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,19 +38,19 @@ public class NIDSMain {
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
-    protected String modelType = "MLP";
+    protected String modelType = "Denoise";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
     protected int testBatchSize = batchSize;
     @Option(name="--numBatches",usage="Number of batches",aliases="-nB")
-    protected int numBatches = 3; // set to max 20000 when full set
+    protected int numBatches = 200; // consider 20K
     @Option(name="--numTestBatches",usage="Number of test batches",aliases="-nTB")
     protected int numTestBatches = numBatches; // set to 2500 when full set
     @Option(name="--numEpochs",usage="Number of epochs",aliases="-nE")
-    protected int numEpochs = 1; // consider 60
+    protected int numEpochs = 2; // consider 60
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
-    protected int iterations = 2;
+    protected int iterations = 1;
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
     protected String trainFile = "0NSL_KDDnormalized0.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
@@ -69,7 +66,7 @@ public class NIDSMain {
     @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
     protected int nIn = 112;
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
-    protected int nOut = 5; // 2 binary or 10 classification of attack types
+    protected int nOut = 40; // 2 binary or 10 classification of attack types
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
     protected int truncatedBPTTLength = 2;
 
@@ -77,20 +74,20 @@ public class NIDSMain {
     protected long endTime = 0;
     protected int trainTime = 0;
     protected int testTime = 0;
-    protected int TEST_EVERY_N_MINIBATCHES = 2 * numEpochs;
+    protected int TEST_EVERY_N_MINIBATCHES = numBatches/2;
 
     protected int seed = 123;
     protected int listenerFreq = 1;
     protected int totalTrainNumExamples = batchSize * numBatches;
     protected int totalTestNumExamples = testBatchSize * numTestBatches;
 
-    protected static String outputFilePath = DataPath.REPO_BASE_DIR;
+    protected static String outputFilePath = DataPathUtil.REPO_BASE_DIR;
     protected String confPath = this.toString() + "conf.yaml";
     protected String paramPath = this.toString() + "param.bin";
     protected Map<String, String> paramPaths = new HashMap<>();
 
 
-    protected List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
+    protected List<String> labels = NSLKDDUtil.LABELS;
     protected int labelIdx = 66;
     protected MultiLayerNetwork network;
 
@@ -112,8 +109,8 @@ public class NIDSMain {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
                 System.out.println("\nLoad data....");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPath.TRAIN_DATA_PATH + trainFile, labelIdx, numEpochs, numBatches);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPath.TEST_DATA_PATH + testFile, labelIdx, 1, numTestBatches);
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPathUtil.TRAIN_DATA_PATH + trainFile, labelIdx, numEpochs, numBatches);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPathUtil.TEST_DATA_PATH + testFile, labelIdx, 1, numTestBatches);
                 network = standard.trainModel(network, trainData, testData);
                 System.out.println("\nFinal evaluation....");
                 standard.evaluatePerformance(network, testData);
@@ -172,7 +169,7 @@ public class NIDSMain {
                         123
                         ).buildModel();
                 break;
-            case "StackedAuto":
+            case "Denoise":
                 network = new BasicAutoEncoderModel(
                         new int[]{nIn, 500, 100},
                         new int[]{500, 100, nOut},
@@ -183,8 +180,8 @@ public class NIDSMain {
                         1e-3
                         ).buildModel();
                 break;
-            case "Denoise":
-                network = new MLPDenoiseModel(
+            case "MLPAuto":
+                network = new MLPAutoEncoderModel(
                         new int[]{nIn,50,200,300,200,50},
                         new int[]{50,200,300,200,50,nOut},
                         iterations,

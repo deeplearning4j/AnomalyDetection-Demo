@@ -1,15 +1,13 @@
 package org.deeplearning4j.examples.nb15;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.math3.util.Pair;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.misc.Histograms;
@@ -25,18 +23,8 @@ import org.deeplearning4j.examples.data.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
-import org.deeplearning4j.examples.data.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
-import org.deeplearning4j.examples.data.transform.categorical.IntegerToCategoricalTransform;
-import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
-import org.deeplearning4j.examples.data.transform.integer.ReplaceEmptyIntegerWithValueTransform;
-import org.deeplearning4j.examples.data.transform.integer.ReplaceInvalidWithIntegerTransform;
-import org.deeplearning4j.examples.data.transform.ConditionalTransform;
 import org.deeplearning4j.examples.data.transform.normalize.Normalize;
-import org.deeplearning4j.examples.data.transform.string.MapAllStringsExceptListTransform;
-import org.deeplearning4j.examples.data.transform.string.RemoveWhiteSpaceTransform;
-import org.deeplearning4j.examples.data.transform.string.ReplaceEmptyStringTransform;
-import org.deeplearning4j.examples.data.transform.string.StringMapTransform;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
 
@@ -52,15 +40,15 @@ public class PreprocessingNB15 {
 
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
-    protected static final DataPath PATH = new DataPath(dataSet);
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
     public static final String IN_DIRECTORY = PATH.IN_DIR;
-    public static final String OUT_DIRECTORY = DataPath.REPO_BASE_DIR + dataSet;
+    public static final String OUT_DIRECTORY = DataPathUtil.REPO_BASE_DIR + dataSet;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
     public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
 
     public static void main(String[] args) throws Exception {
         // For AWS
-        if(DataPath.AWS) {
+        if(DataPathUtil.AWS) {
             // pull down raw
 //            S3Downloader s3Down = new S3Downloader();
 //            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
@@ -114,8 +102,8 @@ public class PreprocessingNB15 {
 
         //Save as CSV file
         int nSplits = 1;
-        SparkExport.exportCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
-        SparkExport.exportCSVLocal(DataPath.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(DataPathUtil.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(DataPathUtil.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getThird(), 12345);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
         //Save the normalizer transform sequence:
@@ -127,7 +115,7 @@ public class PreprocessingNB15 {
         sc.close();
 
 
-        if(DataPath.AWS) {
+        if(DataPathUtil.AWS) {
             // load preprocessed
             throw new UnsupportedOperationException();
 //            S3Uploader s3Up = new S3Uploader();

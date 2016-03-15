@@ -7,7 +7,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.ColumnType;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
@@ -21,12 +21,8 @@ import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.executor.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
-import org.deeplearning4j.examples.data.split.RandomSplit;
-import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
-import org.deeplearning4j.examples.data.transform.normalize.Normalize;
 import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.misc.SparkExport;
-import org.deeplearning4j.examples.misc.SparkUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,7 +38,7 @@ public class PreprocessingNB15PreSplit {
 
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
-    protected static final DataPath PATH = new DataPath(dataSet);
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
     public static final String RAW_TRAIN_DATA_FILE = PATH.RAW_TRAIN_PATH;
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
@@ -50,7 +46,7 @@ public class PreprocessingNB15PreSplit {
 
     public static void main(String[] args) throws Exception {
         // For AWS
-        if(DataPath.AWS) {
+        if(DataPathUtil.AWS) {
             // pull down raw
 //            S3Downloader s3Down = new S3Downloader();
 //            MultipleFileDownload mlpDown = s3Down.downloadFolder(s3Bucket, s3KeyPrefixOut, new File(System.getProperty("user.home") + inputFilePath));
@@ -94,7 +90,7 @@ public class PreprocessingNB15PreSplit {
 
         //Save normalized training data as CSV file
         int nSplits = 1;
-        SparkExport.exportCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(DataPathUtil.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
 
         //Save the normalizer transform sequence:
@@ -105,7 +101,7 @@ public class PreprocessingNB15PreSplit {
         sc.close();
 
 
-        if(DataPath.AWS) {
+        if(DataPathUtil.AWS) {
             // load preprocessed
             throw new UnsupportedOperationException();
 //            S3Uploader s3Up = new S3Uploader();

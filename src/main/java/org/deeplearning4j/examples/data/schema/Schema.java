@@ -140,6 +140,10 @@ public class Schema implements Serializable {
             return addColumn(name,new CategoricalMetaData(stateNames));
         }
 
+        public Builder addColumnCategorical(String name, List<String> stateNames){
+            return addColumn(name,new CategoricalMetaData(stateNames));
+        }
+
         public Builder addColumnLong(String name){
             return addColumn(name, new LongMetaData());
         }

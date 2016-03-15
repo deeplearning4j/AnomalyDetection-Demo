@@ -23,11 +23,15 @@ import org.deeplearning4j.examples.data.transform.string.StringMapTransform;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by Alex on 5/03/2016.
  */
 public class NB15Util {
+
+    public static final List<String> LABELS  = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS",
+            "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
 
     public static Schema getNB15CsvSchema(){
 

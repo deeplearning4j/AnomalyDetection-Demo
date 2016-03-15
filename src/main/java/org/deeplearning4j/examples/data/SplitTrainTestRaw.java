@@ -3,7 +3,7 @@ package org.deeplearning4j.examples.data;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.split.RandomSplit;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
@@ -21,7 +21,7 @@ public class SplitTrainTestRaw {
 
     public static void main(String[] args) throws Exception {
         dataSet = args[0];
-        DataPath PATH = new DataPath(dataSet);
+        DataPathUtil PATH = new DataPathUtil(dataSet);
         String IN_DIRECTORY = PATH.IN_DIR;
 
         SparkConf sparkConf = new SparkConf();

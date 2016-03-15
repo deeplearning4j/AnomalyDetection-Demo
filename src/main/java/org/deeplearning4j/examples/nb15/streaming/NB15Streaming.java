@@ -7,7 +7,7 @@ import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.nb15.NB15Util;
@@ -32,7 +32,7 @@ import java.util.Map;
 public class NB15Streaming {
 
     protected static String dataSet = "UNSW_NB15";
-    protected static final DataPath PATH = new DataPath(dataSet);
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
 
     private static final boolean WIN = System.getProperty("os.name").toLowerCase().contains("win");
     private static final String WIN_DIR = "C:/Data/UNSW_NB15/";

@@ -29,10 +29,9 @@ public class StandardNIDS extends NIDSMain{
         DataSet next;
         System.out.println("Train model....");
         startTime = System.currentTimeMillis();
-        int countTrain = 0;
 
-        while(iter.hasNext()) {
-            countTrain++;
+        int countTrain = 0;
+        while(iter.hasNext()  && countTrain++ < numBatches) {
             next = iter.next();
             if(next == null) break;
             net.fit(next);

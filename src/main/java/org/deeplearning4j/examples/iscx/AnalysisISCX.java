@@ -1,12 +1,11 @@
 package org.deeplearning4j.examples.iscx;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
@@ -20,7 +19,7 @@ import java.util.Collection;
 public class AnalysisISCX {
 
     protected static String dataSet = "ISCX";
-    protected static final DataPath PATH = new DataPath(dataSet);
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
     public static final String IN_DIRECTORY = PATH.IN_DIR;
 
     public static void main(String[] args) throws Exception {

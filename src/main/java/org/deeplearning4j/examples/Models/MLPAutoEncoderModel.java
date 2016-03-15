@@ -13,7 +13,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 /**
  */
 
-public class MLPDenoiseModel {
+public class MLPAutoEncoderModel {
 
     protected int[] nIn;
     protected int[] nOut;
@@ -28,15 +28,15 @@ public class MLPDenoiseModel {
     double dropoutRate = 0.7;
     protected long seed;
 
-    public MLPDenoiseModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit, double learningRate, double l2){
+    public MLPAutoEncoderModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit, double learningRate, double l2){
         this(nIn, nOut, iterations, activation, weightInit, OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
                 Updater.NESTEROVS, LossFunctions.LossFunction.MCXENT, learningRate, l2, 123);
     }
 
 
-    public MLPDenoiseModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit,
-                         OptimizationAlgorithm optimizationAlgorithm, Updater updater, LossFunctions.LossFunction lossFunctions,
-                         double learningRate , double l2, long seed) {
+    public MLPAutoEncoderModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit,
+                               OptimizationAlgorithm optimizationAlgorithm, Updater updater, LossFunctions.LossFunction lossFunctions,
+                               double learningRate , double l2, long seed) {
         this.nIn = nIn;
         this.nOut = nOut;
         this.iterations = iterations;

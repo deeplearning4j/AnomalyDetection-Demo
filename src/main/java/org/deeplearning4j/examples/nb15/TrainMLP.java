@@ -1,14 +1,11 @@
 package org.deeplearning4j.examples.nb15;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.spark.mllib.classification.impl.GLMClassificationModel;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
-import org.canova.api.util.ClassPathResource;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -40,7 +37,7 @@ public class TrainMLP {
     protected static String dataSet = "UNSW_NB15";
     public static final String trainFile = "normalized0.csv";  // "csv_preprocessed.csv"
     public static final String testFile = "normalized0.csv"; // "csv_test_preprocessed.csv"
-    public static final String NETWORK_SAVE_DIR = new DataPath("UNSW_NB15").OUT_DIR;
+    public static final String NETWORK_SAVE_DIR = new DataPathUtil("UNSW_NB15").OUT_DIR;
 
     public static void main(String[] args) throws Exception {
 
@@ -54,11 +51,11 @@ public class TrainMLP {
         List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
 
         CSVRecordReader rr = new CSVRecordReader(0,",");
-        rr.initialize(new FileSplit(new File(DataPath.TRAIN_DATA_PATH, trainFile)));
+        rr.initialize(new FileSplit(new File(DataPathUtil.TRAIN_DATA_PATH, trainFile)));
         DataSetIterator iterTrain = new RecordReaderDataSetIterator(rr,minibatchSize,labelIdx,nOut);
 
         CSVRecordReader rrTest = new CSVRecordReader(0,",");
-        rrTest.initialize(new FileSplit(new File(DataPath.TRAIN_DATA_PATH, testFile)));
+        rrTest.initialize(new FileSplit(new File(DataPathUtil.TRAIN_DATA_PATH, testFile)));
         DataSetIterator iterTest = new RecordReaderDataSetIterator(rrTest,minibatchSize,labelIdx,nOut);
 
 //        int MAX_TRAIN_MINIBATCHES = 20000;

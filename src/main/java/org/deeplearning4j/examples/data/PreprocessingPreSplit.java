@@ -7,7 +7,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.DataPath;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
 import org.deeplearning4j.examples.data.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
@@ -36,9 +36,9 @@ public class PreprocessingPreSplit {
         TransformSequence seq = NSLKDDUtil.getpreProcessingSequence(); // haven't figured out how to pass in
         String dataSet =  args[0]; //"NSL_KDD";
 
-        DataPath path = new DataPath(dataSet);
+        DataPathUtil path = new DataPathUtil(dataSet);
         List<String> inputDir = Arrays.asList(path.RAW_TRAIN_PATH, path.RAW_TEST_PATH);
-        List<String> trainTestDir = Arrays.asList(DataPath.TRAIN_DATA_PATH, DataPath.TEST_DATA_PATH);
+        List<String> trainTestDir = Arrays.asList(DataPathUtil.TRAIN_DATA_PATH, DataPathUtil.TEST_DATA_PATH);
         String outDir = path.PRE_DIR;
         String chartDirOrig = path.CHART_DIR_ORIG;
         String chartDirNorm = path.CHART_DIR_NORM;
