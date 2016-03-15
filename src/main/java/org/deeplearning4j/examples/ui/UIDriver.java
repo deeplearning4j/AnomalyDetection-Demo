@@ -9,10 +9,7 @@ import io.dropwizard.views.ViewBundle;
 import io.dropwizard.views.ViewMessageBodyWriter;
 import org.canova.api.berkeley.Pair;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.ui.components.RenderElements;
-import org.deeplearning4j.examples.ui.components.RenderableComponent;
-import org.deeplearning4j.examples.ui.components.RenderableComponentLineChart;
-import org.deeplearning4j.examples.ui.components.RenderableComponentTable;
+import org.deeplearning4j.examples.ui.components.*;
 import org.deeplearning4j.examples.ui.config.NIDSConfig;
 import org.deeplearning4j.examples.ui.resources.FlowDetailsResource;
 import org.deeplearning4j.examples.ui.resources.LineChartResource;
@@ -46,6 +43,8 @@ public class UIDriver extends Application<NIDSConfig> {
 
     private static TableConverter tableConverter;
     private static Map<String,Integer> columnsMap;
+    private static List<String> classNames;
+    private static int normalClassIdx;
 
     private LinkedBlockingQueue<Tuple3<Long,INDArray,Collection<Writable>>> predictions = new LinkedBlockingQueue<>();
     private AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -127,6 +126,13 @@ public class UIDriver extends Application<NIDSConfig> {
         UIDriver.columnsMap = map;
     }
 
+    public static void setClassNames(List<String> classNames){
+        UIDriver.classNames = classNames;
+    }
+
+    public static void setNormalClassIdx(int normalClassIdx){
+        UIDriver.normalClassIdx = normalClassIdx;
+    }
 
     public void addPrediction(Tuple3<Long,INDArray,Collection<Writable>> prediction){
         this.predictions.add(prediction);
@@ -148,6 +154,11 @@ public class UIDriver extends Application<NIDSConfig> {
         private LinkedList<Pair<Long,Double>> connectionRateHistory = new LinkedList<>();
         private LinkedList<Pair<Long,Double>> byteRateHistory = new LinkedList<>();
         private LinkedList<Tuple3<Long,INDArray,Collection<Writable>>> lastAttacks = new LinkedList<>();
+
+        //Keep a small history here, to smooth out the instantaneous rate calculations (i.e., delta(connections_now - connections_t-3)) etc
+        private LinkedList<Long> flowCountHistory = new LinkedList<>();
+        private LinkedList<Long> updateTimeHistory = new LinkedList<>();
+        private LinkedList<Double> sumBytesHistory = new LinkedList<>();
 
         @Override
         public void run() {
@@ -195,30 +206,75 @@ public class UIDriver extends Application<NIDSConfig> {
                         }catch(Exception e){ }
                     }
 
+                    //Now: determine if this is an attack or not...
+                    float[] probs = t3._2().data().asFloat();
+                    if(probs[normalClassIdx] < 0.5f){
+                        //Attack
+                        lastAttacks.add(t3);
 
-                    //This appears to be a significant bottleneck... causing very significant delays, and processing to completely stop at times
-//                    RenderableComponent rc = tableConverter.rawDataToTable(c);
-//                    RenderElements re = new RenderElements(rc);
-//                    WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
-//                    wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-//                            .post(Entity.entity(re,MediaType.APPLICATION_JSON));
+                        //This appears to be a bottleneck at times... maybe ok if just attacks though...
+                        RenderableComponent rc = tableConverter.rawDataToTable(c);
+                        RenderableComponent barChart = new RenderableComponentHorizontalBarChart.Builder()
+                                .addValues(classNames,probs)
+                                .margins(10,20,150,20)
+                                .xMin(0.0).xMax(1.0)
+                                .build();
+
+
+                        RenderElements re = new RenderElements(rc,barChart);
+                        WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
+                        wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                                .post(Entity.entity(re,MediaType.APPLICATION_JSON));
+                        
+                    }
                 }
 
 
                 //Calculate the rate of updates (connections/sec). Just do delta connections / delta time for now
+//                if(lastUpdateTime > 0){
+//                    double connectionsPerSec = 1000.0 * list.size() / (System.currentTimeMillis() - lastUpdateTime);
+////                    double bytesPerSec = 1000.0 * sumBytes / (System.currentTimeMillis() - lastUpdateTime);
+//                    double kBytesPerSec = 1000.0 * sumBytes / ((System.currentTimeMillis() - lastUpdateTime) * 1024.0);
+//                    //1000.0 is due to time being in MS, rate being in connections/sec
+//
+//                    lastUpdateTime = System.currentTimeMillis();
+//
+//                    //Add the new instantaneous rate:
+//                    connectionRateHistory.add(new Pair<>(lastUpdateTime,connectionsPerSec));
+//                    byteRateHistory.add(new Pair<>(lastUpdateTime,kBytesPerSec));
+//                } else {
+//                    lastUpdateTime = System.currentTimeMillis();
+//                }
+
                 if(lastUpdateTime > 0){
-                    double connectionsPerSec = 1000.0 * list.size() / (System.currentTimeMillis() - lastUpdateTime);
-                    double bytesPerSec = 1000.0 * sumBytes / (System.currentTimeMillis() - lastUpdateTime);
+                    long pastUpdateTime = updateTimeHistory.getFirst();
+                    long pastCount = flowCountHistory.getFirst();
+                    long newCount = flowCountHistory.getLast() + list.size();
+                    double connectionsPerSec = 1000.0 * (newCount - pastCount) / (System.currentTimeMillis() - pastUpdateTime);
+//                    double bytesPerSec = 1000.0 * sumBytes / (System.currentTimeMillis() - lastUpdateTime);
+
+                    double pastSumBytes = sumBytesHistory.getFirst();
+                    double newSumBytes = sumBytesHistory.getLast() + sumBytes;
+                    double kBytesPerSec = 1000.0 * (newSumBytes - pastSumBytes) / ((System.currentTimeMillis() - pastUpdateTime) * 1024.0);
                     //1000.0 is due to time being in MS, rate being in connections/sec
 
                     lastUpdateTime = System.currentTimeMillis();
 
                     //Add the new instantaneous rate:
                     connectionRateHistory.add(new Pair<>(lastUpdateTime,connectionsPerSec));
-                    byteRateHistory.add(new Pair<>(lastUpdateTime,bytesPerSec));
+                    byteRateHistory.add(new Pair<>(lastUpdateTime,kBytesPerSec));
                 } else {
                     lastUpdateTime = System.currentTimeMillis();
                 }
+
+                flowCountHistory.addLast((flowCountHistory.size() > 0 ? flowCountHistory.getLast() + list.size() : list.size()));
+                updateTimeHistory.addLast(lastUpdateTime);
+                sumBytesHistory.addLast((sumBytesHistory.size() > 0 ? sumBytesHistory.getLast() + sumBytes : sumBytes));
+
+                while(flowCountHistory.size() > 4 ) flowCountHistory.removeFirst();
+                while(updateTimeHistory.size() > 4 ) updateTimeHistory.removeFirst();
+                while(sumBytesHistory.size() > 4) sumBytesHistory.removeFirst();
+
 
                 //Remove any old instantaneous rates (older than chart cutoff)
                 Pair<Long,Double> last = (connectionRateHistory.isEmpty() ? null : connectionRateHistory.getFirst());
@@ -258,7 +314,7 @@ public class UIDriver extends Application<NIDSConfig> {
                         .post(Entity.entity(connectionRate,MediaType.APPLICATION_JSON));
 
                 RenderableComponent byteRate = new RenderableComponentLineChart.Builder()
-                        .addSeries("Bytes/sec",bytesTime,bytesRate).build();
+                        .addSeries("kBytes/sec",bytesTime,bytesRate).build();
 
                 bytesRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                         .post(Entity.entity(byteRate,MediaType.APPLICATION_JSON));
@@ -267,19 +323,26 @@ public class UIDriver extends Application<NIDSConfig> {
 
                 //Now, post details of the last 20 attacks
                 //For now: just post details of last 20 FLOWS, whether attacks or not
-                //TODO do this more efficiently + better (+ don't make assumptions about order?)
-                lastAttacks.addAll(list);
                 while(lastAttacks.size() > 20) lastAttacks.removeFirst();
 
                 String[][] table = new String[lastAttacks.size()][5];
                 int j=0;
                 for(Tuple3<Long,INDArray,Collection<Writable>> t3 : lastAttacks ){
                     List<Writable> l = (t3._3() instanceof List ? ((List<Writable>)t3._3()) : new ArrayList<>(t3._3()));
+                    float[] probs = t3._2().data().asFloat();
+                    int maxIdx = 0;
+                    for( int k=1; k<probs.length; k++ ){
+                        if(probs[maxIdx] < probs[k] ) maxIdx = k;
+                    }
+
+                    float attackProb = 100.0f * (1.0f - probs[normalClassIdx]);
+                    String attackProbStr = (attackProb <1.0f ? "< 1%" : String.format("%.1f",attackProb) + "%");
+
                     table[j][0] = String.valueOf(t3._1());
                     table[j][1] = l.get(columnsMap.get("source ip")) + " : " + l.get(columnsMap.get("source port"));
                     table[j][2] = l.get(columnsMap.get("destination ip")) + " : " + l.get(columnsMap.get("destination port"));
-                    table[j][3] = "-";
-                    table[j][4] = "-";
+                    table[j][3] = attackProbStr;
+                    table[j][4] = classNames.get(maxIdx);
                     j++;
                 }
 

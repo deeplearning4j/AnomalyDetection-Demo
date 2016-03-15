@@ -61,8 +61,12 @@ public class TrainMLP {
         rrTest.initialize(new FileSplit(new File(DataPath.TRAIN_DATA_PATH, testFile)));
         DataSetIterator iterTest = new RecordReaderDataSetIterator(rrTest,minibatchSize,labelIdx,nOut);
 
-        int MAX_TRAIN_MINIBATCHES = 20000;
-        int TEST_NUM_MINIBATCHES = 2500;
+//        int MAX_TRAIN_MINIBATCHES = 20000;
+//        int TEST_NUM_MINIBATCHES = 2500;
+//        int TEST_EVERY_N_MINIBATCHES = 5000;
+
+        int MAX_TRAIN_MINIBATCHES = 2000;
+        int TEST_NUM_MINIBATCHES = 250;
         int TEST_EVERY_N_MINIBATCHES = 5000;
 
 

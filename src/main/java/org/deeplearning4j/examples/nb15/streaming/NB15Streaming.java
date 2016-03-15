@@ -21,6 +21,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,6 +73,10 @@ public class NB15Streaming {
 
         UIDriver.setColumnsMap(columnMap);
 
+        UIDriver.setClassNames(Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"));
+        UIDriver.setNormalClassIdx(0);
+
+
         UIDriver uiDriver = UIDriver.getInstance();
 
 
@@ -105,9 +110,9 @@ public class NB15Streaming {
                 new FromRawCsvReceiver(PATH.RAW_TEST_PATH, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, GENERATION_RATE));
 
         //Pass each instance through the network:
-        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream;    //TODO
-//        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.flatMap(
-//                new Predict3Function(sc.sc().broadcast(conf),sc.sc().broadcast(params),64));
+//        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream;    //TODO
+        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.mapPartitions(
+                new Predict3Function(sc.sc().broadcast(conf),sc.sc().broadcast(params),64));
 //        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.flatMap()
 
         //And finally push the predictions to the UI driver so they can be displayed:
@@ -116,12 +121,13 @@ public class NB15Streaming {
         //Start streaming:
         sc.start();
 
-        sc.awaitTermination(60000);     //For testing: only run for short period of time
+        sc.awaitTermination(120000);     //For testing: only run for short period of time
 
         sc.close();
 
         System.out.println("DONE");
 
+        System.exit(0);
     }
 
 }

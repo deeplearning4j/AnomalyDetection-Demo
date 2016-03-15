@@ -27,7 +27,8 @@ import lombok.Data;
         @JsonSubTypes.Type(value = RenderableComponentLineChart.class, name = "RenderableComponentLineChart"),
         @JsonSubTypes.Type(value = RenderableComponentScatterPlot.class, name = "RenderableComponentScatterPlot"),
         @JsonSubTypes.Type(value = RenderableComponentTable.class, name = "RenderableComponentTable"),
-        @JsonSubTypes.Type(value = RenderableComponentAccordionDecorator.class, name = "RenderableComponentAccordionDecorator")
+        @JsonSubTypes.Type(value = RenderableComponentAccordionDecorator.class, name = "RenderableComponentAccordionDecorator"),
+        @JsonSubTypes.Type(value = RenderableComponentHorizontalBarChart.class, name = "RenderableComponentBarChart")
 })
 @Data
 public abstract class RenderableComponent {
