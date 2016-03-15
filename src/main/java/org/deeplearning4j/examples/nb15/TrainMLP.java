@@ -74,7 +74,7 @@ public class TrainMLP {
                 .regularization(true).l2(1e-6)
                 .activation("leakyrelu")
                 .weightInit(WeightInit.XAVIER)
-                .list()
+                .list(3)
                 .layer(0, new DenseLayer.Builder().nIn(nIn).nOut(layerSize).build())
                 .layer(1, new DenseLayer.Builder().nIn(layerSize).nOut(layerSize).build())
                 .layer(2, new OutputLayer.Builder().lossFunction(LossFunctions.LossFunction.MCXENT)
@@ -107,7 +107,6 @@ public class TrainMLP {
 
                 log.info("--- Evaluation after {} examples ---",countTrain*minibatchSize);
                 log.info(evaluation.stats());
-                log.info("False Alarm Rate: {}", evaluation.falseAlarmRate());
             }
 
             if(!iterTrain.hasNext()) iterTrain.reset();

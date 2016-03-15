@@ -19,7 +19,8 @@ public class StandardNIDS extends NIDSMain{
     protected MultipleEpochsIterator loadData(int batchSize, String dataPath, int labelIdx, int numEpochs, int numBatches) throws Exception{
         CSVRecordReader rr = new CSVRecordReader(0,",");
         rr.initialize(new FileSplit(new File(dataPath)));
-        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
+        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut);
+//        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches); 3.9
         return new MultipleEpochsIterator(numEpochs, iter);
 
     }
@@ -50,10 +51,17 @@ public class StandardNIDS extends NIDSMain{
 
     protected void evaluatePerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
         startTime = System.currentTimeMillis();
-        Evaluation eval = net.evaluate(iter, labels);
+//        Evaluation eval = net.evaluate(iter, labels); 3.9
+        Evaluation eval = new Evaluation(labels);
+        int countEval = 0;
+        while(iter.hasNext() && countEval++ < testBatchSize){
+            org.nd4j.linalg.dataset.DataSet ds = iter.next();
+            eval.eval(ds.getLabels(),net.output(ds.getFeatureMatrix()));
+        }
+
         endTime = System.currentTimeMillis();
         System.out.println(eval.stats());
-        System.out.print("False Alarm Rate: " + eval.falseAlarmRate());
+//        System.out.print("False Alarm Rate: " + eval.falseAlarmRate()); 3.9
         testTime = (int) (endTime - startTime) / 60000;
 
     }

@@ -13,7 +13,6 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
-import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -42,7 +41,7 @@ public class NIDSMain {
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
-    protected String modelType = "Denoise";
+    protected String modelType = "MLP";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
@@ -119,22 +118,22 @@ public class NIDSMain {
                 System.out.println("\nFinal evaluation....");
                 standard.evaluatePerformance(network, testData);
                 break;
-            case "SparkStandAlone":
-            case "SparkCluster":
-                SparkNIDS spark = new SparkNIDS();
-                JavaSparkContext sc = (version == "SparkStandAlone")? spark.setupLocalSpark(): spark.setupClusterSpark();
-                System.out.println("\nLoad data....");
-                JavaRDD<DataSet> trainSparkData = spark.loadData(sc, DataPath.TRAIN_DATA_PATH + trainFile);
-                SparkDl4jMultiLayer sparkNetwork = new SparkDl4jMultiLayer(sc, network);
-                network = spark.trainModel(sparkNetwork, trainSparkData);
-                trainSparkData.unpersist();
-
-                sparkNetwork = new SparkDl4jMultiLayer(sc, network);
-                JavaRDD<DataSet> testSparkData = spark.loadData(sc, DataPath.TEST_DATA_PATH + testFile);
-                System.out.println("\nFinal evaluation....");
-                spark.evaluatePerformance(sparkNetwork, testSparkData);
-                testSparkData.unpersist();
-                break;
+//            case "SparkStandAlone":
+//            case "SparkCluster":
+//                SparkNIDS spark = new SparkNIDS();
+//                JavaSparkContext sc = (version == "SparkStandAlone")? spark.setupLocalSpark(): spark.setupClusterSpark();
+//                System.out.println("\nLoad data....");
+//                JavaRDD<DataSet> trainSparkData = spark.loadData(sc, DataPath.TRAIN_DATA_PATH + trainFile);
+//                SparkDl4jMultiLayer sparkNetwork = new SparkDl4jMultiLayer(sc, network);
+//                network = spark.trainModel(sparkNetwork, trainSparkData);
+//                trainSparkData.unpersist();
+//
+//                sparkNetwork = new SparkDl4jMultiLayer(sc, network);
+//                JavaRDD<DataSet> testSparkData = spark.loadData(sc, DataPath.TEST_DATA_PATH + testFile);
+//                System.out.println("\nFinal evaluation....");
+//                spark.evaluatePerformance(sparkNetwork, testSparkData);
+//                testSparkData.unpersist();
+//                break;
         }
 
         saveAndPrintResults(network);
@@ -204,7 +203,7 @@ public class NIDSMain {
         System.out.println("\n============================Time========================================");
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
-        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, new DataPath("UNSW").OUT_DIR.toString());
+//        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, new DataPath("UNSW").OUT_DIR.toString());
     }
 
 

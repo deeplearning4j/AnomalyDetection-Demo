@@ -62,7 +62,7 @@ public class MLPDenoiseModel {
                 .l2(l2)
                 .updater(Updater.RMSPROP)
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                .list()
+                .list(6)
                 .layer(0, new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0]).dropOut(0.3)
                         .build())
                 .layer(1, new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1]).dropOut(0.3)
