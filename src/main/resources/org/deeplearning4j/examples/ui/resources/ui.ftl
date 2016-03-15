@@ -133,6 +133,16 @@
             createAndAddComponent(jsonObj,byteRateDiv, 460, 300);
         })
 
+//        drawAttacksTable();
+
+        $.get("/table",function(data){
+            var jsonObj = JSON.parse(JSON.stringify(data));
+            var tableDiv = $('#attackTableDiv');
+
+            tableDiv.html('');
+            createAndAddComponent(jsonObj,tableDiv,0,0);
+
+        })
 
     },1000);
 
@@ -168,40 +178,63 @@
         var header = tableObj['header'];
         var values = tableObj['table'];
         var title = tableObj['title'];
+        var border = tableObj['border'];
+        var padLeft = tableObj['padLeftPx'];
+        var padRight = tableObj['padRightPx'];
+        var padTop = tableObj['padTopPx'];
+        var padBottom = tableObj['padBottomPx'];
+        var colWidths = tableObj['colWidthsPercent'];
         var nRows = (values ? values.length : 0);
 
-        if(title){
-            appendTo.append("<h5>"+title+"</h5>");
+
+        var tbl = document.createElement('table');
+        tbl.style.width = '100%';
+        tbl.style.height = '100%';
+        tbl.paddingLeft = padLeft + 'px';
+        tbl.paddingRight = padRight + 'px';
+        tbl.paddingTop = padTop + 'px';
+        tbl.paddingBottom = padBottom + 'px';
+        tbl.setAttribute('border', border);
+
+        if(colWidths){
+            for( var i=0; i<colWidths.length; i++ ){
+                var col = document.createElement('col');
+                col.setAttribute('width', colWidths[i]+'%');
+                tbl.appendChild(col);
+            }
         }
 
-        var table;
-        if(tableId) table = $("<table id=\"" + tableId + "\" class=\"renderableComponentTable\">");
-        else table = $("<table class=\"renderableComponentTable\">");
         if(header){
-            var headerRow = $("<tr>");
-            var len = header.length;
-            for( var i=0; i<len; i++ ){
-                headerRow.append($("<th>" + header[i] + "</th>"));
+            var theader = document.createElement('thead');
+            var headerRow = document.createElement('tr');
+
+            for( var i=0; i<header.length; i++ ){
+                var headerd = document.createElement('td');
+                headerd.appendChild(document.createTextNode(header[i]));
+                headerRow.appendChild(headerd);
             }
-            headerRow.append($("</tr>"));
-            table.append(headerRow);
+            tbl.appendChild(headerRow);
         }
 
+        //Add content:
         if(values){
-            for( var i=0; i<nRows; i++ ){
-                var row = $("<tr>");
-                var rowValues = values[i];
-                var len = rowValues.length;
-                for( var j=0; j<len; j++ ){
-                    row.append($('<td>'+rowValues[j]+'</td>'));
+
+            var tbdy = document.createElement('tbody');
+            for (var i = 0; i < values.length; i++) {
+                var tr = document.createElement('tr');
+
+                for( var j=0; j<values[i].length; j++ ){
+                    var td = document.createElement('td');
+                    td.appendChild(document.createTextNode(values[i][j]));
+                    tr.appendChild(td);
                 }
-                row.append($("</tr>"));
-                table.append(row);
+
+                tbdy.appendChild(tr);
             }
+            tbl.appendChild(tbdy);
         }
 
-        table.append($("</table>"));
-        appendTo.append(table);
+        appendTo.append(tbl);
     }
 
     /** Create + add line chart with multiple lines, (optional) title, (optional) series names.
@@ -526,10 +559,17 @@
             <div style="width:100%;" class="sectionheader">
                 Summary: Network Attacks
             </div>
+            <#--<div style="width:100%; height:100%" id="attackTableDiv">-->
+            <div style="padding:10px" id="attackTableDiv">
+
+            </div>
         </div>
         <div style="width:50%; float:right;" class="subsectionbottom">
             <div style="width:100%;" class="sectionheader">
                 Connection/Attack Information
+            </div>
+            <div style="padding:10px" id="attackInfoDiv">
+
             </div>
         </div>
     </div>

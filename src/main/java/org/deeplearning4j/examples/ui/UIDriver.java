@@ -12,9 +12,11 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.RenderElements;
 import org.deeplearning4j.examples.ui.components.RenderableComponent;
 import org.deeplearning4j.examples.ui.components.RenderableComponentLineChart;
+import org.deeplearning4j.examples.ui.components.RenderableComponentTable;
 import org.deeplearning4j.examples.ui.config.NIDSConfig;
 import org.deeplearning4j.examples.ui.resources.FlowDetailsResource;
 import org.deeplearning4j.examples.ui.resources.LineChartResource;
+import org.deeplearning4j.examples.ui.resources.TableResource;
 import org.deeplearning4j.examples.ui.resources.UIResource;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
@@ -52,6 +54,7 @@ public class UIDriver extends Application<NIDSConfig> {
     private final Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
     private final WebTarget connectionRateChartTarget = client.target("http://localhost:8080/charts/update/connection");
     private final WebTarget bytesRateChartTarget = client.target("http://localhost:8080/charts/update/bytes");
+    private final WebTarget tableTarget = client.target("http://localhost:8080/table/update");
 
     private Thread uiThread;
 
@@ -93,6 +96,7 @@ public class UIDriver extends Application<NIDSConfig> {
         //Register our resources
         environment.jersey().register(new FlowDetailsResource());
         environment.jersey().register(new LineChartResource());
+        environment.jersey().register(new TableResource());
 
 //        log.info("*** UIDriver run called ***");
         System.out.println("*** UIDriver run called ***");
@@ -143,6 +147,7 @@ public class UIDriver extends Application<NIDSConfig> {
         private long lastUpdateTime = 0;
         private LinkedList<Pair<Long,Double>> connectionRateHistory = new LinkedList<>();
         private LinkedList<Pair<Long,Double>> byteRateHistory = new LinkedList<>();
+        private LinkedList<Tuple3<Long,INDArray,Collection<Writable>>> lastAttacks = new LinkedList<>();
 
         @Override
         public void run() {
@@ -257,6 +262,37 @@ public class UIDriver extends Application<NIDSConfig> {
 
                 bytesRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                         .post(Entity.entity(byteRate,MediaType.APPLICATION_JSON));
+
+
+
+                //Now, post details of the last 20 attacks
+                //For now: just post details of last 20 FLOWS, whether attacks or not
+                //TODO do this more efficiently + better (+ don't make assumptions about order?)
+                lastAttacks.addAll(list);
+                while(lastAttacks.size() > 20) lastAttacks.removeFirst();
+
+                String[][] table = new String[lastAttacks.size()][5];
+                int j=0;
+                for(Tuple3<Long,INDArray,Collection<Writable>> t3 : lastAttacks ){
+                    List<Writable> l = (t3._3() instanceof List ? ((List<Writable>)t3._3()) : new ArrayList<>(t3._3()));
+                    table[j][0] = String.valueOf(t3._1());
+                    table[j][1] = l.get(columnsMap.get("source ip")) + " : " + l.get(columnsMap.get("source port"));
+                    table[j][2] = l.get(columnsMap.get("destination ip")) + " : " + l.get(columnsMap.get("destination port"));
+                    table[j][3] = "-";
+                    table[j][4] = "-";
+                    j++;
+                }
+
+                RenderableComponentTable rct = new RenderableComponentTable.Builder()
+                        .header("#","Source","Destination","Attack Prob.","Type")
+                        .table(table)
+                        .paddingPx(4)
+                        .border(1)
+                        .colWidthsPercent(8,28,28,16,20)
+                        .build();
+
+                tableTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(rct,MediaType.APPLICATION_JSON));
 
 
                 //Clear the list for the next iteration

@@ -1,5 +1,6 @@
 package org.deeplearning4j.examples.nb15.streaming;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Durations;
@@ -13,8 +14,10 @@ import org.deeplearning4j.examples.nb15.NB15Util;
 import org.deeplearning4j.examples.nb15.ui.NB15TableConverter;
 import org.deeplearning4j.examples.ui.UIDriver;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 import scala.Tuple3;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
@@ -57,21 +60,28 @@ public class NB15Streaming {
 
         Schema schema = NB15Util.getNB15CsvSchema();
         UIDriver.setTableConverter(new NB15TableConverter(NB15Util.getNB15CsvSchema()));
+
+        //TODO: find a better (but still general-purspose) design for this
         Map<String,Integer> columnMap = new HashMap<>();
         columnMap.put("source-dest bytes",schema.getIndexOfColumn("source-dest bytes"));
         columnMap.put("dest-source bytes",schema.getIndexOfColumn("dest-source bytes"));
+        columnMap.put("source ip",schema.getIndexOfColumn("source ip"));
+        columnMap.put("destination ip",schema.getIndexOfColumn("destination ip"));
+        columnMap.put("source port",schema.getIndexOfColumn("source port"));
+        columnMap.put("destination port",schema.getIndexOfColumn("destination port"));
+
         UIDriver.setColumnsMap(columnMap);
 
         UIDriver uiDriver = UIDriver.getInstance();
 
 
         //Load config and parameters:
-//        String conf = FileUtils.readFileToString(new File(PARAMS_PATH));
-//
-//        INDArray params;
-//        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(CONF_PATH)))){
-//            params = Nd4j.read(dis);
-//        }
+        String conf = FileUtils.readFileToString(new File(PARAMS_PATH));
+
+        INDArray params;
+        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(CONF_PATH)))){
+            params = Nd4j.read(dis);
+        }
 
         Thread.sleep(3000);
 
@@ -96,6 +106,9 @@ public class NB15Streaming {
 
         //Pass each instance through the network:
         JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream;    //TODO
+//        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.flatMap(
+//                new Predict3Function(sc.sc().broadcast(conf),sc.sc().broadcast(params),64));
+//        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.flatMap()
 
         //And finally push the predictions to the UI driver so they can be displayed:
         predictionStream.foreachRDD(new CollectAtUIDriverFunction());
