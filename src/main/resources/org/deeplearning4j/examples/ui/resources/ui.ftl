@@ -5,14 +5,9 @@
         html, body {
             width: 100%;
             height: 100%;
-            /*padding-top: 20px;*/
-            /*padding-left: 20px;*/
-            /*padding-right: 20px;*/
-            /*padding-bottom: 20px;*/
         }
 
         .bgcolor {
-            /*background-color: #DCEBF2;*/
             background-color: #FFFFFF;
         }
 
@@ -23,11 +18,11 @@
         }
 
         .sectionheader {
-            background-color: #BBBBBB;
+            background-color: #888888;
             font-size: 16px;
             font-style: bold;
             color: #FFFFFF;
-            padding-left: 8px;
+            padding-left: 40px;
             padding-right: 8px;
             padding-top: 2px;
             padding-bottom: 2px;
@@ -36,12 +31,12 @@
 
         .subsectiontop {
             background-color: #F5F5FF;
-            height: 320px;
+            height: 300px;
         }
 
         .subsectionbottom {
             background-color: #F5F5FF;
-            height: 520px;
+            height: 540px;
         }
 
         h1 {
@@ -89,6 +84,12 @@
             fill: steelblue;
         }
 
+        .legend rect {
+            fill:white;
+            stroke:black;
+            opacity:0.8;
+        }
+
     </style>
     <title>Network Intrusion Detection</title>
 </head>
@@ -103,7 +104,7 @@
 <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="/assets/nv.d3.min.js"></script>
+<script src="/assets/d3.legend.js"></script>
 
 <script>
     //Store last update times:
@@ -129,7 +130,7 @@
             var connectionRateDiv = $('#connectionChartDiv');
             connectionRateDiv.html('');
 
-            createAndAddComponent(jsonObj, connectionRateDiv, 460, 300);
+            createAndAddComponent(jsonObj, connectionRateDiv, 460, 260);
         });
 
         //Bytes/sec chart:
@@ -141,7 +142,19 @@
             var byteRateDiv = $('#bytesChartDiv');
             byteRateDiv.html('');
 
-            createAndAddComponent(jsonObj, byteRateDiv, 460, 300);
+            createAndAddComponent(jsonObj, byteRateDiv, 460, 260);
+        });
+
+        //Types of flows area chart:
+        $.get("/areachart/", function (data) {
+            var jsonObj = JSON.parse(JSON.stringify(data));
+//            console.log(jsonObj);
+
+            //Expect a line chart here...
+            var areaDiv = $('#flowsAreaChartDiv');
+            areaDiv.html('');
+
+            createAndAddComponent(jsonObj, areaDiv, 460, 260);
         });
 
         //Summary of network attacks chart
@@ -153,6 +166,9 @@
             createAndAddComponent(jsonObj, tableDiv, 0, 0);
 
         });
+
+
+
     }, 1000);
 
     //Intercept click events on table rows:
@@ -175,7 +191,7 @@
                 detailsDiv.html('');
                 var nComponents = components.length;
                 for (var i = 0; i < nComponents; i++) {
-                    createAndAddComponent(components[i], detailsDiv, 660, 200);
+                    createAndAddComponent(components[i], detailsDiv, 660, 215);
                 }
             });
         });
@@ -226,16 +242,15 @@
         var padBottom = tableObj['padBottomPx'];
         var colWidths = tableObj['colWidthsPercent'];
         var nRows = (values ? values.length : 0);
+        var backgroundColor = tableObj['backgroundColor'];
+        var headerColor = tableObj['headerColor'];
 
 
         var tbl = document.createElement('table');
         tbl.style.width = '100%';
         tbl.style.height = '100%';
-        tbl.paddingLeft = padLeft + 'px';
-        tbl.paddingRight = padRight + 'px';
-        tbl.paddingTop = padTop + 'px';
-        tbl.paddingBottom = padBottom + 'px';
         tbl.setAttribute('border', border);
+        if(backgroundColor) tbl.style.backgroundColor = backgroundColor;
 
         if (colWidths) {
             for (var i = 0; i < colWidths.length; i++) {
@@ -249,8 +264,11 @@
             var theader = document.createElement('thead');
             var headerRow = document.createElement('tr');
 
+            if(headerColor) headerRow.style.backgroundColor = headerColor;
+
             for (var i = 0; i < header.length; i++) {
                 var headerd = document.createElement('th');
+                headerd.style.padding = padTop + 'px ' + padRight + 'px ' + padBottom + 'px ' + padLeft + 'px';
                 headerd.appendChild(document.createTextNode(header[i]));
                 headerRow.appendChild(headerd);
             }
@@ -266,6 +284,7 @@
 
                 for (var j = 0; j < values[i].length; j++) {
                     var td = document.createElement('td');
+                    td.style.padding = padTop + 'px ' + padRight + 'px ' + padBottom + 'px ' + padLeft + 'px';
                     td.appendChild(document.createTextNode(values[i][j]));
                     tr.appendChild(td);
                 }
@@ -286,11 +305,17 @@
         var title = chartObj['title'];
         var xData = chartObj['x'];
         var yData = chartObj['y'];
+        var mTop = chartObj['marginTop'];
+        var mBottom = chartObj['marginBottom'];
+        var mLeft = chartObj['marginLeft'];
+        var mRight = chartObj['marginRight'];
+        var removeAxisHorizontal = chartObj['removeAxisHorizontal'];
         var seriesNames = chartObj['seriesNames'];
+        var withLegend = chartObj['legend'];
         var nSeries = (!xData ? 0 : xData.length);
 
         // Set the dimensions of the canvas / graph
-        var margin = {top: 60, right: 20, bottom: 60, left: 60},
+        var margin = {top: mTop, right: mRight, bottom: mBottom, left: mLeft},
                 width = chartWidth - margin.left - margin.right,
                 height = chartHeight - margin.top - margin.bottom;
 
@@ -302,6 +327,10 @@
         var xAxis = d3.svg.axis().scale(xScale)
                 .innerTickSize(-height)     //used as grid line
                 .orient("bottom").ticks(5);
+
+        if(removeAxisHorizontal == true){
+            xAxis.tickValues([]);
+        }
 
         var yAxis = d3.svg.axis().scale(yScale)
                 .innerTickSize(-width)      //used as grid line
@@ -374,7 +403,7 @@
                 .call(yAxis);
 
         //Add legend (if present)
-        if (seriesNames) {
+        if (seriesNames && withLegend == true) {
             var legendSpace = width / i;
             for (var i = 0; i < nSeries; i++) {
                 var values = xData[i];
@@ -624,6 +653,155 @@
                 .attr("class", "y axis")
                 .attr("transform", "translate(" + x(0) + ",0)")
                 .call(yAxis);
+
+        //Add title (if present)
+        if (title) {
+            svg.append("text")
+                    .attr("x", (width / 2))
+                    .attr("y", 0 - ((margin.top - 30) / 2))
+                    .attr("text-anchor", "middle")
+                    .style("font-size", "13px")
+                    .style("text-decoration", "underline")
+                    .text(title);
+        }
+    }
+
+    function createStackedAreaChart(chartObj, appendTo, chartWidth, chartHeight) {
+
+        var title = chartObj['title'];
+        var labels = chartObj['labels'];
+        var mTop = chartObj['marginTop'];
+        var mBottom = chartObj['marginBottom'];
+        var mLeft = chartObj['marginLeft'];
+        var mRight = chartObj['marginRight'];
+        var removeAxisHorizontal = chartObj['removeAxisHorizontal'];
+
+        var xValues = chartObj['x'];
+        var yValuesList = chartObj['y'];
+
+        //Convert data:
+        var data = [];
+        for(var i=0; i<xValues.length; i++ ){
+            var obj = {};
+            for( var j=0; j<labels.length; j++ ){
+                obj[labels[j]] = yValuesList[j][i];
+                obj['xValue'] = xValues[i];
+            }
+            data.push(obj);
+        }
+
+        var margin = {top: mTop, right: mRight, bottom: mBottom, left: mLeft},
+                width = chartWidth - margin.left - margin.right,
+                height = chartHeight - margin.top - margin.bottom;
+
+        var x = d3.scale.linear()
+                .range([0, width]);
+
+        var y = d3.scale.linear()
+                .range([height, 0]);
+
+        var color = d3.scale.category20();
+
+        var xAxis = d3.svg.axis()
+                .scale(x);
+
+        if(removeAxisHorizontal == true){
+            xAxis.tickValues([]);
+        }
+
+        var yAxis = d3.svg.axis()
+                .scale(y)
+                .orient("left")
+
+
+        var area = d3.svg.area()
+                .x(function(d) { return x(d.xValue); })
+                .y0(function(d) { return y(d.y0); })
+                .y1(function(d) { return y(d.y0 + d.y); });
+
+        var stack = d3.layout.stack()
+                .values(function(d) { return d.values; });
+
+        var svg = d3.select("#" + appendTo.attr("id")).append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        color.domain(d3.keys(data[0]).filter(function (key) {
+            return key !== "xValue";
+        }));
+
+        var browsers = stack(color.domain().map(function (name) {
+            return {
+                name: name,
+                values: data.map(function (d) {
+                    return {xValue: d.xValue, y: d[name] * 1};
+                })
+            };
+        }));
+
+        // Find the value of the day with highest total value
+        var maxX = d3.max(data, function (d) {
+            var vals = d3.keys(d).map(function (key) {
+                return key !== "xValue" ? d[key] : 0
+            });
+            return d3.sum(vals);
+        });
+
+        // Set domains for axes
+        x.domain(d3.extent(data, function (d) {
+            return d.xValue;
+        }));
+
+        y.domain([0, maxX]);
+
+        var browser = svg.selectAll(".browser")
+                .data(browsers)
+                .enter().append("g")
+                .attr("class", "browser");
+
+        browser.append("path")
+                .attr("class", "area")
+                .attr("data-legend",function(d) { return d.name})
+                .attr("d", function (d) {
+                    return area(d.values);
+                })
+                .style("fill", function (d) {
+                    return color(d.name);
+                })
+                .style({"stroke-width": "0px"});
+
+        //This appends the text labels to the right of the chart. Don't need this in addition to the legend
+//        browser.append("text")
+//                .datum(function (d) {
+//                    return {name: d.name, value: d.values[d.values.length - 1]};
+//                })
+//                .attr("transform", function (d) {
+//                    return "translate(" + x(d.value.xValue) + "," + y(d.value.y0 + d.value.y / 2) + ")";
+//                })
+//                .attr("x", -6)
+//                .attr("dy", ".35em")
+//                .text(function (d) {
+//                    return d.name;
+//                });
+
+        svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+        //Vertical axis label
+        svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis);
+
+        legend = svg.append("g")
+                .attr("class","legend")
+                .attr("transform","translate(20,20)")
+                .style("font-size","12px")
+                .call(d3.legend);
+
     }
 </script>
 
@@ -642,21 +820,23 @@
     <div style="width:100%; padding-top:20px">
         <div style="width:33.333%; float:left;" class="subsectiontop" id="connectionChartOuter">
             <div style="width:100%;" class="sectionheader">
-                Connections/sec
+                Network Utilization: Connections/sec
             </div>
             <div style="width:100%; height:100%; float:left;" id="connectionChartDiv">
             </div>
         </div>
         <div style="width:33.333%; float:left;" class="subsectiontop" id="bytesChartOuter">
             <div style="width:100%;" class="sectionheader">
-                kBytes/sec
+                Network Utilization: kBytes/sec
             </div>
             <div style="width:100%; height:100%; float:left;" id="bytesChartDiv">
             </div>
         </div>
         <div style="width:33.333%; float:right;" class="subsectiontop">
-            <div style="width:100%;" class="sectionheader">
-                Chart 3
+            <div style="width:100%;" class="sectionheader" id="flowsAreaDiv">
+                Network Connections by Service
+            </div>
+            <div style="width:100%; height:100%; float:left;" id="flowsAreaChartDiv">
             </div>
 
         </div>

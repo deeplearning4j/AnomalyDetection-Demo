@@ -33,6 +33,8 @@ public class RenderableComponentTable extends RenderableComponent {
     private int padBottomPx = 0;
     private int border = 0;
     private double[] colWidthsPercent = null;
+    private String backgroundColor;
+    private String headerColor;
 
     public RenderableComponentTable(){
         super(COMPONENT_TYPE);
@@ -50,6 +52,8 @@ public class RenderableComponentTable extends RenderableComponent {
         this.padBottomPx = builder.padBottomPx;
         this.border = builder.border;
         this.colWidthsPercent = builder.colWidthsPercent;
+        this.backgroundColor = builder.backgroundColor;
+        this.headerColor = builder.headerColor;
     }
 
     public RenderableComponentTable(String[] header, String[][] table){
@@ -74,6 +78,8 @@ public class RenderableComponentTable extends RenderableComponent {
         private int padBottomPx = 0;
         private int border = 0;
         private double[] colWidthsPercent;
+        private String backgroundColor;
+        private String headerColor;
 
         public Builder title(String title){
             this.title = title;
@@ -123,8 +129,26 @@ public class RenderableComponentTable extends RenderableComponent {
             return this;
         }
 
+        public Builder paddingPx(int left, int right, int top, int bottom){
+            padLeftPx(left);
+            padRightPx(right);
+            padTopPx(top);
+            padBottomPx(bottom);
+            return this;
+        }
+
         public Builder colWidthsPercent(double... colWidthsPercent){
             this.colWidthsPercent = colWidthsPercent;
+            return this;
+        }
+
+        public Builder backgroundColor(String backgroundColor){
+            this.backgroundColor = backgroundColor;
+            return this;
+        }
+
+        public Builder headerColor(String headerColor){
+            this.headerColor = headerColor;
             return this;
         }
 

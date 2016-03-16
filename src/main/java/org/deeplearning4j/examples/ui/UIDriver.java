@@ -6,15 +6,11 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
-import io.dropwizard.views.ViewMessageBodyWriter;
 import org.canova.api.berkeley.Pair;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.*;
 import org.deeplearning4j.examples.ui.config.NIDSConfig;
-import org.deeplearning4j.examples.ui.resources.FlowDetailsResource;
-import org.deeplearning4j.examples.ui.resources.LineChartResource;
-import org.deeplearning4j.examples.ui.resources.TableResource;
-import org.deeplearning4j.examples.ui.resources.UIResource;
+import org.deeplearning4j.examples.ui.resources.*;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +22,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class UIDriver extends Application<NIDSConfig> {
 
     public static final double CHART_HISTORY_SECONDS = 20.0;   //N seconds of chart history for UI
+    private static final int NUM_ATTACKS_TO_KEEP = 22;
 
     private static volatile UIDriver instance;
 
@@ -44,6 +40,7 @@ public class UIDriver extends Application<NIDSConfig> {
     private static TableConverter tableConverter;
     private static Map<String,Integer> columnsMap;
     private static List<String> classNames;
+    private static List<String> serviceNames;
     private static int normalClassIdx;
 
     private LinkedBlockingQueue<Tuple3<Long,INDArray,Collection<Writable>>> predictions = new LinkedBlockingQueue<>();
@@ -54,6 +51,7 @@ public class UIDriver extends Application<NIDSConfig> {
     private final WebTarget connectionRateChartTarget = client.target("http://localhost:8080/charts/update/connection");
     private final WebTarget bytesRateChartTarget = client.target("http://localhost:8080/charts/update/bytes");
     private final WebTarget tableTarget = client.target("http://localhost:8080/table/update");
+    private final WebTarget areaChartTarget = client.target("http://localhost:8080/areachart/update");
 
     private Thread uiThread;
 
@@ -96,6 +94,7 @@ public class UIDriver extends Application<NIDSConfig> {
         environment.jersey().register(new FlowDetailsResource());
         environment.jersey().register(new LineChartResource());
         environment.jersey().register(new TableResource());
+        environment.jersey().register(new AreaChartResource());
 
 //        log.info("*** UIDriver run called ***");
         System.out.println("*** UIDriver run called ***");
@@ -130,6 +129,10 @@ public class UIDriver extends Application<NIDSConfig> {
         UIDriver.classNames = classNames;
     }
 
+    public static void setServiceNames(List<String> serviceNames){
+        UIDriver.serviceNames = serviceNames;
+    }
+
     public static void setNormalClassIdx(int normalClassIdx){
         UIDriver.normalClassIdx = normalClassIdx;
     }
@@ -159,6 +162,7 @@ public class UIDriver extends Application<NIDSConfig> {
         private LinkedList<Long> flowCountHistory = new LinkedList<>();
         private LinkedList<Long> updateTimeHistory = new LinkedList<>();
         private LinkedList<Double> sumBytesHistory = new LinkedList<>();
+        private Map<String,LinkedList<Double>> serviceNamesHistory = new HashMap<>();
 
         @Override
         public void run() {
@@ -172,6 +176,13 @@ public class UIDriver extends Application<NIDSConfig> {
 
         private void runHelper(){
             log.info("Starting UI driver thread");
+
+            //Initialize service names history...
+            for(String s : serviceNames){
+                LinkedList<Double> list = new LinkedList<>();
+                list.add(1.0 / serviceNames.size());
+                serviceNamesHistory.put(s,list);
+            }
 
             List<Tuple3<Long,INDArray,Collection<Writable>>> list = new ArrayList<>(100);
             while(!shutdown.get()){
@@ -187,6 +198,9 @@ public class UIDriver extends Application<NIDSConfig> {
                 double sumBytes = 0.0;
                 int sdBytesCol = (columnsMap.containsKey("source-dest bytes") ? columnsMap.get("source-dest bytes") : -1);
                 int dsBytesCol = (columnsMap.containsKey("dest-source bytes") ? columnsMap.get("dest-source bytes") : -1);
+                int serviceCol = (columnsMap.containsKey("service") ? columnsMap.get("service") : -1);
+
+                Map<String,Integer> serviceCounts = new HashMap<>();
                 for(Tuple3<Long,INDArray,Collection<Writable>> t3 : list){
 //                    System.out.println(t3);
                     Collection<Writable> c = t3._3();
@@ -206,6 +220,15 @@ public class UIDriver extends Application<NIDSConfig> {
                         }catch(Exception e){ }
                     }
 
+                    String service = (serviceCol == -1 ? null : listWritables.get(serviceCol).toString());
+                    if(service != null){
+                        if(serviceCounts.containsKey(service)){
+                            serviceCounts.put(service,serviceCounts.get(service)+1);
+                        } else {
+                            serviceCounts.put(service,1);
+                        }
+                    }
+
                     //Now: determine if this is an attack or not...
                     float[] probs = t3._2().data().asFloat();
                     if(probs[normalClassIdx] < 0.5f){
@@ -216,7 +239,8 @@ public class UIDriver extends Application<NIDSConfig> {
                         RenderableComponent rc = tableConverter.rawDataToTable(c);
                         RenderableComponent barChart = new RenderableComponentHorizontalBarChart.Builder()
                                 .addValues(classNames,probs)
-                                .margins(10,20,150,20)
+                                .title("Network Predictions: Attack Type Probabilities")
+                                .margins(40,20,150,20)
                                 .xMin(0.0).xMax(1.0)
                                 .build();
 
@@ -228,23 +252,6 @@ public class UIDriver extends Application<NIDSConfig> {
                         
                     }
                 }
-
-
-                //Calculate the rate of updates (connections/sec). Just do delta connections / delta time for now
-//                if(lastUpdateTime > 0){
-//                    double connectionsPerSec = 1000.0 * list.size() / (System.currentTimeMillis() - lastUpdateTime);
-////                    double bytesPerSec = 1000.0 * sumBytes / (System.currentTimeMillis() - lastUpdateTime);
-//                    double kBytesPerSec = 1000.0 * sumBytes / ((System.currentTimeMillis() - lastUpdateTime) * 1024.0);
-//                    //1000.0 is due to time being in MS, rate being in connections/sec
-//
-//                    lastUpdateTime = System.currentTimeMillis();
-//
-//                    //Add the new instantaneous rate:
-//                    connectionRateHistory.add(new Pair<>(lastUpdateTime,connectionsPerSec));
-//                    byteRateHistory.add(new Pair<>(lastUpdateTime,kBytesPerSec));
-//                } else {
-//                    lastUpdateTime = System.currentTimeMillis();
-//                }
 
                 if(lastUpdateTime > 0){
                     long pastUpdateTime = updateTimeHistory.getFirst();
@@ -308,12 +315,18 @@ public class UIDriver extends Application<NIDSConfig> {
 
                 //And post the instantaneous connection rate and bytes/sec charts...
                 RenderableComponent connectionRate = new RenderableComponentLineChart.Builder()
+                        .setRemoveAxisHorizontal(true)
+                        .legend(false)
+                        .margins(30,20,60,20)
                         .addSeries("Connections/sec",time,rate).build();
 
                 connectionRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                         .post(Entity.entity(connectionRate,MediaType.APPLICATION_JSON));
 
                 RenderableComponent byteRate = new RenderableComponentLineChart.Builder()
+                        .setRemoveAxisHorizontal(true)
+                        .legend(false)
+                        .margins(30,20,60,20)
                         .addSeries("kBytes/sec",bytesTime,bytesRate).build();
 
                 bytesRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
@@ -323,7 +336,7 @@ public class UIDriver extends Application<NIDSConfig> {
 
                 //Now, post details of the last 20 attacks
                 //For now: just post details of last 20 FLOWS, whether attacks or not
-                while(lastAttacks.size() > 20) lastAttacks.removeFirst();
+                while(lastAttacks.size() > NUM_ATTACKS_TO_KEEP) lastAttacks.removeFirst();
 
                 String[][] table = new String[lastAttacks.size()][5];
                 int j=0;
@@ -349,13 +362,71 @@ public class UIDriver extends Application<NIDSConfig> {
                 RenderableComponentTable rct = new RenderableComponentTable.Builder()
                         .header("#","Source","Destination","Attack Prob.","Type")
                         .table(table)
-                        .paddingPx(4)
+                        .paddingPx(5,5,0,0)
                         .border(1)
+                        .backgroundColor("#FFFFFF")
+                        .headerColor("#CCCCCC")
                         .colWidthsPercent(8,28,28,16,20)
                         .build();
 
                 tableTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                         .post(Entity.entity(rct,MediaType.APPLICATION_JSON));
+
+                //Calculate new proportions:
+                RenderableComponentStackedAreaChart.Builder rcArea = new RenderableComponentStackedAreaChart.Builder()
+                        .title("title")
+                        .setRemoveAxisHorizontal(true)
+                        .margins(30,20,60,20)
+                        .setXValues(time);
+
+                double alpha = 0.9;
+                double sum = 0.0;
+                double[] props = new double[serviceNames.size()];
+                int k=0;
+                for(String s : serviceNames){
+                    LinkedList<Double> history = serviceNamesHistory.get(s);
+                    double lastProp;
+                    if(history == null){
+                        history = new LinkedList<>();
+                        serviceNamesHistory.put(s,history);
+                        lastProp = 0.0;
+                    } else if(history.size() == 0) {
+                        lastProp = 0.0;
+                    } else {
+                        lastProp = history.getLast();
+                    }
+
+                    int count = (serviceCounts.containsKey(s) ? serviceCounts.get(s) : 0);
+                    double rawProportion = ((double)count)/list.size();
+
+                    double newProp = alpha * lastProp + (1.0-alpha)*rawProportion;
+                    props[k++] = newProp;
+                    sum += newProp;
+
+                    while(history.size() > time.length) history.removeFirst();
+                }
+                for(k=0; k<props.length; k++ ){
+                    props[k] /= sum;
+                }
+
+                k=0;
+                for(String s : serviceNames){
+                    LinkedList<Double> history = serviceNamesHistory.get(s);
+                    history.addLast(props[k++]);
+
+                    while(history.size() > time.length) history.removeFirst();
+
+                    double[] out = new double[time.length];
+                    for( int l=0; l<out.length; l++ ){
+                        out[l] = history.get(l);
+                    }
+                    rcArea.addSeries(s,out);
+                }
+
+
+
+                areaChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(rcArea.build(),MediaType.APPLICATION_JSON));
 
 
                 //Clear the list for the next iteration

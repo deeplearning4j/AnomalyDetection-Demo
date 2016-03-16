@@ -86,6 +86,9 @@ public class NB15TableConverter implements TableConverter {
                 .title(title).header(header).table(table)
                 .border(1)
                 .colWidthsPercent(40,60)
+                .paddingPx(5,5,0,0)
+                .backgroundColor("#FFFFFF")
+                .headerColor("#CCCCCC")
                 .build();
     }
 }

@@ -16,9 +16,9 @@ import java.util.Collections;
 @Produces(MediaType.APPLICATION_JSON)
 public class LineChartResource {
 
-    private RenderableComponent unknown = new RenderableComponentLineChart.Builder().build();
-    private RenderableComponent connectionRateChart = new RenderableComponentLineChart.Builder().build();
-    private RenderableComponent bytesRateChart = new RenderableComponentLineChart.Builder().build();
+    private RenderableComponent unknown = null; //new RenderableComponentLineChart.Builder().build();
+    private RenderableComponent connectionRateChart = null; //new RenderableComponentLineChart.Builder().build();
+    private RenderableComponent bytesRateChart = null;  //new RenderableComponentLineChart.Builder().build();
 
     @GET
     @Path("/{chart}")

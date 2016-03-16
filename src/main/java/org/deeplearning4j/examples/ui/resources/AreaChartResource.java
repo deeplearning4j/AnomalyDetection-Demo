@@ -2,7 +2,7 @@ package org.deeplearning4j.examples.ui.resources;
 
 import org.deeplearning4j.examples.ui.components.RenderableComponent;
 import org.deeplearning4j.examples.ui.components.RenderableComponentLineChart;
-import org.deeplearning4j.examples.ui.components.RenderableComponentTable;
+import org.deeplearning4j.examples.ui.components.RenderableComponentStackedAreaChart;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -10,26 +10,25 @@ import javax.ws.rs.core.Response;
 import java.util.Collections;
 
 /**
- * Created by Alex on 15/03/2016.
+ * Created by Alex on 14/03/2016.
  */
-@Path("/table")
+@Path("/areachart")
 @Produces(MediaType.APPLICATION_JSON)
-public class TableResource {
+public class AreaChartResource {
 
-    private RenderableComponent table = null;
+    private RenderableComponent chart;
 
     @GET
-    public Response getTable(){
-        return Response.ok(table).build();
+    public Response getChart(){
+        return Response.ok(chart).build();
     }
 
     @POST
-    @Path("/update")
+    @Path("/update/")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response update(RenderableComponentTable table){
-        this.table = table;
+    public Response update(RenderableComponentStackedAreaChart chart){
+        this.chart = chart;
         return Response.ok(Collections.singletonMap("status", "ok")).build();
     }
-
 }

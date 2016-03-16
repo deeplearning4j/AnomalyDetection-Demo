@@ -70,10 +70,12 @@ public class NB15Streaming {
         columnMap.put("destination ip",schema.getIndexOfColumn("destination ip"));
         columnMap.put("source port",schema.getIndexOfColumn("source port"));
         columnMap.put("destination port",schema.getIndexOfColumn("destination port"));
+        columnMap.put("service", schema.getIndexOfColumn("service"));
 
         UIDriver.setColumnsMap(columnMap);
 
         UIDriver.setClassNames(Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"));
+        UIDriver.setServiceNames(Arrays.asList("-", "dns", "http", "smtp", "ftp-data", "ftp", "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp"));
         UIDriver.setNormalClassIdx(0);
 
 
