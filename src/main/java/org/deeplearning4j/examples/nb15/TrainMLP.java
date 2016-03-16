@@ -59,14 +59,9 @@ public class TrainMLP {
         rrTest.initialize(new FileSplit(new File(DataPathUtil.TRAIN_DATA_PATH, testFile)));
         DataSetIterator iterTest = new RecordReaderDataSetIterator(rrTest,minibatchSize,labelIdx,nOut);
 
-//        int MAX_TRAIN_MINIBATCHES = 20000;
-//        int TEST_NUM_MINIBATCHES = 2500;
-//        int TEST_EVERY_N_MINIBATCHES = 5000;
-
-        int MAX_TRAIN_MINIBATCHES = 2000;
-        int TEST_NUM_MINIBATCHES = 250;
+        int MAX_TRAIN_MINIBATCHES = 20000;
+        int TEST_NUM_MINIBATCHES = 2500;
         int TEST_EVERY_N_MINIBATCHES = 5000;
-
 
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
@@ -109,7 +104,7 @@ public class TrainMLP {
 
                 log.info("--- Evaluation after {} examples ---",countTrain*minibatchSize);
                 log.info(evaluation.stats());
-                System.out.print("False Alarm Rate: " + evaluation.falseAlarmRate()); //3.9
+                log.info("False Alarm Rate: {}", evaluation.falseAlarmRate());
 
             }
 
