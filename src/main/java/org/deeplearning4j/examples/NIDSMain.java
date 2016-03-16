@@ -41,7 +41,8 @@ public class NIDSMain {
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
-    protected String modelType = "MLPAuto";
+    protected String modelType = "MLP";
+    protected boolean supervised = true;
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
@@ -93,7 +94,6 @@ public class NIDSMain {
     protected int labelIdx = 66;
     protected MultiLayerNetwork network;
 
-    protected boolean supervised = false;
     protected int TEST_EVERY_N_MINIBATCHES = (supervised)? numBatches/2: numBatches+ 1;
 
     public void run(String[] args) throws Exception {

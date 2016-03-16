@@ -6,6 +6,7 @@ import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.examples.utils.Evaluation39Util;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.dataset.api.DataSet;
 
@@ -51,7 +52,7 @@ public class StandardNIDS extends NIDSMain{
     protected void evaluatePerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
         startTime = System.currentTimeMillis();
 //        Evaluation eval = net.evaluate(iter, labels); 3.9
-        Evaluation eval = new Evaluation(labels);
+        Evaluation39Util eval = new Evaluation39Util(labels);
         int countEval = 0;
         while(iter.hasNext() && countEval++ < testBatchSize){
             org.nd4j.linalg.dataset.DataSet ds = iter.next();
@@ -60,7 +61,7 @@ public class StandardNIDS extends NIDSMain{
 
         endTime = System.currentTimeMillis();
         System.out.println(eval.stats());
-//        System.out.print("False Alarm Rate: " + eval.falseAlarmRate()); 3.9
+        System.out.print("False Alarm Rate: " + eval.falseAlarmRate()); //3.9
         testTime = (int) (endTime - startTime) / 60000;
 
     }

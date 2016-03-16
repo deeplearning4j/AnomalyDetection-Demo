@@ -6,6 +6,7 @@ import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.utils.DataPathUtil;
+import org.deeplearning4j.examples.utils.Evaluation39Util;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -99,7 +100,7 @@ public class TrainMLP {
             if(countTrain % TEST_EVERY_N_MINIBATCHES == 0){
                 iterTest.reset();
                 //Test:
-                Evaluation evaluation = new Evaluation(labels);
+                Evaluation39Util evaluation = new Evaluation39Util(labels);
                 int countEval = 0;
                 while(iterTest.hasNext() && countEval++ < TEST_NUM_MINIBATCHES){
                     DataSet ds = iterTest.next();
@@ -108,6 +109,8 @@ public class TrainMLP {
 
                 log.info("--- Evaluation after {} examples ---",countTrain*minibatchSize);
                 log.info(evaluation.stats());
+                System.out.print("False Alarm Rate: " + evaluation.falseAlarmRate()); //3.9
+
             }
 
             if(!iterTrain.hasNext()) iterTrain.reset();
@@ -125,7 +128,7 @@ public class TrainMLP {
             params = Nd4j.read(dis);
         }
 
-        System.out.println(params);
+//        System.out.println(params);
 
         log.info("----- Complete -----");
     }
