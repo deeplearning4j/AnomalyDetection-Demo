@@ -12,6 +12,7 @@ import org.deeplearning4j.examples.data.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.sequence.ConvertFromSequence;
 import org.deeplearning4j.examples.data.sequence.ConvertToSequence;
 import org.deeplearning4j.examples.data.sequence.SequenceComparator;
+import org.deeplearning4j.examples.data.sequence.SequenceSplit;
 import org.deeplearning4j.examples.data.transform.categorical.CategoricalToOneHotTransform;
 import org.deeplearning4j.examples.data.transform.column.RemoveColumnsTransform;
 import org.deeplearning4j.examples.data.transform.normalize.Normalize;
@@ -54,13 +55,15 @@ public class TransformSequence implements Serializable {
                 ConvertToSequence cts = d.getConvertToSequence();
                 cts.setInputSchema(currInputSchema);
                 currInputSchema = cts.transform(currInputSchema);
-            } else if(d.getConvertFromSequence() != null){
+            } else if(d.getConvertFromSequence() != null) {
                 ConvertFromSequence cfs = d.getConvertFromSequence();
-                if(!(currInputSchema instanceof SequenceSchema)){
+                if (!(currInputSchema instanceof SequenceSchema)) {
                     throw new RuntimeException("Cannot convert from sequence: schema is not a sequence schema: " + currInputSchema);
                 }
-                cfs.setInputSchema((SequenceSchema)currInputSchema);
+                cfs.setInputSchema((SequenceSchema) currInputSchema);
                 currInputSchema = cfs.transform((SequenceSchema) currInputSchema);
+            } else if(d.getSequenceSplit() != null ){
+                continue;   //no change to sequence schema
             } else {
                 throw new RuntimeException("Unknown action: " + d);
             }
@@ -86,12 +89,14 @@ public class TransformSequence implements Serializable {
                 }
                 ConvertToSequence cts = d.getConvertToSequence();
                 currInputSchema = cts.transform(currInputSchema);
-            } else if(d.getConvertFromSequence() != null){
+            } else if(d.getConvertFromSequence() != null) {
                 ConvertFromSequence cfs = d.getConvertFromSequence();
-                if(!(currInputSchema instanceof SequenceSchema)){
+                if (!(currInputSchema instanceof SequenceSchema)) {
                     throw new RuntimeException("Cannot convert from sequence: schema is not a sequence schema: " + currInputSchema);
                 }
                 currInputSchema = cfs.transform((SequenceSchema) currInputSchema);
+            } else if(d.getSequenceSplit() != null){
+                continue;   //Sequence split -> no change to schema
             } else {
                 throw new RuntimeException("Unknown action: " + d);
             }
@@ -119,8 +124,10 @@ public class TransformSequence implements Serializable {
                 if(f.removeExample(currValues)) return null;
             } else if(d.getConvertToSequence() != null ) {
                 throw new RuntimeException("Cannot execute examples individually: TransformSequence contains a ConvertToSequence operation");
-            } else if(d.getConvertFromSequence() != null){
+            } else if(d.getConvertFromSequence() != null) {
                 throw new RuntimeException("Unexpected operation: TransformSequence contains a ConvertFromSequence operation");
+            } else if(d.getSequenceSplit() != null ){
+                throw new RuntimeException("Cannot execute examples individually: TransformSequence contains a SequenceSplit operation");
             } else {
                 throw new RuntimeException("Unknown action: " + d);
             }
@@ -207,6 +214,11 @@ public class TransformSequence implements Serializable {
 
         public Builder convertToSequence(String keyColumn, SequenceComparator comparator, SequenceSchema.SequenceType sequenceType){
             actionList.add(new DataAction(new ConvertToSequence(keyColumn,comparator,sequenceType)));
+            return this;
+        }
+
+        public Builder splitSequence(SequenceSplit split){
+            actionList.add(new DataAction(split));
             return this;
         }
 

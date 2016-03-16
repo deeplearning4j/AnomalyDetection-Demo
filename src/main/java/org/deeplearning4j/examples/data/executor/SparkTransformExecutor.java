@@ -10,6 +10,7 @@ import org.deeplearning4j.examples.data.schema.Schema;
 import org.deeplearning4j.examples.data.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.sequence.ConvertFromSequence;
 import org.deeplearning4j.examples.data.sequence.ConvertToSequence;
+import org.deeplearning4j.examples.data.sequence.SequenceSplit;
 import org.deeplearning4j.examples.data.spark.*;
 import org.deeplearning4j.examples.data.spark.sequence.SparkGroupToSequenceFunction;
 import org.deeplearning4j.examples.data.spark.sequence.SparkMapToPairByColumnFunction;
@@ -98,11 +99,14 @@ public class SparkTransformExecutor {
                 //Now: convert to a sequence...
                 currentSequence = grouped.map(new SparkGroupToSequenceFunction(cts.getComparator()));
                 currentWritables = null;
-            } else if(d.getConvertFromSequence() != null ){
+            } else if(d.getConvertFromSequence() != null ) {
                 //Convert from sequence...
                 ConvertFromSequence cfs = d.getConvertFromSequence();
 
                 throw new RuntimeException("Not yet implemented");
+            } else if(d.getSequenceSplit() != null ){
+                SequenceSplit sequenceSplit = d.getSequenceSplit();
+                currentSequence = currentSequence.flatMap(new SequenceSplitFunction(sequenceSplit));
             } else {
                 throw new RuntimeException("Unknown/not implemented action: d");
             }

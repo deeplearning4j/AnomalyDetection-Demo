@@ -7,6 +7,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.sequence.SplitMaxLengthSequence;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
@@ -88,6 +89,7 @@ public class PreprocessingNB15Sequence {
                 .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
                 .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
                 .convertToSequence("destination ip",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+                .splitSequence(new SplitMaxLengthSequence(1000,false))
                 .build();
 
         Schema preprocessedSchema = seq.getFinalSchema();
