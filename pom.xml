@@ -230,6 +230,12 @@
             <version>2.22.1</version>
         </dependency>
 
+        <!--Resolve conflict with heartbleed-->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.1</version>
+        </dependency>
 
         <!-- For some reason we DO need this as a dependency, otherwise Spark streaming fails immediately... (NoSuchMethodException) -->
         <dependency>
@@ -280,10 +286,6 @@
                 <exclusion>
                     <groupId>com.typesafe.akka</groupId>
                     <artifactId>akka-slf4j_2.10</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-httpclient</groupId>
-                    <artifactId>commons-httpclient</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
