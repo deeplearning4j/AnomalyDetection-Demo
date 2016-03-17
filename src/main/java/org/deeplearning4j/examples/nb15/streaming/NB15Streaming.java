@@ -103,7 +103,7 @@ public class NB15Streaming {
         sparkConf.setMaster("local[*]");
         sparkConf.setAppName("NB15Streaming");
         JavaStreamingContext sc = new JavaStreamingContext(sparkConf, Durations.seconds(1));    //Batches: emitted every 1 second
-        sc.checkpoint(CHECKPOINT_DIR);
+//        sc.checkpoint(CHECKPOINT_DIR);
 
 
         //Register our streaming object for receiving data into the system:

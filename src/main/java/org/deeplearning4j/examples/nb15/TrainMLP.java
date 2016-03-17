@@ -16,6 +16,7 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.ui.weights.HistogramIterationListener;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
@@ -81,8 +82,9 @@ public class TrainMLP {
         MultiLayerNetwork net = new MultiLayerNetwork(conf);
         net.init();
 
-//        net.setListeners(new HistogramIterationListener(1));
         net.setListeners(new ScoreIterationListener(1));
+        net.setListeners(new HistogramIterationListener(1));
+
 
         log.info("Start training");
         long start = System.currentTimeMillis();

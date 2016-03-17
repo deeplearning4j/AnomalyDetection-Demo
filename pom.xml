@@ -37,6 +37,7 @@
         <scala.binary.version>2.10</scala.binary.version>
         <scala.version>2.10.4</scala.version>
         <spark.version>1.6.0</spark.version>
+        <!--deeplearning4j-ui uses 0.8.0 v-->
         <dropwizard.version>0.9.2</dropwizard.version>
     </properties>
 
@@ -166,6 +167,11 @@
             <version>${dropwizard.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-views-mustache</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
 
         <!--<dependency>-->
             <!--<groupId>com.fasterxml.jackson.core</groupId>-->
@@ -232,17 +238,6 @@
             <version>${spark.version}</version>
         </dependency>
 
-        <!-- Pretty sure we don't need these 2 dependencies... -->
-        <!--<dependency>-->
-            <!--<groupId>org.scala-lang</groupId>-->
-            <!--<artifactId>scala-library</artifactId>-->
-            <!--<version>${scala.version}</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>org.scala-lang</groupId>-->
-            <!--<artifactId>scala-reflect</artifactId>-->
-            <!--<version>${scala.version}</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.binary.version}</artifactId>
@@ -256,10 +251,6 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
-                <!--<exclusion>-->
-                    <!--<groupId>com.sun.jersey</groupId>-->
-                    <!--<artifactId>jersey-client</artifactId>-->
-                <!--</exclusion>-->
                 <!-- Exclude these dependencies because dropwizard is failing with them (having both com.sun.jersey and org.glassfish.jersey in same classpath is problematic? -->
                 <!-- i.e., jersey 1.x and 2.x don't play nice together... -->
                 <exclusion>
@@ -272,11 +263,11 @@
                 </exclusion>
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-core</artifactId>
+                    <artifactId>jersey-json</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-json</artifactId>
+                    <artifactId>jersey-core</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.typesafe.akka</groupId>
@@ -290,6 +281,10 @@
                     <groupId>com.typesafe.akka</groupId>
                     <artifactId>akka-slf4j_2.10</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>commons-httpclient</groupId>
+                    <artifactId>commons-httpclient</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -297,21 +292,28 @@
             <artifactId>dl4j-spark</artifactId>
             <version>${dl4j.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-aws</artifactId>
-            <version>${dl4j.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-x86</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-core</artifactId>
+            <version>${dl4j.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-databind</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <!--includes kohsuke package-->
-        <!--<dependency>-->
-            <!--<groupId>org.deeplearning4j</groupId>-->
-            <!--<artifactId>deeplearning4j-ui</artifactId>-->
-            <!--<version>${dl4j.version}</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>deeplearning4j-ui</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
 
         <!-- For histogram plots -->
         <dependency>

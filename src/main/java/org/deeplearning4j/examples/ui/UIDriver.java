@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.ui;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
@@ -20,6 +21,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -72,6 +74,15 @@ public class UIDriver extends Application<NIDSConfig> {
 
 //        log.info("*** UIDriver started ***");
         System.out.println("*** UIDriver started ***");
+        printHttp();
+    }
+
+    public void printHttp(){
+        int port = 8080;
+        String subPath = "flow/update/";
+        WebTarget target = client.target("http://localhost:" + port).path(subPath);
+        String path = "http://localhost:" + port + "/" + subPath;
+        System.out.println("UI Streaming: " + path);
     }
 
     @Override
@@ -81,7 +92,12 @@ public class UIDriver extends Application<NIDSConfig> {
 
     @Override
     public void initialize(Bootstrap<NIDSConfig> bootstrap) {
-        bootstrap.addBundle(new ViewBundle<NIDSConfig>());
+        bootstrap.addBundle(new ViewBundle<NIDSConfig>() {
+            @Override
+            public Map<String, Map<String, String>> getViewConfiguration(NIDSConfig nidsConfig) {
+                return ImmutableMap.of();
+            }
+        });
         bootstrap.addBundle(new AssetsBundle());
     }
 
