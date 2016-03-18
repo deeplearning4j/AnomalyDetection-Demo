@@ -7,6 +7,8 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.api.split.RandomSplit;
+import org.deeplearning4j.examples.misc.SparkUtils;
 import org.deeplearning4j.examples.nb15.NB15Util;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.spark.AnalyzeSpark;
@@ -32,6 +34,8 @@ import java.util.List;
  */
 public class PreprocessingPreSplit {
 
+    public static boolean rawSplit = true;
+
     public static void main(String[] args) throws Exception {
         //Pass in name of data folder
         String dataSet =  args[0]; //"NSL_KDD";
@@ -50,6 +54,8 @@ public class PreprocessingPreSplit {
         Schema preprocessedSchema = defineSchema(outDir, seq);
         JavaSparkContext sc = setupSparkContext();
         SparkTransformExecutor executor = new SparkTransformExecutor();
+
+        if (rawSplit) {
 
         int i = 0;
         for (String inputPath : inputDir) {
@@ -93,8 +99,20 @@ public class PreprocessingPreSplit {
             i++;
         }
 
+        }else {
+            loadAndSplitRawData(sc, path.IN_DIR, 0.75);
+        }
+
         sc.close();
 
+    }
+
+    public static void loadAndSplitRawData(JavaSparkContext sc, String path, double trainFraction) throws Exception {
+        JavaRDD<String> rawData = sc.textFile(path);
+
+        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(trainFraction),rawData);
+        SparkExport.exportStringLocal(new File(DataPathUtil.TRAIN_DATA_DIR),split.get(0),12345);
+        SparkExport.exportStringLocal(new File(DataPathUtil.TEST_DATA_DIR),split.get(1),12345);
     }
 
     public static JavaSparkContext setupSparkContext(){
