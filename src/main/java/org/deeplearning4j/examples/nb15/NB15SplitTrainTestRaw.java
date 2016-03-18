@@ -5,7 +5,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.examples.data.split.RandomSplit;
+import org.deeplearning4j.examples.data.api.split.RandomSplit;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
 

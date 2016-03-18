@@ -4,10 +4,9 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.analysis.sparkfunctions.SequenceFlatMapFunction;
+import org.deeplearning4j.examples.data.spark.analysis.SequenceFlatMapFunction;
 
 import java.io.File;
 import java.util.*;

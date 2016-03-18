@@ -1,12 +1,12 @@
 package org.deeplearning4j.examples.misc;
 
-import org.deeplearning4j.examples.data.ColumnType;
-import org.deeplearning4j.examples.data.analysis.DataAnalysis;
-import org.deeplearning4j.examples.data.analysis.columns.ColumnAnalysis;
-import org.deeplearning4j.examples.data.analysis.columns.IntegerAnalysis;
-import org.deeplearning4j.examples.data.analysis.columns.LongAnalysis;
-import org.deeplearning4j.examples.data.analysis.columns.RealAnalysis;
-import org.deeplearning4j.examples.data.schema.Schema;
+import org.deeplearning4j.examples.data.api.ColumnType;
+import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
+import org.deeplearning4j.examples.data.api.analysis.columns.ColumnAnalysis;
+import org.deeplearning4j.examples.data.api.analysis.columns.IntegerAnalysis;
+import org.deeplearning4j.examples.data.api.analysis.columns.LongAnalysis;
+import org.deeplearning4j.examples.data.api.analysis.columns.RealAnalysis;
+import org.deeplearning4j.examples.data.api.schema.Schema;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -16,11 +16,9 @@ import org.jfree.data.xy.DefaultIntervalXYDataset;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.List;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.*;
 
 /**
  * Created by Alex on 6/03/2016.

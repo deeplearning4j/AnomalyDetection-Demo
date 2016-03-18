@@ -1,13 +1,10 @@
 package org.deeplearning4j.examples.misc;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.analysis.sparkfunctions.SequenceFlatMapFunction;
-import org.deeplearning4j.examples.data.split.RandomSplit;
-import org.deeplearning4j.examples.data.split.SplitStrategy;
+import org.deeplearning4j.examples.data.api.split.RandomSplit;
+import org.deeplearning4j.examples.data.api.split.SplitStrategy;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 

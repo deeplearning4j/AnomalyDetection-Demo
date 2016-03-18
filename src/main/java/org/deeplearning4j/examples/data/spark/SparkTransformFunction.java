@@ -3,7 +3,7 @@ package org.deeplearning4j.examples.data.spark;
 import lombok.AllArgsConstructor;
 import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.Transform;
+import org.deeplearning4j.examples.data.api.Transform;
 
 import java.util.Collection;
 

@@ -6,9 +6,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.examples.data.schema.Schema;
-import org.deeplearning4j.examples.data.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.data.dataquality.QualityAnalyzeSpark;
+import org.deeplearning4j.examples.data.api.schema.Schema;
+import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
+import org.deeplearning4j.examples.data.spark.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
 
 import java.util.Collection;

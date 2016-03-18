@@ -2,9 +2,8 @@ package org.deeplearning4j.examples.data.spark;
 
 import lombok.AllArgsConstructor;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.TransformSequence;
+import org.deeplearning4j.examples.data.api.TransformSequence;
 
 import java.util.Collection;
 import java.util.Collections;

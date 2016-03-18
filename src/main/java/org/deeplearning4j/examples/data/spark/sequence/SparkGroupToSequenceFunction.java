@@ -3,7 +3,7 @@ package org.deeplearning4j.examples.data.spark.sequence;
 import lombok.AllArgsConstructor;
 import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.sequence.SequenceComparator;
+import org.deeplearning4j.examples.data.api.sequence.SequenceComparator;
 import scala.Tuple2;
 
 import java.util.*;

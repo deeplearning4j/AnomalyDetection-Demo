@@ -1,12 +1,12 @@
 package org.deeplearning4j.examples.iscx;
 
-import org.deeplearning4j.examples.data.TransformSequence;
-import org.deeplearning4j.examples.data.analysis.DataAnalysis;
-import org.deeplearning4j.examples.data.schema.Schema;
-import org.deeplearning4j.examples.data.transform.categorical.CategoricalToIntegerTransform;
-import org.deeplearning4j.examples.data.transform.categorical.StringToCategoricalTransform;
-import org.deeplearning4j.examples.data.transform.normalize.Normalize;
-import org.deeplearning4j.examples.data.transform.string.StringListToCategoricalSetTransform;
+import org.deeplearning4j.examples.data.api.TransformSequence;
+import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
+import org.deeplearning4j.examples.data.api.schema.Schema;
+import org.deeplearning4j.examples.data.api.transform.categorical.CategoricalToIntegerTransform;
+import org.deeplearning4j.examples.data.api.transform.categorical.StringToCategoricalTransform;
+import org.deeplearning4j.examples.data.api.transform.normalize.Normalize;
+import org.deeplearning4j.examples.data.api.transform.string.StringListToCategoricalSetTransform;
 
 import java.util.Arrays;
 import java.util.List;

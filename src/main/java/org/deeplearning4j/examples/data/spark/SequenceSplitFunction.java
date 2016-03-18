@@ -3,7 +3,7 @@ package org.deeplearning4j.examples.data.spark;
 import lombok.AllArgsConstructor;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.sequence.SequenceSplit;
+import org.deeplearning4j.examples.data.api.sequence.SequenceSplit;
 
 import java.util.Collection;
 
