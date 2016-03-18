@@ -33,11 +33,14 @@ import java.util.List;
 public class PreprocessingPreSplit {
 
     public static void main(String[] args) throws Exception {
-        TransformProcess seq = NB15Util.getNB15PreProcessingSequence(); //NSLKDDUtil.getpreProcessingSequence(); // haven't figured out how to pass in
+        //Pass in name of data folder
         String dataSet =  args[0]; //"NSL_KDD";
 
+        //Change sequence to load specific data util
+        TransformProcess seq = NB15Util.getNB15PreProcessingSequence(); //NSLKDDUtil.getpreProcessingSequence(); // haven't figured out how to pass in
+
         DataPathUtil path = new DataPathUtil(dataSet);
-        List<String> inputDir = Arrays.asList(path.RAW_TRAIN_PATH, path.RAW_TEST_PATH);
+        List<String> inputDir = Arrays.asList(path.RAW_TRAIN_FILE, path.RAW_TEST_FILE);
         List<String> trainTestDir = Arrays.asList(DataPathUtil.TRAIN_DATA_DIR, DataPathUtil.TEST_DATA_DIR);
         String outDir = path.PRE_DIR;
         String chartDirOrig = path.CHART_DIR_ORIG;
@@ -62,6 +65,7 @@ public class PreprocessingPreSplit {
             DataAnalysis dataAnalyis = AnalyzeSpark.analyze(preprocessedSchema, preprocessedData);
 
             //Same normalization scheme for both. Normalization scheme based only on test data, however
+            //Change sequence to load specific data util
             Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> dataNormalized = NSLKDDUtil.normalize(preprocessedSchema, dataAnalyis, preprocessedData, executor);
             dataNormalized.getThird().cache();
             Schema normSchema = dataNormalized.getSecond();
@@ -74,12 +78,13 @@ public class PreprocessingPreSplit {
                 oos.writeObject(dataNormalized.getFirst());
             }
 
+            //Print analysis
             Thread.sleep(200);
             printAnalysis(dqa, "Data quality:");
             printAnalysis(dataAnalyis, "Processed data summary:");
             printAnalysis(normDataAnalysis, "Normalized data summary:");
 
-            //analysis and histograms
+            //Store histograms
             System.out.println("Storing charts...");
             Histograms.plot(preprocessedSchema, dataAnalyis, chartDirOrig);
             Histograms.plot(normSchema, normDataAnalysis, chartDirNorm);

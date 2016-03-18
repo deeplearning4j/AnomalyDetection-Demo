@@ -30,8 +30,8 @@ public class DataPathUtil {
     public final String CHART_DIR_ORIG;
     public final String CHART_DIR_NORM;
     public final String NORMALIZER_FILE;
-    public final String RAW_TRAIN_PATH;
-    public final String RAW_TEST_PATH;
+    public final String RAW_TRAIN_FILE;
+    public final String RAW_TEST_FILE;
     public final String TRAIN_DATA_FILE;
     public final String TEST_DATA_FILE;
     public final String NETWORK_CONFIG_FILE;
@@ -61,8 +61,8 @@ public class DataPathUtil {
         this.CHART_DIR_NORM = FilenameUtils.concat(DATA_BASE_DIR,  chartFilePath + "Norm/");
         this.NORMALIZER_FILE = FilenameUtils.concat(OUT_DIR, "normalizerTransform.bin");
 
-        this.RAW_TRAIN_PATH = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"/train/train.csv");
-        this.RAW_TEST_PATH = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"/test/test.csv");
+        this.RAW_TRAIN_FILE = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"train.csv");
+        this.RAW_TEST_FILE = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"test.csv");
         this.TRAIN_DATA_FILE = FilenameUtils.concat(OUT_DIR,"train.csv");
         this.TEST_DATA_FILE = FilenameUtils.concat(OUT_DIR,"test.csv");
 

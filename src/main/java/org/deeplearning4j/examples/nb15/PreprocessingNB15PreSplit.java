@@ -64,11 +64,11 @@ public class PreprocessingNB15PreSplit {
         JavaRDD<String> rawData = sc.textFile(PATH.IN_DIR);
 
         List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN),rawData);
-        SparkExport.exportStringLocal(new File(PATH.RAW_TRAIN_PATH),split.get(0),12345);
-        SparkExport.exportStringLocal(new File(PATH.RAW_TEST_PATH),split.get(1),12345);
+        SparkExport.exportStringLocal(new File(PATH.RAW_TRAIN_FILE),split.get(0),12345);
+        SparkExport.exportStringLocal(new File(PATH.RAW_TEST_FILE),split.get(1),12345);
 
         //Now that split is done: do preprocessing and normalization on training data
-        JavaRDD<String> rawTrainData = sc.textFile(PATH.RAW_TRAIN_PATH);
+        JavaRDD<String> rawTrainData = sc.textFile(PATH.RAW_TRAIN_FILE);
         JavaRDD<Collection<Writable>> writableTrainData = rawTrainData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();

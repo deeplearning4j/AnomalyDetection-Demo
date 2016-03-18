@@ -31,7 +31,13 @@ import java.util.Map;
  * Take in common parameters
  * Setup model
  * Run single server model, use spark stand alone or run on spark cluster
+ *
+ * Steps:
+ * - Download dataset and and store in System.getProperty("user.home"), "data/NIDS/<name of dataset>"
+ * - Run SplitTrainTestRaw and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
+ * - Run PreprocessingPreSplit
  */
+
 public class NIDSMain {
 
     protected static final Logger log = LoggerFactory.getLogger(NIDSMain.class);

@@ -109,7 +109,7 @@ public class NB15Streaming {
         //Register our streaming object for receiving data into the system:
         //FromRawCsvReceiver handles loading raw data, normalization, and conversion of normalized training data to INDArrays
         JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> dataStream = sc.receiverStream(
-                new FromRawCsvReceiver(PATH.RAW_TEST_PATH, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, GENERATION_RATE));
+                new FromRawCsvReceiver(PATH.RAW_TEST_FILE, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, GENERATION_RATE));
 
         //Pass each instance through the network:
 //        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream;    //TODO
