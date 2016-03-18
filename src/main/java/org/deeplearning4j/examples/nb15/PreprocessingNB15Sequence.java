@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.nb15;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -8,6 +9,7 @@ import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.sequence.SplitMaxLengthSequence;
+import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.TransformSequence;
 import org.deeplearning4j.examples.data.analysis.AnalyzeSpark;
@@ -67,7 +69,6 @@ public class PreprocessingNB15Sequence {
 
         //Set up the sequence of transforms:
         TransformSequence seq = new TransformSequence.Builder(csvSchema)
-//                .removeColumns("timestamp start", "timestamp end", //Don't need timestamps, we have duration
                 .removeColumns(
                         "source TCP base sequence num", "dest TCP base sequence num",       //Sequence numbers are essentially random between 0 and 4.29 billion
                         "label")    //leave attack category
@@ -85,11 +86,11 @@ public class PreprocessingNB15Sequence {
                 .transform(new StringToCategoricalTransform("transaction protocol", "unas", "sctp", "ospf", "tcp", "udp", "arp", "other"))
                 .transform(new MapAllStringsExceptListTransform("state", "other", Arrays.asList("FIN", "CON", "INT", "RST", "REQ")))  //Before: CategoricalAnalysis(CategoryCounts={CLO=161, FIN=1478689, ECR=8, PAR=26, MAS=7, URN=7, ECO=96, TXD=5, CON=560588, INT=490469, RST=528, TST=8, ACC=43, REQ=9043, no=7, URH=54})
                 .transform(new StringToCategoricalTransform("state", "FIN", "CON", "INT", "RST", "REQ", "other"))
-//                .transform(new IntegerToCategoricalTransform("label", Arrays.asList("normal", "attack")))
                 .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
                 .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
                 .convertToSequence("destination ip",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
                 .splitSequence(new SplitMaxLengthSequence(1000,false))
+                .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip") //Don't need timestamps, except for ordering time steps within each sequence; don't need IPs (except for conversion to sequence)
                 .build();
 
         Schema preprocessedSchema = seq.getFinalSchema();
@@ -134,13 +135,9 @@ public class PreprocessingNB15Sequence {
 
         SequenceDataAnalysis trainDataAnalyis = AnalyzeSpark.analyzeSequence(normSchema, trainDataNormalized.getThird());
 
-        //Save as CSV file  -> TODO for sequences
-        int nSplits = 1;
-//        SparkExport.exportCSVLocal(DataPath.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-//        SparkExport.exportCSVLocal(DataPath.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
-//        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
-
-//        List<Writable> invalidIsFtpLogin = QualityAnalyzeSpark.sampleInvalidColumns(100,"is ftp login",finalSchema,processedData);
+        //Save as CSV files
+        SparkExport.exportCSVSequenceLocal(new File(FilenameUtils.concat(PATH.OUT_DIR,"train/")),trainDataNormalized.getThird());
+        SparkExport.exportCSVSequenceLocal(new File(FilenameUtils.concat(PATH.OUT_DIR,"test/")),testDataNormalized.getThird());
         sc.close();
 
 
