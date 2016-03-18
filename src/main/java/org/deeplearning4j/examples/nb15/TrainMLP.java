@@ -4,7 +4,6 @@ import org.apache.commons.io.FileUtils;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
-import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.utils.Evaluation39Util;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -37,9 +36,7 @@ public class TrainMLP {
     private static final Logger log = LoggerFactory.getLogger(TrainMLP.class);
 
     protected static String dataSet = "UNSW_NB15";
-    public static final String trainFile = "normalized0.csv";  // "csv_preprocessed.csv"
-    public static final String testFile = "normalized0.csv"; // "csv_test_preprocessed.csv"
-    public static final String NETWORK_SAVE_DIR = new DataPathUtil("UNSW_NB15").OUT_DIR;
+    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
 
     public static void main(String[] args) throws Exception {
 
@@ -47,17 +44,17 @@ public class TrainMLP {
         int nOut = 10;
         int labelIdx = 66;
 
-        int layerSize = 512;
+        int layerSize = 256;
         int minibatchSize = 128;
 
         List<String> labels = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
 
         CSVRecordReader rr = new CSVRecordReader(0,",");
-        rr.initialize(new FileSplit(new File(DataPathUtil.TRAIN_DATA_PATH, trainFile)));
+        rr.initialize(new FileSplit(new File(PATH.TRAIN_DATA_FILE)));
         DataSetIterator iterTrain = new RecordReaderDataSetIterator(rr,minibatchSize,labelIdx,nOut);
 
         CSVRecordReader rrTest = new CSVRecordReader(0,",");
-        rrTest.initialize(new FileSplit(new File(DataPathUtil.TRAIN_DATA_PATH, testFile)));
+        rrTest.initialize(new FileSplit(new File(PATH.TEST_DATA_FILE)));
         DataSetIterator iterTest = new RecordReaderDataSetIterator(rrTest,minibatchSize,labelIdx,nOut);
 
         int MAX_TRAIN_MINIBATCHES = 20000;
@@ -69,10 +66,10 @@ public class TrainMLP {
                 .updater(Updater.NESTEROVS).momentum(0.9)
                 .iterations(1)
                 .learningRate(1e-2)
-                .regularization(true).l2(1e-6)
+                .regularization(true).l2(1e-5)
                 .activation("leakyrelu")
                 .weightInit(WeightInit.XAVIER)
-                .list(3)
+                .list()
                 .layer(0, new DenseLayer.Builder().nIn(nIn).nOut(layerSize).build())
                 .layer(1, new DenseLayer.Builder().nIn(layerSize).nOut(layerSize).build())
                 .layer(2, new OutputLayer.Builder().lossFunction(LossFunctions.LossFunction.MCXENT)
@@ -83,7 +80,7 @@ public class TrainMLP {
         net.init();
 
         net.setListeners(new ScoreIterationListener(1));
-        net.setListeners(new HistogramIterationListener(1));
+//        net.setListeners(new HistogramIterationListener(10));
 
 
         log.info("Start training");
@@ -115,13 +112,13 @@ public class TrainMLP {
         long end = System.currentTimeMillis();
         log.info("Training complete. Time: {} min", (end - start) / 60000);
 
-        FileUtils.writeStringToFile(new File(NETWORK_SAVE_DIR, "config.json"), conf.toJson());
-        try(DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(NETWORK_SAVE_DIR,"params.bin")))){
+        FileUtils.writeStringToFile(new File(PATH.NETWORK_CONFIG_FILE), conf.toJson());
+        try(DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(PATH.NETWORK_PARAMS_FILE)))){
             Nd4j.write(net.params(),dos);
         }
 
         INDArray params;
-        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(NETWORK_SAVE_DIR,"params.bin")))){
+        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(PATH.NETWORK_PARAMS_FILE)))){
             params = Nd4j.read(dis);
         }
 

@@ -10,6 +10,6 @@ public enum ColumnType {
     Double,
     Categorical,
     Time,
-    BLOB    //Binary Large Object - i.e., like in SQL. Arbitrary byte[] data
+    Bytes    //Arbitrary byte[] data
 
 }

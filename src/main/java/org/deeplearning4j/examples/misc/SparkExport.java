@@ -31,12 +31,13 @@ public class SparkExport {
 
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
         List<String> linesList = lines.collect();   //Requires all data in memory
+        if(!(linesList instanceof ArrayList)) linesList = new ArrayList<>(linesList);
         Collections.shuffle(linesList, new Random(rngSeed));
 
         FileUtils.writeLines(outputFile, linesList);
     }
 
-    //Another quick and dirty CSV export (local). Dumps all values into a single file
+    //Another quick and dirty CSV export (local). Dumps all values into multiple files (specified number of files)
     public static void exportCSVLocal(String outputDir, String baseFileName, int numFiles, String delimiter,
                                       JavaRDD<Collection<Writable>> data, int rngSeed) throws Exception {
 
@@ -130,6 +131,7 @@ public class SparkExport {
     //Another quick and dirty CSV export (local). Dumps all values into a single file
     public static void exportStringLocal(File outputFile, JavaRDD<String> data, int rngSeed) throws Exception {
         List<String> linesList = data.collect();   //Requires all data in memory
+        if(!(linesList instanceof ArrayList)) linesList = new ArrayList<>(linesList);
         Collections.shuffle(linesList, new Random(rngSeed));
 
         FileUtils.writeLines(outputFile, linesList);

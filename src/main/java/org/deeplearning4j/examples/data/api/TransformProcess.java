@@ -29,12 +29,12 @@ import java.util.List;
  * Created by Alex on 4/03/2016.
  */
 @Data
-public class TransformSequence implements Serializable {
+public class TransformProcess implements Serializable {
 
     private final Schema initialSchema;
     private List<DataAction> actionList;
 
-    private TransformSequence(Builder builder){
+    private TransformProcess(Builder builder){
         actionList = builder.actionList;
         initialSchema = builder.initialSchema;
 
@@ -107,7 +107,7 @@ public class TransformSequence implements Serializable {
 
 
     /** Execute the full sequence of transformations for a single example. May return null if example is filtered
-     * <b>NOTE:</b> Some TransformSequence operations cannot be done on examples individually. Most notably, ConvertToSequence
+     * <b>NOTE:</b> Some TransformProcess operations cannot be done on examples individually. Most notably, ConvertToSequence
      * and ConvertFromSequence operations require the full data set to be processed at once
      * @param input
      * @return
@@ -124,11 +124,11 @@ public class TransformSequence implements Serializable {
                 Filter f = d.getFilter();
                 if(f.removeExample(currValues)) return null;
             } else if(d.getConvertToSequence() != null ) {
-                throw new RuntimeException("Cannot execute examples individually: TransformSequence contains a ConvertToSequence operation");
+                throw new RuntimeException("Cannot execute examples individually: TransformProcess contains a ConvertToSequence operation");
             } else if(d.getConvertFromSequence() != null) {
-                throw new RuntimeException("Unexpected operation: TransformSequence contains a ConvertFromSequence operation");
+                throw new RuntimeException("Unexpected operation: TransformProcess contains a ConvertFromSequence operation");
             } else if(d.getSequenceSplit() != null ){
-                throw new RuntimeException("Cannot execute examples individually: TransformSequence contains a SequenceSplit operation");
+                throw new RuntimeException("Cannot execute examples individually: TransformProcess contains a SequenceSplit operation");
             } else {
                 throw new RuntimeException("Unknown action: " + d);
             }
@@ -223,8 +223,8 @@ public class TransformSequence implements Serializable {
             return this;
         }
 
-        public TransformSequence build(){
-            return new TransformSequence(this);
+        public TransformProcess build(){
+            return new TransformProcess(this);
         }
     }
 

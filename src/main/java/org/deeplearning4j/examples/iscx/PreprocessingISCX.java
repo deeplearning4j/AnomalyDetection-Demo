@@ -7,10 +7,10 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.api.ColumnType;
 import org.deeplearning4j.examples.data.api.schema.Schema;
-import org.deeplearning4j.examples.data.api.TransformSequence;
 import org.deeplearning4j.examples.data.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.columns.ColumnAnalysis;
@@ -18,9 +18,8 @@ import org.deeplearning4j.examples.data.api.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.columns.LongAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.data.spark.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.spark.SparkTransformExecutor;
-import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.api.split.RandomSplit;
 import org.deeplearning4j.examples.data.api.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.data.api.transform.normalize.Normalize;
@@ -54,7 +53,7 @@ public class PreprocessingISCX {
         Schema csvSchema = ISCXUtil.getCsvSchema();
 
         //Set up the sequence of transforms:
-        TransformSequence seq = ISCXUtil.getpreProcessingSequence();
+        TransformProcess seq = ISCXUtil.getpreProcessingSequence();
 
         Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY,dataSet + "preprocessedDataSchema.txt"),preprocessedSchema.toString());
@@ -76,7 +75,7 @@ public class PreprocessingISCX {
         DataAnalysis da = null;
         if(analysis) {
             //Analyze the quality of the columns (missing values, etc), on a per column basis
-            dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, processedData);
+            dqa = AnalyzeSpark.analyzeQuality(preprocessedSchema, processedData);
             //Do analysis, on a per-column basis
             da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
         }
@@ -103,8 +102,8 @@ public class PreprocessingISCX {
 
             //Save as CSV file
             int nSplits = 1;
-            SparkExport.exportCSVLocal(DataPathUtil.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
-            SparkExport.exportCSVLocal(DataPathUtil.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
+            SparkExport.exportCSVLocal(DataPathUtil.TRAIN_DATA_DIR, dataSet + "normalized", nSplits, ",", trainDataNormalized.getSecond(), 12345);
+            SparkExport.exportCSVLocal(DataPathUtil.TEST_DATA_DIR, dataSet + "normalized", nSplits, ",", testDataNormalized.getSecond(), 12345);
             FileUtils.writeStringToFile(new File(OUT_DIRECTORY, dataSet + "normDataSchema.txt"), normSchema.toString());
         }
 
@@ -140,7 +139,7 @@ public class PreprocessingISCX {
 
     public static Pair<Schema, JavaRDD<Collection<Writable>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input,
                                                                         SparkTransformExecutor executor) {
-        TransformSequence norm = new TransformSequence.Builder(schema)
+        TransformProcess norm = new TransformProcess.Builder(schema)
                 .normalize("totalSourceBytes", Normalize.Log2Mean, da)
                 .normalize("totalDestinationBytes", Normalize.Log2Mean, da)
                 .normalize("totalDestinationPackets", Normalize.Log2Mean, da)

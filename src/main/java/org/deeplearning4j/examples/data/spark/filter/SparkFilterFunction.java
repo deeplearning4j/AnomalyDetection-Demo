@@ -1,4 +1,4 @@
-package org.deeplearning4j.examples.data.spark;
+package org.deeplearning4j.examples.data.spark.filter;
 
 import lombok.AllArgsConstructor;
 import org.apache.spark.api.java.function.Function;

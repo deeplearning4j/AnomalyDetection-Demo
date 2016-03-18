@@ -8,16 +8,19 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.data.api.DataAction;
 import org.deeplearning4j.examples.data.api.filter.Filter;
 import org.deeplearning4j.examples.data.api.Transform;
-import org.deeplearning4j.examples.data.api.TransformSequence;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.data.api.schema.Schema;
 import org.deeplearning4j.examples.data.api.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.api.sequence.ConvertFromSequence;
 import org.deeplearning4j.examples.data.api.sequence.ConvertToSequence;
 import org.deeplearning4j.examples.data.api.sequence.SequenceSplit;
+import org.deeplearning4j.examples.data.spark.filter.SparkFilterFunction;
 import org.deeplearning4j.examples.data.spark.sequence.SparkGroupToSequenceFunction;
 import org.deeplearning4j.examples.data.spark.sequence.SparkMapToPairByColumnFunction;
 import org.deeplearning4j.examples.data.spark.sequence.SparkSequenceFilterFunction;
 import org.deeplearning4j.examples.data.spark.sequence.SparkSequenceTransformFunction;
+import org.deeplearning4j.examples.data.spark.transform.SequenceSplitFunction;
+import org.deeplearning4j.examples.data.spark.transform.SparkTransformFunction;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,16 +28,16 @@ import java.util.List;
 public class SparkTransformExecutor {
 
 
-    public JavaRDD<Collection<Writable>> execute(JavaRDD<Collection<Writable>> inputWritables, TransformSequence sequence ) {
+    public JavaRDD<Collection<Writable>> execute(JavaRDD<Collection<Writable>> inputWritables, TransformProcess sequence ) {
         if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
 
         return execute(inputWritables,null,sequence).getFirst();
-//        return inputWritables.flatMap(new SparkTransformSequenceFunction(sequence));    //Only works if no toSequence or FromSequence ops are in the TransformSequenc...
+//        return inputWritables.flatMap(new SparkTransformProcessFunction(sequence));    //Only works if no toSequence or FromSequence ops are in the TransformSequenc...
     }
 
-    public JavaRDD<Collection<Collection<Writable>>> executeToSequence(JavaRDD<Collection<Writable>> inputWritables, TransformSequence sequence ) {
+    public JavaRDD<Collection<Collection<Writable>>> executeToSequence(JavaRDD<Collection<Writable>> inputWritables, TransformProcess sequence ) {
         if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
@@ -42,7 +45,7 @@ public class SparkTransformExecutor {
         return execute(inputWritables,null,sequence).getSecond();
     }
 
-    public JavaRDD<Collection<Writable>> executeSequenceToSeparate(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformSequence sequence ) {
+    public JavaRDD<Collection<Writable>> executeSequenceToSeparate(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformProcess sequence ) {
         if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
@@ -50,7 +53,7 @@ public class SparkTransformExecutor {
         return execute(null,inputSequence,sequence).getFirst();
     }
 
-    public JavaRDD<Collection<Collection<Writable>>> executeSequenceToSequence(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformSequence sequence ) {
+    public JavaRDD<Collection<Collection<Writable>>> executeSequenceToSequence(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformProcess sequence ) {
         if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
@@ -61,7 +64,7 @@ public class SparkTransformExecutor {
 
     private Pair<JavaRDD<Collection<Writable>>,JavaRDD<Collection<Collection<Writable>>>>
         execute(JavaRDD<Collection<Writable>> inputWritables, JavaRDD<Collection<Collection<Writable>>> inputSequence,
-                TransformSequence sequence ){
+                TransformProcess sequence ){
         JavaRDD<Collection<Writable>> currentWritables = inputWritables;
         JavaRDD<Collection<Collection<Writable>>> currentSequence = inputSequence;
 

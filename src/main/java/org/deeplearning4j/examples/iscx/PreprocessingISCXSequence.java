@@ -9,7 +9,7 @@ import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.api.ColumnType;
-import org.deeplearning4j.examples.data.api.TransformSequence;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.data.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.SequenceDataAnalysis;
@@ -18,12 +18,11 @@ import org.deeplearning4j.examples.data.api.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.columns.LongAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.data.spark.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.spark.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.api.schema.Schema;
 import org.deeplearning4j.examples.data.api.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.api.sequence.comparator.StringComparator;
-import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.api.split.RandomSplit;
 import org.deeplearning4j.examples.data.api.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.data.api.transform.categorical.StringToCategoricalTransform;
@@ -58,7 +57,7 @@ public class PreprocessingISCXSequence {
         Schema csvSchema = ISCXUtil.getCsvSchema();
 
         //Set up the sequence of transforms:
-        TransformSequence seq = new TransformSequence.Builder(csvSchema)
+        TransformProcess seq = new TransformProcess.Builder(csvSchema)
                 .removeColumns("source payload base64", "destination payload base64")  // TODO use in nlp approach for attacks that need payload to id
                 .transform(new StringToCategoricalTransform("direction", "L2L", "L2R", "R2L", "R2R"))
                 .transform(new StringToCategoricalTransform("protocol name", "icmp_ip", "udp_ip", "ip", "ipv6icmp", "tcp_ip", "igmp"))
@@ -122,7 +121,7 @@ public class PreprocessingISCXSequence {
         DataAnalysis da;
         if(analysis) {
             //Analyze the quality of the columns (missing values, etc), on a per column basis
-            dqa = QualityAnalyzeSpark.analyzeQualitySequence(preprocessedSchema, sequenceData);
+            dqa = AnalyzeSpark.analyzeQualitySequence(preprocessedSchema, sequenceData);
             //Do analysis, on a per-column basis
             da = AnalyzeSpark.analyzeSequence(preprocessedSchema, sequenceData);
         }
@@ -198,7 +197,7 @@ public class PreprocessingISCXSequence {
 
     public static Pair<Schema, JavaRDD<Collection<Collection<Writable>>>> normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Collection<Writable>>> input,
                                                                         SparkTransformExecutor executor) {
-        TransformSequence norm = new TransformSequence.Builder(schema)
+        TransformProcess norm = new TransformProcess.Builder(schema)
                 .normalize("totalSourceBytes", Normalize.Log2Mean, da)
                 .normalize("totalDestinationBytes", Normalize.Log2Mean, da)
                 .normalize("totalDestinationPackets", Normalize.Log2Mean, da)

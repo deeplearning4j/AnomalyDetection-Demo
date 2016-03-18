@@ -9,6 +9,9 @@ import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.SequenceDataAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.columns.*;
 import org.deeplearning4j.examples.data.api.analysis.sequence.SequenceLengthAnalysis;
+import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
+import org.deeplearning4j.examples.data.api.dataquality.columns.*;
+import org.deeplearning4j.examples.data.api.metadata.*;
 import org.deeplearning4j.examples.data.spark.analysis.seqlength.IntToDoubleFunction;
 import org.deeplearning4j.examples.data.spark.analysis.*;
 import org.deeplearning4j.examples.data.spark.analysis.seqlength.SequenceLengthAnalysisAddFunction;
@@ -24,6 +27,17 @@ import org.deeplearning4j.examples.data.spark.analysis.longa.LongAnalysisMergeFu
 import org.deeplearning4j.examples.data.spark.analysis.real.RealAnalysisAddFunction;
 import org.deeplearning4j.examples.data.spark.analysis.real.RealAnalysisCounter;
 import org.deeplearning4j.examples.data.spark.analysis.real.RealAnalysisMergeFunction;
+import org.deeplearning4j.examples.data.spark.filter.FilterWritablesBySchemaFunction;
+import org.deeplearning4j.examples.data.spark.quality.categorical.CategoricalQualityAddFunction;
+import org.deeplearning4j.examples.data.spark.quality.categorical.CategoricalQualityMergeFunction;
+import org.deeplearning4j.examples.data.spark.quality.integer.IntegerQualityAddFunction;
+import org.deeplearning4j.examples.data.spark.quality.integer.IntegerQualityMergeFunction;
+import org.deeplearning4j.examples.data.spark.quality.longq.LongQualityAddFunction;
+import org.deeplearning4j.examples.data.spark.quality.longq.LongQualityMergeFunction;
+import org.deeplearning4j.examples.data.spark.quality.real.RealQualityAddFunction;
+import org.deeplearning4j.examples.data.spark.quality.real.RealQualityMergeFunction;
+import org.deeplearning4j.examples.data.spark.quality.string.StringQualityAddFunction;
+import org.deeplearning4j.examples.data.spark.quality.string.StringQualityMergeFunction;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -264,8 +278,8 @@ public class AnalyzeSpark {
 
 
                     break;
-                case BLOB:
-                    list.add(new BlobAnalysis());
+                case Bytes:
+                    list.add(new BytesAnalysis());
                     break;
             }
 
@@ -297,6 +311,78 @@ public class AnalyzeSpark {
 
     public static List<Collection<Collection<Writable>>> sampleSequence(int count, JavaRDD<Collection<Collection<Writable>>> data ){
         return data.takeSample(false,count);
+    }
+
+
+
+
+
+    private static ColumnQuality analyze(ColumnMetaData meta, JavaRDD<Writable> ithColumn){
+
+        switch(meta.getColumnType()){
+            case String:
+                ithColumn.cache();
+                long countUnique = ithColumn.distinct().count();
+
+                StringQuality initialString = new StringQuality();
+                StringQuality stringQuality = ithColumn.aggregate(initialString,new StringQualityAddFunction((StringMetaData)meta),new StringQualityMergeFunction());
+                return stringQuality.add(new StringQuality(0,0,0,0,0,0,0,0,0,countUnique));
+            case Integer:
+                IntegerQuality initialInt = new IntegerQuality(0,0,0,0,0);
+                return ithColumn.aggregate(initialInt,new IntegerQualityAddFunction((IntegerMetaData)meta),new IntegerQualityMergeFunction());
+            case Long:
+                LongQuality initialLong = new LongQuality();
+                return ithColumn.aggregate(initialLong,new LongQualityAddFunction((LongMetaData)meta),new LongQualityMergeFunction());
+            case Double:
+                RealQuality initialReal = new RealQuality();
+                return ithColumn.aggregate(initialReal,new RealQualityAddFunction((DoubleMetaData)meta), new RealQualityMergeFunction());
+            case Categorical:
+                CategoricalQuality initialCat = new CategoricalQuality();
+                return ithColumn.aggregate(initialCat,new CategoricalQualityAddFunction((CategoricalMetaData)meta),new CategoricalQualityMergeFunction());
+            case Time:
+                throw new UnsupportedOperationException("Not yet implemented");
+            case Bytes:
+                return new BytesQuality();    //TODO
+            default:
+                throw new RuntimeException("Unknown or not implemented column type: " + meta.getColumnType());
+        }
+    }
+
+    public static DataQualityAnalysis analyzeQualitySequence(Schema schema, JavaRDD<Collection<Collection<Writable>>> data){
+        JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
+        return analyzeQuality(schema, fmSeq);
+    }
+
+    public static DataQualityAnalysis analyzeQuality(Schema schema, JavaRDD<Collection<Writable>> data){
+
+        data.cache();
+        int nColumns = schema.numColumns();
+
+        //This is inefficient, but it's easy to implement. Good enough for now!
+        List<ColumnQuality> list = new ArrayList<>(nColumns);
+
+        for( int i=0; i<nColumns; i++ ) {
+            ColumnMetaData meta = schema.getMetaData(i);
+            JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(i));
+            list.add(analyze(meta, ithColumn));
+        }
+
+        return new DataQualityAnalysis(schema,list);
+    }
+
+
+    public static List<Writable> sampleInvalidColumns(int count, String columnName, Schema schema, JavaRDD<Collection<Writable>> data){
+
+        //First: filter out all valid entries, to leave only invalid entries
+
+        int colIdx = schema.getIndexOfColumn(columnName);
+        JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(colIdx));
+
+        ColumnMetaData meta = schema.getMetaData(columnName);
+
+        JavaRDD<Writable> invalid = ithColumn.filter(new FilterWritablesBySchemaFunction(meta,false));
+
+        return invalid.takeSample(false,count);
     }
 
 }

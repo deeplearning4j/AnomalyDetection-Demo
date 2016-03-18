@@ -32,10 +32,15 @@ public class DataPathUtil {
     public final String NORMALIZER_FILE;
     public final String RAW_TRAIN_PATH;
     public final String RAW_TEST_PATH;
+    public final String TRAIN_DATA_FILE;
+    public final String TEST_DATA_FILE;
+    public final String NETWORK_CONFIG_FILE;
+    public final String NETWORK_PARAMS_FILE;
+
 
     public static final String REPO_BASE_DIR = FilenameUtils.concat(System.getProperty("user.dir"), "src/main/resources/");
-    public static final String TRAIN_DATA_PATH = FilenameUtils.concat(REPO_BASE_DIR, "train/");
-    public static final String TEST_DATA_PATH = FilenameUtils.concat(REPO_BASE_DIR, "test/");
+    public static final String TRAIN_DATA_DIR = FilenameUtils.concat((WIN ? outputFilePath : REPO_BASE_DIR), "train/");
+    public static final String TEST_DATA_DIR = FilenameUtils.concat((WIN ? outputFilePath : REPO_BASE_DIR), "test/");
 
     public static final boolean AWS = false;
     protected static String S3_BUCKET = "anomaly-data";
@@ -56,8 +61,13 @@ public class DataPathUtil {
         this.CHART_DIR_NORM = FilenameUtils.concat(DATA_BASE_DIR,  chartFilePath + "Norm/");
         this.NORMALIZER_FILE = FilenameUtils.concat(OUT_DIR, "normalizerTransform.bin");
 
-        this.RAW_TRAIN_PATH = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"train.csv");
-        this.RAW_TEST_PATH = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"test.csv");
+        this.RAW_TRAIN_PATH = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"/train/train.csv");
+        this.RAW_TEST_PATH = FilenameUtils.concat(RAW_TRAIN_TEST_SPLIT_DIR,"/test/test.csv");
+        this.TRAIN_DATA_FILE = FilenameUtils.concat(OUT_DIR,"train.csv");
+        this.TEST_DATA_FILE = FilenameUtils.concat(OUT_DIR,"test.csv");
+
+        this.NETWORK_CONFIG_FILE = FilenameUtils.concat(OUT_DIR,"config.json");
+        this.NETWORK_PARAMS_FILE = FilenameUtils.concat(OUT_DIR,"params.bin");
 
         if(!new File(IN_DIR).exists()) new File(IN_DIR).mkdirs();
         if(!new File(PRE_DIR).exists()) new File(PRE_DIR).mkdirs();

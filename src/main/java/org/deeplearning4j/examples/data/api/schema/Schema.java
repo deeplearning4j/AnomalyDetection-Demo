@@ -2,7 +2,6 @@ package org.deeplearning4j.examples.data.api.schema;
 
 import org.deeplearning4j.examples.data.api.ColumnType;
 import org.deeplearning4j.examples.data.api.metadata.*;
-import org.deeplearning4j.examples.data.meta.*;
 
 import java.io.Serializable;
 import java.util.*;

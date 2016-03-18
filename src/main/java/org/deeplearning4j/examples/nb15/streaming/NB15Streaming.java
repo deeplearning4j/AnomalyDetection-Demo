@@ -7,8 +7,8 @@ import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.examples.data.api.TransformSequence;
 import org.deeplearning4j.examples.data.api.schema.Schema;
 import org.deeplearning4j.examples.nb15.NB15Util;
 import org.deeplearning4j.examples.nb15.ui.NB15TableConverter;
@@ -92,10 +92,10 @@ public class NB15Streaming {
 
         Thread.sleep(3000);
 
-        TransformSequence preproc = NB15Util.getNB15PreProcessingSequence();
-        TransformSequence norm;
+        TransformProcess preproc = NB15Util.getNB15PreProcessingSequence();
+        TransformProcess norm;
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(PATH.NORMALIZER_FILE)))) {
-            norm = (TransformSequence) ois.readObject();
+            norm = (TransformProcess) ois.readObject();
         }
 
 

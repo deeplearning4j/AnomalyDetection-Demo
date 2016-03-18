@@ -12,10 +12,9 @@ import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.data.spark.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.spark.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.api.schema.Schema;
-import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.misc.Histograms;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.nslkdd.NSLKDDUtil;
@@ -34,12 +33,12 @@ import java.util.List;
 public class PreprocessingPreSplit {
 
     public static void main(String[] args) throws Exception {
-        TransformSequence seq = NB15Util.getNB15PreProcessingSequence(); //NSLKDDUtil.getpreProcessingSequence(); // haven't figured out how to pass in
+        TransformProcess seq = NB15Util.getNB15PreProcessingSequence(); //NSLKDDUtil.getpreProcessingSequence(); // haven't figured out how to pass in
         String dataSet =  args[0]; //"NSL_KDD";
 
         DataPathUtil path = new DataPathUtil(dataSet);
         List<String> inputDir = Arrays.asList(path.RAW_TRAIN_PATH, path.RAW_TEST_PATH);
-        List<String> trainTestDir = Arrays.asList(DataPathUtil.TRAIN_DATA_PATH, DataPathUtil.TEST_DATA_PATH);
+        List<String> trainTestDir = Arrays.asList(DataPathUtil.TRAIN_DATA_DIR, DataPathUtil.TEST_DATA_DIR);
         String outDir = path.PRE_DIR;
         String chartDirOrig = path.CHART_DIR_ORIG;
         String chartDirNorm = path.CHART_DIR_NORM;
@@ -58,12 +57,12 @@ public class PreprocessingPreSplit {
             preprocessedData.cache();
 
             //Analyze the quality of the columns (missing values, etc), on a per column basis
-            DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, preprocessedData);
+            DataQualityAnalysis dqa = AnalyzeSpark.analyzeQuality(preprocessedSchema, preprocessedData);
             // Per-column statis summary
             DataAnalysis dataAnalyis = AnalyzeSpark.analyze(preprocessedSchema, preprocessedData);
 
             //Same normalization scheme for both. Normalization scheme based only on test data, however
-            Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>> dataNormalized = NSLKDDUtil.normalize(preprocessedSchema, dataAnalyis, preprocessedData, executor);
+            Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> dataNormalized = NSLKDDUtil.normalize(preprocessedSchema, dataAnalyis, preprocessedData, executor);
             dataNormalized.getThird().cache();
             Schema normSchema = dataNormalized.getSecond();
             DataAnalysis normDataAnalysis = AnalyzeSpark.analyze(normSchema, dataNormalized.getThird());
@@ -101,7 +100,7 @@ public class PreprocessingPreSplit {
         return new JavaSparkContext(sparkConf);
     }
 
-    public static Schema defineSchema(String outDir, TransformSequence seq) throws IOException {
+    public static Schema defineSchema(String outDir, TransformProcess seq) throws IOException {
         //Get the sequence of transformations to make on the original data:
         Schema schema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(outDir, "preprocessedDataSchema.txt"), schema.toString());

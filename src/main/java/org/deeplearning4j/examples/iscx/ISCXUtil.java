@@ -1,6 +1,6 @@
 package org.deeplearning4j.examples.iscx;
 
-import org.deeplearning4j.examples.data.api.TransformSequence;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.api.schema.Schema;
 import org.deeplearning4j.examples.data.api.transform.categorical.CategoricalToIntegerTransform;
@@ -41,8 +41,8 @@ public class ISCXUtil {
                 .build();
     }
 
-    public static TransformSequence getpreProcessingSequence() {
-        return new TransformSequence.Builder(getCsvSchema())
+    public static TransformProcess getpreProcessingSequence() {
+        return new TransformProcess.Builder(getCsvSchema())
                 .removeColumns("source payload base64", "destination payload base64")
                 .transform(new StringToCategoricalTransform("direction", "L2L", "L2R", "R2L", "R2R"))
                 .transform(new StringToCategoricalTransform("protocol name", "icmp_ip", "udp_ip", "ip", "ipv6icmp", "tcp_ip", "igmp"))
@@ -79,9 +79,9 @@ public class ISCXUtil {
                 .build();
     }
 
-    private static TransformSequence getNormalizerSequence(Schema schema, DataAnalysis da){
+    private static TransformProcess getNormalizerSequence(Schema schema, DataAnalysis da){
 
-        return new TransformSequence.Builder(schema)
+        return new TransformProcess.Builder(schema)
                 .normalize("totalSourceBytes", Normalize.Log2Mean, da)
                 .normalize("totalDestinationBytes", Normalize.Log2Mean, da)
                 .normalize("totalDestinationPackets", Normalize.Log2Mean, da)

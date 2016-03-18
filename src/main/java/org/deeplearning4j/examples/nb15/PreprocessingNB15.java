@@ -7,23 +7,17 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.api.split.RandomSplit;
 import org.deeplearning4j.examples.data.api.transform.categorical.CategoricalToIntegerTransform;
 import org.deeplearning4j.examples.misc.Histograms;
-import org.deeplearning4j.examples.data.api.ColumnType;
 import org.deeplearning4j.examples.data.api.schema.Schema;
-import org.deeplearning4j.examples.data.api.TransformSequence;
 import org.deeplearning4j.examples.data.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
-import org.deeplearning4j.examples.data.api.analysis.columns.ColumnAnalysis;
-import org.deeplearning4j.examples.data.api.analysis.columns.IntegerAnalysis;
-import org.deeplearning4j.examples.data.api.analysis.columns.LongAnalysis;
-import org.deeplearning4j.examples.data.api.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.data.spark.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.spark.SparkTransformExecutor;
-import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.api.transform.normalize.Normalize;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.misc.SparkUtils;
@@ -41,10 +35,6 @@ public class PreprocessingNB15 {
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
     protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
-    public static final String IN_DIRECTORY = PATH.IN_DIR;
-    public static final String OUT_DIRECTORY = DataPathUtil.REPO_BASE_DIR + dataSet;
-    public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
-    public static final String CHART_DIRECTORY_NORM = PATH.CHART_DIR_NORM;
 
     public static void main(String[] args) throws Exception {
         // For AWS
@@ -56,10 +46,10 @@ public class PreprocessingNB15 {
         }
 
         //Get the sequence of transformations to make on the original data:
-        TransformSequence seq = NB15Util.getNB15PreProcessingSequence();
+        TransformProcess seq = NB15Util.getNB15PreProcessingSequence();
 
         Schema preprocessedSchema = seq.getFinalSchema();
-        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
+        FileUtils.writeStringToFile(new File(PATH.OUT_DIR,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
 
         SparkConf sparkConf = new SparkConf();
         sparkConf.setMaster("local[*]");
@@ -67,7 +57,7 @@ public class PreprocessingNB15 {
         sparkConf.set("spark.driver.maxResultSize", "2G");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
+        JavaRDD<String> rawData = sc.textFile(PATH.IN_DIR);
 
         JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
@@ -76,7 +66,7 @@ public class PreprocessingNB15 {
         processedData.cache();
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(preprocessedSchema, processedData);
+        DataQualityAnalysis dqa = AnalyzeSpark.analyzeQuality(preprocessedSchema, processedData);
 
         //Do analysis, on a per-column basis
         DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
@@ -89,8 +79,8 @@ public class PreprocessingNB15 {
         DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
-        Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
         trainDataNormalized.getThird().cache();
@@ -101,10 +91,12 @@ public class PreprocessingNB15 {
         DataAnalysis trainDataAnalyis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getThird());
 
         //Save as CSV file
-        int nSplits = 1;
-        SparkExport.exportCSVLocal(DataPathUtil.TRAIN_DATA_PATH, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
-        SparkExport.exportCSVLocal(DataPathUtil.TEST_DATA_PATH, dataSet + "normalized", nSplits, ",", testDataNormalized.getThird(), 12345);
-        FileUtils.writeStringToFile(new File(OUT_DIRECTORY,"normDataSchema.txt"),normSchema.toString());
+//        int nSplits = 1;
+//        SparkExport.exportCSVLocal(DataPathUtil.TRAIN_DATA_DIR, dataSet + "normalized", nSplits, ",", trainDataNormalized.getThird(), 12345);
+//        SparkExport.exportCSVLocal(DataPathUtil.TEST_DATA_DIR, dataSet + "normalized", nSplits, ",", testDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(new File(PATH.TRAIN_DATA_FILE), ",", trainDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(new File(PATH.TEST_DATA_FILE), ",", testDataNormalized.getThird(), 12345);
+        FileUtils.writeStringToFile(new File(PATH.OUT_DIR,"normDataSchema.txt"),normSchema.toString());
 
         //Save the normalizer transform sequence:
         try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(PATH.NORMALIZER_FILE)))){
@@ -142,15 +134,13 @@ public class PreprocessingNB15 {
         System.out.println(trainDataAnalyis);
 
         //analysis and histograms
-        plot(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
-        plot(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORM);
-
-        System.out.println();
+        Histograms.exportPlots(preprocessedSchema, da, PATH.CHART_DIR_ORIG);
+        Histograms.exportPlots(normSchema, trainDataAnalyis, PATH.CHART_DIR_NORM);
     }
 
-    public static Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>>
+    public static Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>>
                 normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input, SparkTransformExecutor executor) {
-        TransformSequence norm = new TransformSequence.Builder(schema)
+        TransformProcess norm = new TransformProcess.Builder(schema)
                 .normalize("source port", Normalize.MinMax, da)
                 .normalize("destination port", Normalize.MinMax, da)
                 .normalize("total duration", Normalize.Log2Mean, da)
@@ -199,47 +189,45 @@ public class PreprocessingNB15 {
         return new Triple<>(norm, normSchema, normalizedData);
     }
 
-    public static void plot(Schema finalSchema, DataAnalysis da, String directory) throws Exception {
-        //Plots!
-        List<ColumnAnalysis> analysis = da.getColumnAnalysis();
-        List<String> names = finalSchema.getColumnNames();
-        List<ColumnType> types = finalSchema.getColumnTypes();
-
-        for (int i = 0; i < analysis.size(); i++) {
-            ColumnType type = types.get(i);
-            ColumnAnalysis a = analysis.get(i);
-            double[] bins;
-            long[] counts;
-            switch (type) {
-                case Integer:
-                    IntegerAnalysis ia = (IntegerAnalysis) a;
-                    bins = ia.getHistogramBuckets();
-                    counts = ia.getHistogramBucketCounts();
-                    break;
-                case Long:
-                    LongAnalysis la = (LongAnalysis) a;
-                    bins = la.getHistogramBuckets();
-                    counts = la.getHistogramBucketCounts();
-                    break;
-                case Double:
-                    RealAnalysis ra = (RealAnalysis) a;
-                    bins = ra.getHistogramBuckets();
-                    counts = ra.getHistogramBucketCounts();
-                    break;
-                default:
-                    continue;
-            }
-
-            String colName = names.get(i);
-
-
-//            Histograms.plot(bins,counts,colName);
-            File f = new File(directory, colName + ".png");
-            if (f.exists()) f.delete();
-            Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
-        }
-
-
-    }
+//    public static void plot(Schema finalSchema, DataAnalysis da, String directory) throws Exception {
+//        //Plots!
+//        List<ColumnAnalysis> analysis = da.getColumnAnalysis();
+//        List<String> names = finalSchema.getColumnNames();
+//        List<ColumnType> types = finalSchema.getColumnTypes();
+//
+//        for (int i = 0; i < analysis.size(); i++) {
+//            ColumnType type = types.get(i);
+//            ColumnAnalysis a = analysis.get(i);
+//            double[] bins;
+//            long[] counts;
+//            switch (type) {
+//                case Integer:
+//                    IntegerAnalysis ia = (IntegerAnalysis) a;
+//                    bins = ia.getHistogramBuckets();
+//                    counts = ia.getHistogramBucketCounts();
+//                    break;
+//                case Long:
+//                    LongAnalysis la = (LongAnalysis) a;
+//                    bins = la.getHistogramBuckets();
+//                    counts = la.getHistogramBucketCounts();
+//                    break;
+//                case Double:
+//                    RealAnalysis ra = (RealAnalysis) a;
+//                    bins = ra.getHistogramBuckets();
+//                    counts = ra.getHistogramBucketCounts();
+//                    break;
+//                default:
+//                    continue;
+//            }
+//
+//            String colName = names.get(i);
+//
+//
+////            Histograms.plot(bins,counts,colName);
+//            File f = new File(directory, colName + ".png");
+//            if (f.exists()) f.delete();
+//            Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
+//        }
+//    }
 
 }

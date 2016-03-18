@@ -7,12 +7,12 @@ import lombok.Data;
  * Created by Alex on 4/03/2016.
  */
 @AllArgsConstructor @Data
-public class BlobAnalysis implements ColumnAnalysis {
+public class BytesAnalysis implements ColumnAnalysis {
 
 
     @Override
     public String toString(){
-        return "BlobAnalysis()";
+        return "BytesAnalysis()";
     }
 
     @Override

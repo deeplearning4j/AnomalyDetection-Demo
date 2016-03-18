@@ -8,7 +8,7 @@ import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.api.TransformSequence;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
@@ -32,8 +32,8 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,Collection
     private static final Logger log = LoggerFactory.getLogger(FromRawCsvReceiver.class);
 
     private final String localCSVPath;
-    private final TransformSequence preprocess;
-    private final TransformSequence normalizer;
+    private final TransformProcess preprocess;
+    private final TransformProcess normalizer;
     private final int labelIndex;
     private final int numPossibleLabels;
     private RecordReader rr;
@@ -45,7 +45,7 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,Collection
     private WritableConverter converter = null;
     private boolean regression = false;
 
-    public FromRawCsvReceiver(String localCSVPath, TransformSequence preprocess, TransformSequence normalizer,
+    public FromRawCsvReceiver(String localCSVPath, TransformProcess preprocess, TransformProcess normalizer,
                               int labelIdx, int nOut, int examplesPerSecond) throws Exception {
         super(StorageLevel.MEMORY_ONLY());
         this.preprocess = preprocess;

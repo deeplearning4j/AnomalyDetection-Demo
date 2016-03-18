@@ -1,18 +1,8 @@
 package org.deeplearning4j.examples;
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.storage.StorageLevel;
-import org.canova.api.records.reader.impl.CSVRecordReader;
-import org.canova.api.writable.Writable;
-import org.deeplearning4j.eval.Evaluation;
-import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
-import org.nd4j.linalg.dataset.DataSet;
-
-import java.util.Collection;
 
 /**
  *

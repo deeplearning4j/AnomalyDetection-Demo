@@ -8,21 +8,20 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.data.api.sequence.SplitMaxLengthSequence;
 import org.deeplearning4j.examples.misc.SparkExport;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.examples.data.api.TransformSequence;
 import org.deeplearning4j.examples.data.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.api.analysis.SequenceDataAnalysis;
 import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.data.spark.QualityAnalyzeSpark;
 import org.deeplearning4j.examples.data.spark.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.api.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.data.api.schema.Schema;
 import org.deeplearning4j.examples.data.api.schema.SequenceSchema;
 import org.deeplearning4j.examples.data.api.sequence.comparator.StringComparator;
-import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.data.api.split.RandomSplit;
 import org.deeplearning4j.examples.data.api.transform.ConditionalTransform;
 import org.deeplearning4j.examples.data.api.transform.categorical.IntegerToCategoricalTransform;
@@ -68,7 +67,7 @@ public class PreprocessingNB15Sequence {
         Schema csvSchema = NB15Util.getNB15CsvSchema();
 
         //Set up the sequence of transforms:
-        TransformSequence seq = new TransformSequence.Builder(csvSchema)
+        TransformProcess seq = new TransformProcess.Builder(csvSchema)
                 .removeColumns(
                         "source TCP base sequence num", "dest TCP base sequence num",       //Sequence numbers are essentially random between 0 and 4.29 billion
                         "label")    //leave attack category
@@ -111,7 +110,7 @@ public class PreprocessingNB15Sequence {
         processedData.cache();
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQualitySequence(preprocessedSchema, processedData);
+        DataQualityAnalysis dqa = AnalyzeSpark.analyzeQualitySequence(preprocessedSchema, processedData);
 
         //Do analysis, on a per-column basis
         DataAnalysis da = AnalyzeSpark.analyzeSequence(preprocessedSchema, processedData);
@@ -124,8 +123,8 @@ public class PreprocessingNB15Sequence {
         DataAnalysis trainDataAnalysis = AnalyzeSpark.analyzeSequence(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Triple<TransformSequence, Schema, JavaRDD<Collection<Collection<Writable>>>> trainDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, trainData, executor);
-        Triple<TransformSequence, Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, testData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<Collection<Collection<Writable>>>> trainDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
         trainDataNormalized.getThird().cache();

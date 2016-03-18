@@ -3,7 +3,7 @@ package org.deeplearning4j.examples.nb15;
 import org.apache.spark.api.java.JavaRDD;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.data.api.TransformSequence;
+import org.deeplearning4j.examples.data.api.TransformProcess;
 import org.deeplearning4j.examples.data.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.data.spark.SparkTransformExecutor;
 import org.deeplearning4j.examples.data.api.filter.FilterInvalidValues;
@@ -66,9 +66,9 @@ public class NB15Util {
     }
 
 
-    public static TransformSequence getNB15PreProcessingSequence(){
+    public static TransformProcess getNB15PreProcessingSequence(){
 
-        TransformSequence seq = new TransformSequence.Builder(getNB15CsvSchema())
+        TransformProcess seq = new TransformProcess.Builder(getNB15CsvSchema())
 //                .removeColumns("timestamp start", "timestamp end", //Don't need timestamps, we have duration. Can't really use IPs here.
 //                        "source TCP base sequence num", "dest TCP base sequence num")       //Sequence numbers are essentially random between 0 and 4.29 billion
                 .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip",  //Don't need timestamps, we have duration. Can't really use IPs here.
@@ -97,26 +97,26 @@ public class NB15Util {
         return seq;
     }
 
-    public static Triple<TransformSequence, Schema, JavaRDD<Collection<Writable>>>
+    public static Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>>
             normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input, SparkTransformExecutor executor) {
 
-        TransformSequence norm = getNormalizerSequence(schema,da);
+        TransformProcess norm = getNormalizerSequence(schema,da);
         Schema normSchema = norm.getFinalSchema();
         JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
         return new Triple<>(norm, normSchema, normalizedData);
     }
 
-    public static Triple<TransformSequence, Schema, JavaRDD<Collection<Collection<Writable>>>>
+    public static Triple<TransformProcess, Schema, JavaRDD<Collection<Collection<Writable>>>>
         normalizeSequence(Schema schema, DataAnalysis da, JavaRDD<Collection<Collection<Writable>>> input, SparkTransformExecutor executor) {
 
-        TransformSequence norm = getNormalizerSequence(schema,da);
+        TransformProcess norm = getNormalizerSequence(schema,da);
         Schema normSchema = norm.getFinalSchema();
         JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
         return new Triple<>(norm, normSchema, normalizedData);
     }
 
-    private static TransformSequence getNormalizerSequence(Schema schema, DataAnalysis da){
-        TransformSequence norm = new TransformSequence.Builder(schema)
+    private static TransformProcess getNormalizerSequence(Schema schema, DataAnalysis da){
+        TransformProcess norm = new TransformProcess.Builder(schema)
                 .normalize("source port", Normalize.MinMax, da)
                 .normalize("destination port", Normalize.MinMax, da)
                 .normalize("total duration", Normalize.Log2Mean, da)

@@ -15,7 +15,6 @@ import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -114,8 +113,8 @@ public class NIDSMain {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
                 System.out.println("\nLoad data....");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPathUtil.TRAIN_DATA_PATH + trainFile, labelIdx, numEpochs, numBatches);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPathUtil.TEST_DATA_PATH + testFile, labelIdx, 1, numTestBatches);
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPathUtil.TRAIN_DATA_DIR + trainFile, labelIdx, numEpochs, numBatches);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPathUtil.TEST_DATA_DIR + testFile, labelIdx, 1, numTestBatches);
                 network = standard.trainModel(network, trainData, testData);
                 System.out.println("\nFinal evaluation....");
                 if(supervised){

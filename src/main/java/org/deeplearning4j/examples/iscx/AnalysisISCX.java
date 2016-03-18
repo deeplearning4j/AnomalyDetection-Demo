@@ -5,11 +5,11 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.data.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.data.api.schema.Schema;
 import org.deeplearning4j.examples.data.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.data.spark.QualityAnalyzeSpark;
-import org.deeplearning4j.examples.data.spark.StringToWritablesFunction;
+import org.deeplearning4j.examples.data.spark.misc.StringToWritablesFunction;
 
 import java.util.Collection;
 
@@ -36,7 +36,7 @@ public class AnalysisISCX {
 
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
-        DataQualityAnalysis dqa = QualityAnalyzeSpark.analyzeQuality(csvSchema,data);
+        DataQualityAnalysis dqa = AnalyzeSpark.analyzeQuality(csvSchema,data);
         sc.close();
 
         //Wait for spark to stop its console spam before printing analysis
