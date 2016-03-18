@@ -1,4 +1,4 @@
-package org.deeplearning4j.examples.Models;
+package org.deeplearning4j.examples.models;
 
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.GradientNormalization;

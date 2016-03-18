@@ -6,7 +6,6 @@ import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.eval.Evaluation;
-import org.deeplearning4j.examples.utils.Evaluation39Util;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.dataset.api.DataSet;
 
@@ -20,8 +19,7 @@ public class StandardNIDS extends NIDSMain{
     protected MultipleEpochsIterator loadData(int batchSize, String dataPath, int labelIdx, int numEpochs, int numBatches) throws Exception{
         CSVRecordReader rr = new CSVRecordReader(0,",");
         rr.initialize(new FileSplit(new File(dataPath)));
-        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut);
-//        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches); 3.9
+        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
         return new MultipleEpochsIterator(numEpochs, iter);
 
     }
@@ -51,17 +49,10 @@ public class StandardNIDS extends NIDSMain{
 
     protected void evaluatePerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
         startTime = System.currentTimeMillis();
-//        Evaluation eval = net.evaluate(iter, labels); 3.9
-        Evaluation39Util eval = new Evaluation39Util(labels);
-        int countEval = 0;
-        while(iter.hasNext() && countEval++ < testBatchSize){
-            org.nd4j.linalg.dataset.DataSet ds = iter.next();
-            eval.eval(ds.getLabels(),net.output(ds.getFeatureMatrix()));
-        }
-
+        Evaluation eval = net.evaluate(iter, labels);
         endTime = System.currentTimeMillis();
         System.out.println(eval.stats());
-        System.out.print("False Alarm Rate: " + eval.falseAlarmRate()); //3.9
+        System.out.print("False Alarm Rate: " + eval.falseAlarmRate());
         testTime = (int) (endTime - startTime) / 60000;
 
     }

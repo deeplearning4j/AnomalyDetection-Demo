@@ -1,16 +1,16 @@
-package org.deeplearning4j.examples.Models;
+package org.deeplearning4j.examples.models;
 
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
+import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
+import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
-
-import java.util.List;
 
 /**
  *
@@ -62,7 +62,7 @@ public class BasicMLPModel {
                 .momentum(0.9)
                 .regularization(true)
                 .l2(l2)
-                .list(3)
+                .list()
                 .layer(0, new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0]).dropOut(0.5).build())
                 .layer(1, new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1]).dropOut(0.5).build())
                 .layer(2, new OutputLayer.Builder(lossFunctions).activation("softmax").nIn(nIn[2]).nOut(nOut[2]).build())
@@ -74,32 +74,32 @@ public class BasicMLPModel {
         return network;
     }
 
-//    public ComputationGraph buildGraphModel() {
-//        System.out.println("Build model....");
-//
-//        ComputationGraphConfiguration conf = new NeuralNetConfiguration.Builder()
-//                .iterations(iterations)
-//                .activation(activation)
-//                .weightInit(weightInit)
-//                .optimizationAlgo(optimizationAlgorithm)
-//                .learningRate(learningRate)
-//                .seed(seed)
-//                .regularization(true)
-//                .l2(l2)
-//                .graphBuilder()
-//                .addLayer("dnn1", new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0]).build(), "input")
-//                .addLayer("dnn2", new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1]).build(), "dnn2")
-//                .addLayer("output", new OutputLayer.Builder(lossFunctions).activation("softmax")
-//                        .nIn(nIn[2]).nOut(nOut[2]).build())
-//                .setOutputs("output")
-//                .pretrain(false).backprop(true)
-//                .build();
-//
-//        ComputationGraph network = new ComputationGraph(conf);
-//        network.init();
-//        return network;
-//
-//    }
+    public ComputationGraph buildGraphModel() {
+        System.out.println("Build model....");
+
+        ComputationGraphConfiguration conf = new NeuralNetConfiguration.Builder()
+                .iterations(iterations)
+                .activation(activation)
+                .weightInit(weightInit)
+                .optimizationAlgo(optimizationAlgorithm)
+                .learningRate(learningRate)
+                .seed(seed)
+                .regularization(true)
+                .l2(l2)
+                .graphBuilder()
+                .addLayer("dnn1", new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0]).build(), "input")
+                .addLayer("dnn2", new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1]).build(), "dnn2")
+                .addLayer("output", new OutputLayer.Builder(lossFunctions).activation("softmax")
+                        .nIn(nIn[2]).nOut(nOut[2]).build())
+                .setOutputs("output")
+                .pretrain(false).backprop(true)
+                .build();
+
+        ComputationGraph network = new ComputationGraph(conf);
+        network.init();
+        return network;
+
+    }
 
 
 }

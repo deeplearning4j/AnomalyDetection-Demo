@@ -1,25 +1,26 @@
 package org.deeplearning4j.examples;
 
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
-import org.deeplearning4j.examples.Models.BasicAutoEncoderModel;
-import org.deeplearning4j.examples.Models.BasicMLPModel;
-import org.deeplearning4j.examples.Models.BasicRNNModel;
-import org.deeplearning4j.examples.Models.MLPAutoEncoderModel;
+import org.deeplearning4j.examples.models.BasicAutoEncoderModel;
+import org.deeplearning4j.examples.models.BasicMLPModel;
+import org.deeplearning4j.examples.models.BasicRNNModel;
+import org.deeplearning4j.examples.models.MLPAutoEncoderModel;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.examples.utils.Snapshot39Util;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.deeplearning4j.examples.nslkdd.NSLKDDUtil;
+import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,9 @@ import java.util.Map;
  * Steps:
  * - Download dataset and and store in System.getProperty("user.home"), "data/NIDS/<name of dataset>"
  * - Run SplitTrainTestRaw and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
- * - Run PreprocessingPreSplit
+ * - Run PreprocessingPreSplit and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
+ * - Run NIDSMain (or TrainMLP) and pass in values for below and/or update variables below to train and store the model
+ * - Run NIDSStreaming to run SparkStreamin and access analysis GUI of streaming results
  */
 
 public class NIDSMain {
@@ -60,6 +63,9 @@ public class NIDSMain {
     protected int numEpochs = 2; // consider 60
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 1;
+
+    @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-i")
+    protected static String dataSet = "UNSW_NB15";
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
     protected String trainFile = "0NSL_KDDnormalized0.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
@@ -100,6 +106,8 @@ public class NIDSMain {
     protected MultiLayerNetwork network;
 
     protected int TEST_EVERY_N_MINIBATCHES = (supervised)? numBatches/2: numBatches+ 1;
+    protected DataPathUtil PATH = new DataPathUtil(dataSet);
+    protected String OUT_DIR = PATH.OUT_DIR;
 
     public void run(String[] args) throws Exception {
         // Parse command line arguments if they exist
@@ -112,6 +120,8 @@ public class NIDSMain {
             parser.printUsage(System.err);
         }
 
+        // TODO setup approach to load models and compare... use Arbiter?
+        // TODO add early stopping
         buildModel();
         network.setListeners(new ScoreIterationListener(1));
 
@@ -119,15 +129,16 @@ public class NIDSMain {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
                 System.out.println("\nLoad data....");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, DataPathUtil.TRAIN_DATA_DIR + trainFile, labelIdx, numEpochs, numBatches);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, DataPathUtil.TEST_DATA_DIR + testFile, labelIdx, 1, numTestBatches);
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, PATH.NORM_TRAIN_DATA_FILE, labelIdx, numEpochs, numBatches);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, PATH.NORM_TEST_DATA_FILE, labelIdx, 1, numTestBatches);
                 network = standard.trainModel(network, trainData, testData);
                 System.out.println("\nFinal evaluation....");
                 if(supervised){
                     standard.evaluatePerformance(network, testData);
                 } else {
                     DataSet test = testData.next(1);
-                    double result = new Snapshot39Util().scoreExample(network, test, true, LossFunctions.LossFunction.MSE);
+                    INDArray result = network.scoreExamples(test,false);
+                    // TODO get summary result...
                     System.out.println("\nFinal evaluation score: " +  result);
                 }
                 break;
@@ -154,6 +165,18 @@ public class NIDSMain {
     }
 
     protected void buildModel(){
+//         int[] nIn;
+//         int[] nOut;
+//         int iterations;
+//         String activation;
+//         WeightInit weightInit;
+//         OptimizationAlgorithm optimizationAlgorithm;
+//         Updater updater;
+//         LossFunctions.LossFunction lossFunctions;
+//         double learningRate;
+//         double l2;
+//        long seed;
+
         switch (modelType) {
             case "MLP":
                 network = new BasicMLPModel(
@@ -207,7 +230,6 @@ public class NIDSMain {
                         1e-4
                 ).buildModel();
                 break;
-
         }
 
     }
@@ -216,7 +238,7 @@ public class NIDSMain {
         System.out.println("\n============================Time========================================");
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
-//        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, new DataPath("UNSW").OUT_DIR.toString());
+        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIR);
     }
 
 
