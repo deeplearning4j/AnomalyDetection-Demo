@@ -73,7 +73,7 @@ public class NIDSStreaming {
 
         Thread.sleep(3000);
 
-        TransformProcess preproc = NB15Util.getPreProcessingSequence();
+        TransformProcess preproc = NB15Util.getPreProcessingProcess();
         TransformProcess norm;
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(PATH.NORMALIZER_FILE)))) {
             norm = (TransformProcess) ois.readObject();

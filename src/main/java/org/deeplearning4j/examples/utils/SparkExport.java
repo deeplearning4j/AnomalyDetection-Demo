@@ -75,12 +75,6 @@ public class SparkExport {
         }
     }
 
-    public static void exportSequenceCSVLocal(String outputDir, String baseFileName, int numFiles, String delimiter,
-                                      JavaRDD<Collection<Collection<Writable>>> data, int rngSeed) throws Exception {
-        JavaRDD<Collection<Writable>> seq = data.flatMap(new SequenceFlatMapFunction());
-        exportCSVLocal(outputDir, baseFileName, numFiles, delimiter, seq, rngSeed);
-    }
-
     @AllArgsConstructor
     private static class ToStringFunction implements Function<Collection<Writable>,String> {
 
@@ -137,13 +131,15 @@ public class SparkExport {
         FileUtils.writeLines(outputFile, linesList);
     }
 
-    //Quick and dirty CSV export: one file per sequence.
-    public static void exportCSVSequenceLocal(File baseDir, JavaRDD<Collection<Collection<Writable>>> sequences ) throws Exception {
+    //Quick and dirty CSV export: one file per sequence, with shuffling of the order of sequences
+    public static void exportCSVSequenceLocal(File baseDir, JavaRDD<Collection<Collection<Writable>>> sequences, long seed ) throws Exception {
         baseDir.mkdirs();
         if(!baseDir.isDirectory()) throw new IllegalArgumentException("File is not a directory: " + baseDir.toString());
         String baseDirStr = baseDir.toString();
 
         List<String> fileContents = sequences.map(new SequenceToStringFunction(",")).collect();
+        if(!(fileContents instanceof ArrayList)) fileContents = new ArrayList<>(fileContents);
+        Collections.shuffle(fileContents,new Random(seed));
 
         int i=0;
         for(String s : fileContents ){

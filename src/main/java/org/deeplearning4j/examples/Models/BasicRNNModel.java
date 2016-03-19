@@ -63,6 +63,7 @@ public class BasicRNNModel {
                 .rmsDecay(0.95)
                 .seed(seed)
                 .regularization(true)
+                .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue).gradientNormalizationThreshold(1.0)
                 .l2(l2)
                 .list(3)
                 .layer(0, new GravesLSTM.Builder().nIn(nIn[0]).nOut(nOut[0]).build())

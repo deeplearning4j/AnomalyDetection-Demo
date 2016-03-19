@@ -38,10 +38,12 @@ import java.util.List;
  */
 public class PreprocessingPreSplit {
 
+    public static final long RNG_SEED = 12345;
+
     public static boolean rawSplit = true;
     public static String dataSet;
     public static DataPathUtil path;
-    public static TransformProcess sequence = null;
+    public static TransformProcess transformProcess = null;
     public static DataQualityAnalysis dqa;
     public static DataAnalysis dataAnalyis;
     public static DataAnalysis normDataAnalysis;
@@ -57,7 +59,7 @@ public class PreprocessingPreSplit {
     public static List<String> trainTestDir;
 
     public static void main(String[] args) throws Exception {
-        setup(args[0]);
+        setup(args[0], false);
 
         JavaSparkContext sc = setupSparkContext();
         SparkTransformExecutor executor = new SparkTransformExecutor();
@@ -71,7 +73,7 @@ public class PreprocessingPreSplit {
 
                 JavaRDD<String> rawTrainData = sc.textFile(inputPath);
                 JavaRDD<Collection<Writable>> writableData = rawTrainData.map(new StringToWritablesFunction(new CSVRecordReader()));
-                preprocessedData = executor.execute(writableData, sequence);
+                preprocessedData = executor.execute(writableData, transformProcess);
                 preprocessedData.cache();
 
                 runAnalysis(preprocessedSchema, preprocessedData);
@@ -116,28 +118,31 @@ public class PreprocessingPreSplit {
 
     }
 
-    public static void setup(String dS) throws Exception {
+    public static void setup(String dS, boolean getSequenceProcess) throws Exception {
         //Pass in name of data folder
         dataSet = dS;
 
         //Load data squence
-        sequence = null;
+        transformProcess = null;
 
         switch (dataSet) {
             case "UNSW_NB15":
-                sequence = NB15Util.getPreProcessingSequence();
+                if(getSequenceProcess) transformProcess = NB15Util.getSequencePreProcessingProcess();
+                else transformProcess = NB15Util.getPreProcessingProcess();
                 buckets = 30;
                 break;
             case "NSLKDD":
-                sequence = NSLKDDUtil.getPreProcessingSequence();
+                if(getSequenceProcess) throw new UnsupportedOperationException("Not yet implemented");
+                else transformProcess = NSLKDDUtil.getPreProcessingProcess();
                 buckets = 18;
                 break;
             case "ISCX":
-                sequence = ISCXUtil.getPreProcessingSequence();
+                if(getSequenceProcess) throw new UnsupportedOperationException("Not yet implemented");
+                else transformProcess = ISCXUtil.getPreProcessingProcess();
                 break;
         }
         if (dataSet != null) path = new DataPathUtil(dataSet);
-        preprocessedSchema = defineSchema(OUT_DIRECTORY, sequence);
+        preprocessedSchema = defineSchema(OUT_DIRECTORY, transformProcess);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY, "preprocessedDataSchema.txt"), preprocessedSchema.toString());
         // Paths
         inputDir = Arrays.asList(path.RAW_TRAIN_FILE, path.RAW_TEST_FILE);
@@ -153,7 +158,7 @@ public class PreprocessingPreSplit {
     public static void loadAndSplitRawData(JavaSparkContext sc, String inputPath, double trainFraction) throws Exception {
         JavaRDD<String> rawData = sc.textFile(inputPath);
 
-        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(trainFraction), rawData);
+        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(trainFraction), rawData, RNG_SEED);
         SparkExport.exportStringLocal(new File(path.PRE_TRAIN_DATA_DIR), split.get(0), 12345);
         SparkExport.exportStringLocal(new File(path.PRE_TEST_DATA_DIR), split.get(1), 12345);
     }

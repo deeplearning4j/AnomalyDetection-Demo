@@ -46,7 +46,7 @@ public class ISCXUtil {
                 .build();
     }
 
-    public static TransformProcess getPreProcessingSequence() {
+    public static TransformProcess getPreProcessingProcess() {
         return new TransformProcess.Builder(getCsvSchema())
                 .removeColumns("source payload base64", "destination payload base64")
                 .transform(new StringToCategoricalTransform("direction", "L2L", "L2R", "R2L", "R2R"))

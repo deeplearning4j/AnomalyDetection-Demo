@@ -13,29 +13,7 @@ import java.util.List;
  */
 public class SparkUtils {
 
-//    public static List<JavaRDD<Collection<Writable>>> splitData(SplitStrategy splitStrategy, JavaRDD<Collection<Writable>> data){
-//
-//        //So this is kinda ugly, but whatever.
-//        if(splitStrategy instanceof RandomSplit){
-//
-//            RandomSplit rs = (RandomSplit)splitStrategy;
-//
-//            double fractionTrain = rs.getFractionTrain();
-//
-//            double[] splits = new double[]{fractionTrain,1.0-fractionTrain};
-//
-//            JavaRDD<Collection<Writable>>[] split = data.randomSplit(splits);
-//            List<JavaRDD<Collection<Writable>>> list = new ArrayList<>(2);
-//            Collections.addAll(list, split);
-//
-//            return list;
-//
-//        } else {
-//            throw new RuntimeException("Not yet implemented");
-//        }
-//    }
-
-    public static <T> List<JavaRDD<T>> splitData(SplitStrategy splitStrategy, JavaRDD<T> data){
+    public static <T> List<JavaRDD<T>> splitData(SplitStrategy splitStrategy, JavaRDD<T> data, long seed){
 
         //So this is kinda ugly, but whatever.
         if(splitStrategy instanceof RandomSplit){
@@ -46,7 +24,7 @@ public class SparkUtils {
 
             double[] splits = new double[]{fractionTrain,1.0-fractionTrain};
 
-            JavaRDD<T>[] split = data.randomSplit(splits);
+            JavaRDD<T>[] split = data.randomSplit(splits, seed);
             List<JavaRDD<T>> list = new ArrayList<>(2);
             Collections.addAll(list, split);
 

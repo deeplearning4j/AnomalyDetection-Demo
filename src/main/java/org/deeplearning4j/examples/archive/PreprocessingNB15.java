@@ -33,6 +33,7 @@ import java.util.*;
  */
 public class PreprocessingNB15 {
 
+    public static final long RNG_SEED = 12345;
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
     protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
@@ -47,7 +48,7 @@ public class PreprocessingNB15 {
         }
 
         //Get the sequence of transformations to make on the original data:
-        TransformProcess seq = NB15Util.getPreProcessingSequence();
+        TransformProcess seq = NB15Util.getPreProcessingProcess();
 
         Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(PATH.OUT_DIR,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
@@ -73,7 +74,7 @@ public class PreprocessingNB15 {
         DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
 
         //Do train/test split:
-        List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData);
+        List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData, RNG_SEED);
         JavaRDD<Collection<Writable>> trainData = allData.get(0);
         JavaRDD<Collection<Writable>> testData = allData.get(1);
 

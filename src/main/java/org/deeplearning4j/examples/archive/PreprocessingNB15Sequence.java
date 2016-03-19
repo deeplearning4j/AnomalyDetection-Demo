@@ -46,9 +46,10 @@ import java.util.List;
  */
 public class PreprocessingNB15Sequence {
 
+    public static final long RNG_SEED = 12345;
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
-    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
+    public static final DataPathUtil PATH = new DataPathUtil(dataSet);
     public static final String IN_DIRECTORY = PATH.IN_DIR;
     public static final String OUT_DIRECTORY = PATH.PRE_DIR;
     public static final String CHART_DIRECTORY_ORIG = PATH.CHART_DIR_ORIG;
@@ -108,7 +109,7 @@ public class PreprocessingNB15Sequence {
         DataAnalysis da = AnalyzeSpark.analyzeSequence(preprocessedSchema, processedData);
 
         //Do train/test split:
-        List<JavaRDD<Collection<Collection<Writable>>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData);
+        List<JavaRDD<Collection<Collection<Writable>>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData, RNG_SEED);
         JavaRDD<Collection<Collection<Writable>>> trainData = allData.get(0);
         JavaRDD<Collection<Collection<Writable>>> testData = allData.get(1);
 
@@ -127,8 +128,8 @@ public class PreprocessingNB15Sequence {
         SequenceDataAnalysis trainDataAnalyis = AnalyzeSpark.analyzeSequence(normSchema, trainDataNormalized.getThird());
 
         //Save as CSV files
-        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_TRAIN_DATA_DIR),trainDataNormalized.getThird());
-        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_TEST_DATA_DIR),testDataNormalized.getThird());
+        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_TRAIN_DATA_DIR),trainDataNormalized.getThird(), RNG_SEED);
+        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_TEST_DATA_DIR),testDataNormalized.getThird(), RNG_SEED);
         sc.close();
 
         //Wait for spark to stop its console spam before printing analysis

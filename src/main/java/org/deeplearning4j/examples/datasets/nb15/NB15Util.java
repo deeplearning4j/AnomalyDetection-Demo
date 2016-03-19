@@ -5,6 +5,9 @@ import org.canova.api.berkeley.Triple;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.DataAnalysis;
+import org.deeplearning4j.examples.dataProcessing.api.schema.SequenceSchema;
+import org.deeplearning4j.examples.dataProcessing.api.sequence.SplitMaxLengthSequence;
+import org.deeplearning4j.examples.dataProcessing.api.sequence.comparator.StringComparator;
 import org.deeplearning4j.examples.dataProcessing.spark.SparkTransformExecutor;
 import org.deeplearning4j.examples.dataProcessing.api.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
@@ -66,7 +69,7 @@ public class NB15Util {
     }
 
 
-    public static TransformProcess getPreProcessingSequence(){
+    public static TransformProcess getPreProcessingProcess(){
 
         TransformProcess seq = new TransformProcess.Builder(getCsvSchema())
 //                .removeColumns("timestamp start", "timestamp end", //Don't need timestamps, we have duration. Can't really use IPs here.
@@ -92,6 +95,38 @@ public class NB15Util {
                 .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
 
                 .removeColumns("label") //leave attack category
+                .build();
+
+        return seq;
+    }
+
+    public static TransformProcess getSequencePreProcessingProcess(){
+
+        //Set up the sequence of transforms:
+
+        TransformProcess seq = new TransformProcess.Builder(getCsvSchema())
+                .removeColumns(
+                        "source TCP base sequence num", "dest TCP base sequence num",       //Sequence numbers are essentially random between 0 and 4.29 billion
+                        "label")    //leave attack category
+                .filter(new FilterInvalidValues("source port", "destination port")) //Remove examples/rows that have invalid values for these columns
+                .transform(new RemoveWhiteSpaceTransform("attack category"))
+                .transform(new ReplaceEmptyStringTransform("attack category", "none"))  //Replace empty strings in "attack category"
+                .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
+                .transform(new ReplaceInvalidWithIntegerTransform("count ftp commands", 0)) //Only invalid ones here are whitespace
+                .transform(new ConditionalTransform("is ftp login", 1, 0, "service", Arrays.asList("ftp", "ftp-data")))
+                .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
+                .transform(new StringMapTransform("attack category", Collections.singletonMap("Backdoors", "Backdoor"))) //Replace all instances of "Backdoors" with "Backdoor"
+                .transform(new StringToCategoricalTransform("attack category", "none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"))
+                .transform(new StringToCategoricalTransform("service", "-", "dns", "http", "smtp", "ftp-data", "ftp", "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp"))
+                .transform(new MapAllStringsExceptListTransform("transaction protocol", "other", Arrays.asList("unas", "sctp", "ospf", "tcp", "udp", "arp"))) //Map all protocols except these to "other" (all others have <<1000 examples)
+                .transform(new StringToCategoricalTransform("transaction protocol", "unas", "sctp", "ospf", "tcp", "udp", "arp", "other"))
+                .transform(new MapAllStringsExceptListTransform("state", "other", Arrays.asList("FIN", "CON", "INT", "RST", "REQ")))  //Before: CategoricalAnalysis(CategoryCounts={CLO=161, FIN=1478689, ECR=8, PAR=26, MAS=7, URN=7, ECO=96, TXD=5, CON=560588, INT=490469, RST=528, TST=8, ACC=43, REQ=9043, no=7, URH=54})
+                .transform(new StringToCategoricalTransform("state", "FIN", "CON", "INT", "RST", "REQ", "other"))
+                .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
+                .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
+                .convertToSequence("destination ip",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+                .splitSequence(new SplitMaxLengthSequence(1000,false))
+                .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip") //Don't need timestamps, except for ordering time steps within each sequence; don't need IPs (except for conversion to sequence)
                 .build();
 
         return seq;

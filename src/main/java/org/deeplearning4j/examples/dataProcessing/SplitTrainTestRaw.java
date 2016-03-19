@@ -18,6 +18,7 @@ package org.deeplearning4j.examples.dataProcessing;
  */
 public class SplitTrainTestRaw {
 
+    public static final long RNG_SEED = 12345;
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet;
 
@@ -34,7 +35,7 @@ public class SplitTrainTestRaw {
 
         JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
 
-        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN),rawData);
+        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN),rawData, RNG_SEED);
 
         SparkExport.exportStringLocal(new File(PATH.RAW_TRAIN_FILE),split.get(0),12345);
         SparkExport.exportStringLocal(new File(PATH.RAW_TEST_FILE),split.get(1),12345);

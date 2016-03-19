@@ -59,7 +59,7 @@ public class NSLKDDUtil {
         return csvSchema;
     }
 
-    public static TransformProcess getPreProcessingSequence(){
+    public static TransformProcess getPreProcessingProcess(){
         TransformProcess seq = new TransformProcess.Builder(getCsvSchema())
                 .transform(new MapAllStringsExceptListTransform("service", "other",  Arrays.asList("other", "private", "http", "ftp_data","name",
                         "netbios_ns", "eco_i", "mtp", "telnet", "finger", "domain_u", "supdup", "uucp_path", "Z39_50",

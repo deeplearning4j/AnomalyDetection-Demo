@@ -1,11 +1,14 @@
 package org.deeplearning4j.examples;
 
 import org.canova.api.records.reader.impl.CSVRecordReader;
+import org.canova.api.records.reader.impl.CSVSequenceRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
+import org.deeplearning4j.datasets.canova.SequenceRecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.dataset.api.DataSet;
 
@@ -16,10 +19,21 @@ import java.io.File;
 
 public class StandardNIDS extends NIDSMain{
 
-    protected MultipleEpochsIterator loadData(int batchSize, String dataPath, int labelIdx, int numEpochs, int numBatches) throws Exception{
-        CSVRecordReader rr = new CSVRecordReader(0,",");
-        rr.initialize(new FileSplit(new File(dataPath)));
-        DataSetIterator iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
+    protected MultipleEpochsIterator loadData(int batchSize, DataPathUtil dataPath, int labelIdx, int numEpochs, int numBatches,
+                                              int nOut, boolean train, boolean rnn) throws Exception{
+        DataSetIterator iter;
+        if(rnn){
+            CSVSequenceRecordReader rr = new CSVSequenceRecordReader(0,",");
+            String path = (train ? dataPath.PRE_TRAIN_DATA_DIR : dataPath.PRE_TEST_DATA_DIR);
+            rr.initialize(new FileSplit(new File(path)));
+            iter = new SequenceRecordReaderDataSetIterator(rr,batchSize,nOut,labelIdx,false);
+        } else {
+
+            CSVRecordReader rr = new CSVRecordReader(0,",");
+            rr.initialize(new FileSplit(new File(train ? dataPath.TRAIN_DATA_FILE : dataPath.TEST_DATA_FILE)));
+            iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
+        }
+
         return new MultipleEpochsIterator(numEpochs, iter);
 
     }

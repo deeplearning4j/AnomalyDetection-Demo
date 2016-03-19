@@ -59,20 +59,20 @@ public class TrainMLP {
         rrTest.initialize(new FileSplit(new File(PATH.NORM_TEST_DATA_FILE)));
         DataSetIterator iterTest = new RecordReaderDataSetIterator(rrTest,minibatchSize,labelIdx,nOut);
 
-//        int MAX_TRAIN_MINIBATCHES = 20000;
-//        int TEST_NUM_MINIBATCHES = 2500;
-//        int TEST_EVERY_N_MINIBATCHES = 5000;
-        int MAX_TRAIN_MINIBATCHES = 2000;
+        int MAX_TRAIN_MINIBATCHES = 20000;
         int TEST_NUM_MINIBATCHES = 2500;
         int TEST_EVERY_N_MINIBATCHES = 5000;
 
+        Nd4j.getRandom().setSeed(12345);
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .updater(Updater.NESTEROVS).momentum(0.9)
+                .seed(12345)
                 .iterations(1)
                 .learningRate(1e-2)
                 .regularization(true).l2(1e-5)
-                .activation("leakyrelu")
+//                .activation("leakyrelu")
+                .activation("relu")
                 .weightInit(WeightInit.XAVIER)
                 .list()
                 .layer(0, new DenseLayer.Builder().nIn(nIn).nOut(layerSize).build())

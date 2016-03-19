@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples;
 
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
+import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.models.BasicMLPModel;
 import org.deeplearning4j.examples.models.BasicRNNModel;
@@ -11,6 +12,7 @@ import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+import org.deeplearning4j.ui.weights.HistogramIterationListener;
 import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -39,6 +41,10 @@ import java.util.Map;
  * - Run PreprocessingPreSplit and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
  * - Run NIDSMain (or TrainMLP) and pass in values for below and/or update variables below to train and store the model
  * - Run NIDSStreaming to run SparkStreamin and access analysis GUI of streaming results
+ *
+ * Steps for RNN training:
+ * - Download data set as above
+ * - Run
  */
 
 public class NIDSMain {
@@ -81,7 +87,10 @@ public class NIDSMain {
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
     protected int nOut = 40; // 2 binary or 10 classification of attack types
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
-    protected int truncatedBPTTLength = 2;
+    protected int truncatedBPTTLength = 20;
+
+    @Option(name="--useHistogramListener",usage="Add a histogram iteration listener",aliases="-hist")
+    protected boolean useHistogram = false;
 
     protected long startTime = 0;
     protected long endTime = 0;
@@ -103,8 +112,8 @@ public class NIDSMain {
     protected MultiLayerNetwork network;
 
     protected int TEST_EVERY_N_MINIBATCHES = (supervised)? numBatches/2: numBatches+ 1;
-    protected DataPathUtil PATH = new DataPathUtil(dataSet);
-    protected String OUT_DIR = PATH.OUT_DIR;
+    protected DataPathUtil PATH;    // = new DataPathUtil(dataSet); //This needs to be set AFTER parsing command line args
+    protected String OUT_DIR;   // = PATH.OUT_DIR;
 
     public void run(String[] args) throws Exception {
         // Parse command line arguments if they exist
@@ -117,21 +126,51 @@ public class NIDSMain {
             parser.printUsage(System.err);
         }
 
+        PATH = new DataPathUtil(dataSet);
+        OUT_DIR = PATH.OUT_DIR;
+
         // TODO setup approach to load models and compare... use Arbiter?
         // TODO add early stopping
         buildModel();
-        network.setListeners(new ScoreIterationListener(1));
+        if(useHistogram){
+            network.setListeners(new ScoreIterationListener(1), new HistogramIterationListener(1));
+        } else {
+            network.setListeners(new ScoreIterationListener(1));
+        }
+
+        switch(modelType.toLowerCase()){
+            case "mlp":
+            case "rnn":
+                supervised = true;
+        }
+
+        switch(dataSet.toLowerCase()){
+            case "unsw_nb15":
+                labels = NB15Util.LABELS;
+                break;
+            case "nslkdd":
+                labels = NSLKDDUtil.LABELS;
+                break;
+            default:
+                throw new UnsupportedOperationException("Not implemented: " + dataSet);
+        }
+
 
         switch (version) {
             case "Standard":
                 StandardNIDS standard = new StandardNIDS();
+                standard.labels = this.labels;
+                standard.labelIdx = this.labelIdx;
                 System.out.println("\nLoad data....");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, PATH.NORM_TRAIN_DATA_FILE, labelIdx, numEpochs, numBatches);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, PATH.NORM_TEST_DATA_FILE, labelIdx, 1, numTestBatches);
+                boolean rnn = modelType.toLowerCase().equals("rnn");
+                MultipleEpochsIterator trainData = standard.loadData(batchSize, PATH, labelIdx, numEpochs, numBatches, nOut, true, rnn);
+                MultipleEpochsIterator testData = standard.loadData(batchSize, PATH, labelIdx, 1, numTestBatches, nOut, false, rnn);
                 network = standard.trainModel(network, trainData, testData);
+                trainTime = standard.trainTime;
                 System.out.println("\nFinal evaluation....");
                 if(supervised){
                     standard.evaluatePerformance(network, testData);
+                    testTime = standard.testTime;
                 } else {
                     DataSet test = testData.next(1);
 //                    INDArray result = network.scoreExamples(test,false);
@@ -159,6 +198,7 @@ public class NIDSMain {
 
         saveAndPrintResults(network);
         System.out.println("\n==========================Example Finished==============================");
+        System.exit(0);
     }
 
     protected void buildModel(){
@@ -195,13 +235,13 @@ public class NIDSMain {
                         new int[]{nIn, 10, 10},
                         new int[]{10, 10, nOut},
                         iterations,
-                        "tanh",
-                        WeightInit.DISTRIBUTION,
+                        "softsign",
+                        WeightInit.XAVIER,
                         OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
                         Updater.RMSPROP,
                         LossFunctions.LossFunction.MCXENT,
-                        5e-1,
-                        1,
+                        5e-3,
+                        1e-5,
                         truncatedBPTTLength,
                         123
                         ).buildModel();
@@ -240,7 +280,7 @@ public class NIDSMain {
     }
 
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         new NIDSMain().run(args);
     }
 

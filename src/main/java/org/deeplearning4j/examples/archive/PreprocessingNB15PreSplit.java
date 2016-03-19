@@ -36,6 +36,7 @@ import java.util.List;
 @SuppressWarnings("Duplicates")
 public class PreprocessingNB15PreSplit {
 
+    public static final long RNG_SEED = 12345;
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet = "UNSW_NB15";
     protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
@@ -43,7 +44,7 @@ public class PreprocessingNB15PreSplit {
     public static void main(String[] args) throws Exception {
 
         //Get the sequence of transformations to make on the original data:
-        TransformProcess seq = NB15Util.getPreProcessingSequence();
+        TransformProcess seq = NB15Util.getPreProcessingProcess();
 
         Schema preprocessedSchema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(PATH.OUT_DIR,"preprocessedDataSchema.txt"),preprocessedSchema.toString());
@@ -57,7 +58,7 @@ public class PreprocessingNB15PreSplit {
         //First: let's take the raw data, and split it
         JavaRDD<String> rawData = sc.textFile(PATH.IN_DIR);
 
-        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN),rawData);
+        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN),rawData, RNG_SEED);
         SparkExport.exportStringLocal(new File(PATH.RAW_TRAIN_FILE),split.get(0),12345);
         SparkExport.exportStringLocal(new File(PATH.RAW_TEST_FILE),split.get(1),12345);
 
