@@ -49,8 +49,8 @@ public class NIDSMain {
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
-    protected String modelType = "MLP";
-    protected boolean supervised = true;
+    protected String modelType = "Denoise";
+    protected boolean supervised = false;
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
@@ -63,16 +63,14 @@ public class NIDSMain {
     protected int numEpochs = 2; // consider 60
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 1;
-
-    @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-i")
-    protected static String dataSet = "UNSW_NB15";
+    @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-dataS")
+    protected static String dataSet = "NSLKDD";
     @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
     protected String trainFile = "0NSL_KDDnormalized0.csv";
     @Option(name="--testFile",usage="Test filename",aliases="-teFN")
     protected String testFile = "1NSL_KDDnormalized0.csv";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
-
     @Option(name="--confName",usage="Model configuration file name",aliases="-conf")
     protected String confName = null;
     @Option(name="--paramName",usage="Parameter file name",aliases="-param")
@@ -95,7 +93,6 @@ public class NIDSMain {
     protected int totalTrainNumExamples = batchSize * numBatches;
     protected int totalTestNumExamples = testBatchSize * numTestBatches;
 
-    protected static String outputFilePath = DataPathUtil.REPO_BASE_DIR;
     protected String confPath = this.toString() + "conf.yaml";
     protected String paramPath = this.toString() + "param.bin";
     protected Map<String, String> paramPaths = new HashMap<>();
@@ -137,9 +134,9 @@ public class NIDSMain {
                     standard.evaluatePerformance(network, testData);
                 } else {
                     DataSet test = testData.next(1);
-                    INDArray result = network.scoreExamples(test,false);
+//                    INDArray result = network.scoreExamples(test,false);
                     // TODO get summary result...
-                    System.out.println("\nFinal evaluation score: " +  result);
+//                    System.out.println("\nFinal evaluation score: " +  result);
                 }
                 break;
 //            case "SparkStandAlone":
@@ -165,6 +162,7 @@ public class NIDSMain {
     }
 
     protected void buildModel(){
+        // TODO generalize
 //         int[] nIn;
 //         int[] nOut;
 //         int iterations;

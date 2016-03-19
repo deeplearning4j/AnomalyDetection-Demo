@@ -48,6 +48,7 @@ public class PreprocessingPreSplit {
     public static Schema preprocessedSchema;
     public static Schema normSchema;
 
+    public static int buckets = 0;
     public static String IN_DIRECTORY;
     public static String OUT_DIRECTORY;
     public static String CHART_DIRECTORY_ORIG;
@@ -119,12 +120,15 @@ public class PreprocessingPreSplit {
 
         //Load data squence
         sequence = null;
+
         switch (dataSet) {
             case "UNSW_NB15":
                 sequence = NB15Util.getPreProcessingSequence();
+                buckets = 30;
                 break;
             case "NSLKDD":
                 sequence = NSLKDDUtil.getPreProcessingSequence();
+                buckets = 18;
                 break;
             case "ISCX":
                 sequence = ISCXUtil.getPreProcessingSequence();
@@ -134,8 +138,8 @@ public class PreprocessingPreSplit {
         preprocessedSchema = defineSchema(OUT_DIRECTORY, sequence);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY, "preprocessedDataSchema.txt"), preprocessedSchema.toString());
         // Paths
-        List<String> inputDir = Arrays.asList(path.RAW_TRAIN_FILE, path.RAW_TEST_FILE);
-        List<String> trainTestDir = Arrays.asList(path.PRE_TRAIN_DATA_DIR, path.PRE_TEST_DATA_DIR);
+        inputDir = Arrays.asList(path.RAW_TRAIN_FILE, path.RAW_TEST_FILE);
+        trainTestDir = Arrays.asList(path.PRE_TRAIN_DATA_DIR, path.PRE_TEST_DATA_DIR);
         IN_DIRECTORY = path.IN_DIR;
         OUT_DIRECTORY = path.PRE_DIR;
         CHART_DIRECTORY_ORIG = path.CHART_DIR_ORIG;
@@ -157,7 +161,7 @@ public class PreprocessingPreSplit {
         dqa = AnalyzeSpark.analyzeQuality(schema, data);
 
         // Per-column statis summary
-        dataAnalyis = AnalyzeSpark.analyze(schema, data);
+        dataAnalyis = AnalyzeSpark.analyze(schema, data, buckets);
     }
 
     public static JavaSparkContext setupSparkContext() {

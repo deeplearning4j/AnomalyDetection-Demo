@@ -34,7 +34,7 @@ public class StandardNIDS extends NIDSMain{
             next = iter.next();
             if(next == null) break;
             net.fit(next);
-            if (countTrain % TEST_EVERY_N_MINIBATCHES == 0) {
+            if (countTrain % TEST_EVERY_N_MINIBATCHES == 0 && supervised) {
                 //Test:
                 log.info("--- Evaluation after {} examples ---",countTrain*batchSize);
                 evaluatePerformance(net, testIter);
@@ -49,7 +49,7 @@ public class StandardNIDS extends NIDSMain{
 
     protected void evaluatePerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
         startTime = System.currentTimeMillis();
-        Evaluation eval = net.evaluate(iter, labels);
+        Evaluation eval = net.evaluate(iter, labels); // TODO no results - fix
         endTime = System.currentTimeMillis();
         System.out.println(eval.stats());
         System.out.print("False Alarm Rate: " + eval.falseAlarmRate());

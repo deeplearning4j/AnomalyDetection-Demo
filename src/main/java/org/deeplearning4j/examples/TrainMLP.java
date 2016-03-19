@@ -34,10 +34,13 @@ public class TrainMLP {
 
     private static final Logger log = LoggerFactory.getLogger(TrainMLP.class);
 
-    protected static String dataSet = "UNSW_NB15";
-    protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
+    protected static String dataSet;
+    protected static DataPathUtil PATH;
 
     public static void main(String[] args) throws Exception {
+
+        dataSet = args[0]; //"UNSW_NB15";
+        PATH = new DataPathUtil(dataSet);
 
         int nIn = 66;
         int nOut = 10;

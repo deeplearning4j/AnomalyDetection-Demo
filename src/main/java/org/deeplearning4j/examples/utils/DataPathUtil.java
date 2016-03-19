@@ -51,7 +51,6 @@ public class DataPathUtil {
 
     public static final boolean AWS = false;
     protected static String S3_BUCKET = "anomaly-data";
-    // TODO add data name to path
     protected static String S3_KEY_PREFIX_IN = "nids/input/";
     protected static String S3_KEY_PREFIX_OUT = "nids/preprocessed/";
 
@@ -83,8 +82,8 @@ public class DataPathUtil {
         // for normalized files
         this.NORMALIZER_FILE = FilenameUtils.concat(PRE_DIR, "normalizerTransform.bin");
         this.NORM_SCHEMA = FilenameUtils.concat(PRE_DIR, "normalizedDataSchema.txt");
-        this.NORM_TRAIN_DATA_FILE = FilenameUtils.concat(PRE_DIR, "0"+dataSet+"normalized0.csv");
-        this.NORM_TEST_DATA_FILE = FilenameUtils.concat(PRE_DIR, "1"+dataSet+"normalized0.csv");
+        this.NORM_TRAIN_DATA_FILE = FilenameUtils.concat(PRE_TRAIN_DATA_DIR, "0"+dataSet+"normalized0.csv");
+        this.NORM_TEST_DATA_FILE = FilenameUtils.concat(PRE_TEST_DATA_DIR, "1"+dataSet+"normalized0.csv");
 
         // for saving model and params
         this.NETWORK_CONFIG_FILE = FilenameUtils.concat(OUT_DIR,"config.json");

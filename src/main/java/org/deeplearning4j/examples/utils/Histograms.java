@@ -73,7 +73,7 @@ public class Histograms {
 //            Histograms.plot(bins,counts,colName);
             File f = new File(directory, colName + ".png");
             if (f.exists()) f.delete();
-            Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
+//            Histograms.exportHistogramImage(f, bins, counts, colName, 1000, 650);
         }
     }
 
