@@ -93,8 +93,8 @@ public class PreprocessingNB15 {
         DataAnalysis trainDataAnalyis = AnalyzeSpark.analyze(normSchema, trainDataNormalized.getThird());
 
         //Save as CSV file
-        SparkExport.exportCSVLocal(new File(PATH.TRAIN_DATA_FILE), ",", trainDataNormalized.getThird(), 12345);
-        SparkExport.exportCSVLocal(new File(PATH.TEST_DATA_FILE), ",", testDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(new File(PATH.NORM_TRAIN_DATA_FILE), ",", trainDataNormalized.getThird(), 12345);
+        SparkExport.exportCSVLocal(new File(PATH.NORM_TEST_DATA_FILE), ",", testDataNormalized.getThird(), 12345);
         FileUtils.writeStringToFile(new File(PATH.OUT_DIR,"normDataSchema.txt"),normSchema.toString());
 
         //Save the normalizer transform sequence:

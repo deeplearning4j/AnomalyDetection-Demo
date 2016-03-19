@@ -17,7 +17,6 @@ import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ import java.util.Map;
  * Run single server model, use spark stand alone or run on spark cluster
  *
  * Steps:
- * - Download dataset and and store in System.getProperty("user.home"), "data/NIDS/<name of dataset>"
+ * - Download dataset and store in System.getProperty("user.home"), "data/NIDS/<name of dataset>"
  * - Run SplitTrainTestRaw and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
  * - Run PreprocessingPreSplit and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
  * - Run NIDSMain (or TrainMLP) and pass in values for below and/or update variables below to train and store the model
@@ -55,7 +54,7 @@ public class NIDSMain {
     @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
     protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
-    protected String modelType = "Denoise";
+    protected String modelType = "MLP";
     protected boolean supervised = false;
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;

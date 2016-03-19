@@ -30,7 +30,7 @@ public class StandardNIDS extends NIDSMain{
         } else {
 
             CSVRecordReader rr = new CSVRecordReader(0,",");
-            rr.initialize(new FileSplit(new File(train ? dataPath.TRAIN_DATA_FILE : dataPath.TEST_DATA_FILE)));
+            rr.initialize(new FileSplit(new File(train ? dataPath.NORM_TRAIN_DATA_FILE : dataPath.NORM_TEST_DATA_FILE)));
             iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
         }
 

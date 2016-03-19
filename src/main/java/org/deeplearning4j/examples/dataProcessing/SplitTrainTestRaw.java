@@ -25,7 +25,6 @@ public class SplitTrainTestRaw {
     public static void main(String[] args) throws Exception {
         dataSet = args[0];
         DataPathUtil PATH = new DataPathUtil(dataSet);
-        String IN_DIRECTORY = PATH.IN_DIR;
 
         SparkConf sparkConf = new SparkConf();
         sparkConf.setMaster("local[*]");
@@ -33,7 +32,7 @@ public class SplitTrainTestRaw {
         sparkConf.set("spark.driver.maxResultSize", "2G");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
+        JavaRDD<String> rawData = sc.textFile(PATH.IN_DIR);
 
         List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN),rawData, RNG_SEED);
 
