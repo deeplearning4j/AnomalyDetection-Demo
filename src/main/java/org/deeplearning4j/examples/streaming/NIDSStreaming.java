@@ -8,6 +8,7 @@ import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
+import org.deeplearning4j.examples.ui.TableConverter;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
@@ -21,10 +22,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Alex on 10/03/2016.
@@ -34,22 +32,7 @@ public class NIDSStreaming {
     protected static String dataSet = "UNSW_NB15";
     protected static final DataPathUtil PATH = new DataPathUtil(dataSet);
 
-    private static final boolean WIN = System.getProperty("os.name").toLowerCase().contains("win");
-    private static final String WIN_DIR = "C:/Data/UNSW_NB15/";
-
-    private static final String DIR = PATH.OUT_DIR;
-    private static final String MODEL_DIR = FilenameUtils.concat(DIR, "Trained/");
-
-
-    private static final String CONF_FILE = FilenameUtils.concat(MODEL_DIR, "config.json");
-    private static final String PARAMS_FILE = FilenameUtils.concat(MODEL_DIR, "params.bin");
-//    private static final String TEST_DATA_FILE = FilenameUtils.concat(DIR, "Out/test/normalized0.csv");
-
-
-    private static final String CONF_PATH = FilenameUtils.concat(DIR, PARAMS_FILE);
-    private static final String PARAMS_PATH = FilenameUtils.concat(DIR, CONF_FILE);
-
-    private static final String CHECKPOINT_DIR = FilenameUtils.concat(DIR, "/Checkpoint/");
+    private static final String CHECKPOINT_DIR = FilenameUtils.concat(PATH.OUT_DIR, "/Checkpoint/");
 
     private static final int CSV_LABEL_IDX = 66;
     private static final int CSV_NOUT = 10;
@@ -59,8 +42,13 @@ public class NIDSStreaming {
 
     public static void main(String[] args) throws Exception {
 
+        List<String> classNames = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
+        int normalClassIdx = 0;
+
+        List<String> serviceNames = Arrays.asList("-", "dns", "http", "smtp", "ftp-data", "ftp", "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp");
+
         Schema schema = NB15Util.getCsvSchema();
-        UIDriver.setTableConverter(new NB15TableConverter(NB15Util.getCsvSchema()));
+        TableConverter tableConverter = new NB15TableConverter(NB15Util.getCsvSchema());
 
         //TODO: find a better (but still general-purspose) design for this
         Map<String,Integer> columnMap = new HashMap<>();
@@ -72,21 +60,14 @@ public class NIDSStreaming {
         columnMap.put("destination port",schema.getIndexOfColumn("destination port"));
         columnMap.put("service", schema.getIndexOfColumn("service"));
 
-        UIDriver.setColumnsMap(columnMap);
-
-        UIDriver.setClassNames(Arrays.asList("none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"));
-        UIDriver.setServiceNames(Arrays.asList("-", "dns", "http", "smtp", "ftp-data", "ftp", "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp"));
-        UIDriver.setNormalClassIdx(0);
-
-
-        UIDriver uiDriver = UIDriver.getInstance();
+        UIDriver.createInstance(classNames,normalClassIdx,serviceNames,tableConverter,columnMap);
 
 
         //Load config and parameters:
-        String conf = FileUtils.readFileToString(new File(PARAMS_PATH));
+        String conf = FileUtils.readFileToString(new File(PATH.NETWORK_CONFIG_FILE));
 
         INDArray params;
-        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(CONF_PATH)))){
+        try(DataInputStream dis = new DataInputStream(new FileInputStream(new File(PATH.NETWORK_PARAMS_FILE)))){
             params = Nd4j.read(dis);
         }
 
@@ -112,10 +93,8 @@ public class NIDSStreaming {
                 new FromRawCsvReceiver(PATH.RAW_TEST_FILE, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, GENERATION_RATE));
 
         //Pass each instance through the network:
-//        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream;    //TODO
         JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.mapPartitions(
                 new Predict3Function(sc.sc().broadcast(conf),sc.sc().broadcast(params),64));
-//        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.flatMap()
 
         //And finally push the predictions to the UI driver so they can be displayed:
         predictionStream.foreachRDD(new CollectAtUIDriverFunction());
@@ -124,11 +103,9 @@ public class NIDSStreaming {
         sc.start();
 
         sc.awaitTermination(120000);     //For testing: only run for short period of time
-
         sc.close();
 
         System.out.println("DONE");
-
         System.exit(0);
     }
 

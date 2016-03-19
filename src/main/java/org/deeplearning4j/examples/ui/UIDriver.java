@@ -27,8 +27,10 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Created by Alex on 14/03/2016.
+/**UIDriver: main class for the UI
+ * Assumptions with current design:
+ * -
+ * How to use: Start UI using
  */
 public class UIDriver extends Application<NIDSConfig> {
 
@@ -39,11 +41,11 @@ public class UIDriver extends Application<NIDSConfig> {
 
     private static final Logger log = LoggerFactory.getLogger(UIDriver.class);
 
-    private static TableConverter tableConverter;
-    private static Map<String,Integer> columnsMap;
-    private static List<String> classNames;
-    private static List<String> serviceNames;
-    private static int normalClassIdx;
+    private TableConverter tableConverter;
+    private Map<String,Integer> columnsMap;
+    private List<String> classNames;
+    private List<String> serviceNames;
+    private int normalClassIdx;
 
     private LinkedBlockingQueue<Tuple3<Long,INDArray,Collection<Writable>>> predictions = new LinkedBlockingQueue<>();
     private AtomicBoolean shutdown = new AtomicBoolean(false);
@@ -57,32 +59,28 @@ public class UIDriver extends Application<NIDSConfig> {
 
     private Thread uiThread;
 
-    private UIDriver(){
+    private UIDriver(List<String> classNames, int normalClassIdx, List<String> serviceNames,
+                     TableConverter tableConverter, Map<String,Integer> columnsMap) {
         super();
 
-        try{
+        this.classNames = classNames;
+        this.normalClassIdx = normalClassIdx;
+        this.serviceNames = serviceNames;
+        this.tableConverter = tableConverter;
+        this.columnsMap = columnsMap;
+
+        try {
             run("server", "dropwizard.yml");
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-//        ViewMessageBodyWriter
-
+        //Create UI thread
         uiThread = new Thread(new UIThreadRunnable());
         uiThread.setDaemon(true);
         uiThread.start();
 
-//        log.info("*** UIDriver started ***");
-        System.out.println("*** UIDriver started ***");
-        printHttp();
-    }
-
-    public void printHttp(){
-        int port = 8080;
-        String subPath = "flow/update/";
-        WebTarget target = client.target("http://localhost:" + port).path(subPath);
-        String path = "http://localhost:" + port + "/" + subPath;
-        System.out.println("UI Streaming: " + path);
+        log.info("UIDriver started: http://localhost:8080/intrusion/");
     }
 
     @Override
@@ -92,6 +90,7 @@ public class UIDriver extends Application<NIDSConfig> {
 
     @Override
     public void initialize(Bootstrap<NIDSConfig> bootstrap) {
+        //Necessary to avoid abstract method issue with certain dependencies/versions of dropwizard
         bootstrap.addBundle(new ViewBundle<NIDSConfig>() {
             @Override
             public Map<String, Map<String, String>> getViewConfiguration(NIDSConfig nidsConfig) {
@@ -111,55 +110,45 @@ public class UIDriver extends Application<NIDSConfig> {
         environment.jersey().register(new LineChartResource());
         environment.jersey().register(new TableResource());
         environment.jersey().register(new AreaChartResource());
-
-//        log.info("*** UIDriver run called ***");
-        System.out.println("*** UIDriver run called ***");
     }
 
-    /** Create a UIDriver if none exists, or get the existing one if not */
-    public static UIDriver getInstance(){
-        if(instance != null) return instance;
+    /** Get an existing UIDriver instance. If no instance has been manually created, this will throw an exception */
+    public static UIDriver getInstance() {
+        if (instance != null) return instance;
+        throw new RuntimeException("No UIDriver instance has been created");
 
-        //avoid race conditions on creation
-        synchronized(UIDriver.class){
-            if(instance != null) return instance;
-
-            instance = new UIDriver();
-            return instance;
-        }
     }
 
-    public static void setTableConverter(TableConverter tableConverter){
-        UIDriver.tableConverter = tableConverter;
-    }
-
-    /**Columns map: i.e., what columns indexes for:
-     * "source-dest bytes", "dest-source bytes" for
-     *
+    /** Create a new UIDriver instance. Should only every be called once.
+     * @param classNames Names of the output classes, in probability distribution passed to addPrediction/s
+     * @param normalClassIdx Index of the 'normal' / non-attack index in classNames (and addPredictions INDArray)
+     * @param serviceNames Names of the services
+     * @param tableConverter TableConverter converts the Collection<Writable> to a table for displaying the details in the UI
+     * @param columnsMap a map of column names to integers...
+     * @return
      */
-    public static void setColumnsMap(Map<String,Integer> map){
-        UIDriver.columnsMap = map;
+    public synchronized static UIDriver createInstance(List<String> classNames, int normalClassIdx, List<String> serviceNames,
+                                                       TableConverter tableConverter, Map<String,Integer> columnsMap){
+        if(instance != null) throw new RuntimeException("Can only create one UIDriver instance at a time");
+        //avoid race conditions on creation
+
+        instance = new UIDriver(classNames,normalClassIdx,serviceNames,tableConverter,columnsMap);
+        return instance;
     }
 
-    public static void setClassNames(List<String> classNames){
-        UIDriver.classNames = classNames;
-    }
 
-    public static void setServiceNames(List<String> serviceNames){
-        UIDriver.serviceNames = serviceNames;
-    }
-
-    public static void setNormalClassIdx(int normalClassIdx){
-        UIDriver.normalClassIdx = normalClassIdx;
-    }
-
+    /** Method for adding a single prediction
+     * @param prediction Tuple3 containing: Example number, INDArray of predictions (classification probability distribution), original writables for display
+     */
     public void addPrediction(Tuple3<Long,INDArray,Collection<Writable>> prediction){
         this.predictions.add(prediction);
     }
 
+    /** Mthod for adding a multiple predictions
+     * @param predictions Tuple3s containing: Example number, INDArray of predictions (classification probability distribution), original writables for display
+     */
     public void addPredictions(List<Tuple3<Long,INDArray,Collection<Writable>>> predictions){
         this.predictions.addAll(predictions);
-        System.out.println("************ ADDED " + predictions.size() + " - TOTAL = " + this.predictions.size() + " **********");
     }
 
     public void shutdown(){
@@ -167,6 +156,9 @@ public class UIDriver extends Application<NIDSConfig> {
     }
 
 
+    /** UIThreadRunnable: this is where all the processing happens, in an async manner
+     *
+     */
     private class UIThreadRunnable implements Runnable {
 
         private long lastUpdateTime = 0;
@@ -218,7 +210,6 @@ public class UIDriver extends Application<NIDSConfig> {
 
                 Map<String,Integer> serviceCounts = new HashMap<>();
                 for(Tuple3<Long,INDArray,Collection<Writable>> t3 : list){
-//                    System.out.println(t3);
                     Collection<Writable> c = t3._3();
                     List<Writable> listWritables = (c instanceof List ? ((List<Writable>)c) : new ArrayList<>(c));
 
@@ -274,7 +265,6 @@ public class UIDriver extends Application<NIDSConfig> {
                     long pastCount = flowCountHistory.getFirst();
                     long newCount = flowCountHistory.getLast() + list.size();
                     double connectionsPerSec = 1000.0 * (newCount - pastCount) / (System.currentTimeMillis() - pastUpdateTime);
-//                    double bytesPerSec = 1000.0 * sumBytes / (System.currentTimeMillis() - lastUpdateTime);
 
                     double pastSumBytes = sumBytesHistory.getFirst();
                     double newSumBytes = sumBytesHistory.getLast() + sumBytes;
