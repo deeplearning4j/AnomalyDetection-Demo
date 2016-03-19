@@ -13,14 +13,13 @@ public class DataPathUtil {
     public static final String WIN_DIR = "C:/Data/";
     public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/");
 
-    protected static String rawFilePath = WIN? "labeled_flows_xml/" : "raw/";
-    protected static String rawTrainTestSplit = "rawTrainTest/";
+    protected static String rawFilePath = "raw/";
 
     protected static String inputFilePath = "input/";
     protected static String preprocessedFilePath = "preprocessed/";
     protected static String outputFilePath = "out/";
     protected static String chartFilePath = FilenameUtils.concat(outputFilePath,"/charts/");
-    protected static String dataSet;
+    protected String dataSet;
 
     public final String DATA_BASE_DIR;
     public final String IN_DIR;

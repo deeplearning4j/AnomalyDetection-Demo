@@ -38,6 +38,8 @@ public class SplitTrainTestRaw {
 
         SparkExport.exportStringLocal(new File(PATH.RAW_TRAIN_FILE),split.get(0),12345);
         SparkExport.exportStringLocal(new File(PATH.RAW_TEST_FILE),split.get(1),12345);
+
+        System.out.println("-- Done --");
     }
 
 }

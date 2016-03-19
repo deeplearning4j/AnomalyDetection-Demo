@@ -87,6 +87,8 @@ public class PreprocessingPreSplit {
                     case "ISCX":
                         dataNormalized = ISCXUtil.normalize(preprocessedSchema, dataAnalyis, preprocessedData, executor);
                         break;
+                    default:
+                        throw new RuntimeException("Unknown data set: " + dataSet);
                 }
 
                 dataNormalized.getThird().cache();
