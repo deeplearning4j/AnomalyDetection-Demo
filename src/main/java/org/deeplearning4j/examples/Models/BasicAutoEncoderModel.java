@@ -56,7 +56,6 @@ public class BasicAutoEncoderModel {
     }
 
     public MultiLayerNetwork buildModel() {
-        System.out.println("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .iterations(iterations)
                 .seed(seed)
@@ -69,7 +68,7 @@ public class BasicAutoEncoderModel {
                 .l2(l2)
                 .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue)
                 .gradientNormalizationThreshold(1.0)
-                .list(3)
+                .list()
                 .layer(0, new AutoEncoder.Builder().nIn(nIn[0]).nOut(nOut[0])
                         .corruptionLevel(corruptionLevel).lossFunction(autoLossFunctions).build())
                 .layer(1, new AutoEncoder.Builder().nIn(nIn[1]).nOut(nOut[1])

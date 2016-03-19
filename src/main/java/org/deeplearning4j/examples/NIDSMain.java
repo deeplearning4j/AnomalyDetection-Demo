@@ -1,6 +1,13 @@
 package org.deeplearning4j.examples;
 
+import org.canova.api.records.reader.impl.CSVRecordReader;
+import org.canova.api.records.reader.impl.CSVSequenceRecordReader;
+import org.canova.api.split.FileSplit;
+import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
+import org.deeplearning4j.datasets.canova.SequenceRecordReaderDataSetIterator;
+import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.models.BasicMLPModel;
@@ -17,15 +24,14 @@ import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
 
-import java.util.HashMap;
+import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 /**
  * NIDS Main Class
@@ -51,11 +57,8 @@ public class NIDSMain {
     protected static final Logger log = LoggerFactory.getLogger(NIDSMain.class);
 
     // values to pass in from command line when compiled, esp running remotely
-    @Option(name="--version",usage="Version to run (Standard, SparkStandAlone, SparkCluster)",aliases = "-v")
-    protected String version = "Standard";
     @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
     protected String modelType = "MLP";
-    protected boolean supervised = false;
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
@@ -70,24 +73,20 @@ public class NIDSMain {
     protected int iterations = 1;
     @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-dataS")
     protected static String dataSet = "NSLKDD";
-    @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
-    protected String trainFile = "0NSL_KDDnormalized0.csv";
-    @Option(name="--testFile",usage="Test filename",aliases="-teFN")
-    protected String testFile = "1NSL_KDDnormalized0.csv";
+//    @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
+//    protected String trainFile = "0NSL_KDDnormalized0.csv";
+//    @Option(name="--testFile",usage="Test filename",aliases="-teFN")
+//    protected String testFile = "1NSL_KDDnormalized0.csv";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
-    @Option(name="--confName",usage="Model configuration file name",aliases="-conf")
-    protected String confName = null;
-    @Option(name="--paramName",usage="Parameter file name",aliases="-param")
-    protected String paramName = null;
 
     @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
     protected int nIn = 112;
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
-    protected int nOut = 40; // 2 binary or 10 classification of attack types
+    protected int nOut = 40;
+
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
     protected int truncatedBPTTLength = 20;
-
     @Option(name="--useHistogramListener",usage="Add a histogram iteration listener",aliases="-hist")
     protected boolean useHistogram = false;
 
@@ -98,21 +97,17 @@ public class NIDSMain {
 
     protected int seed = 123;
     protected int listenerFreq = 1;
-    protected int totalTrainNumExamples = batchSize * numBatches;
-    protected int totalTestNumExamples = testBatchSize * numTestBatches;
+    protected boolean supervised = false;
 
-    protected String confPath = this.toString() + "conf.yaml";
-    protected String paramPath = this.toString() + "param.bin";
-    protected Map<String, String> paramPaths = new HashMap<>();
-
-
-    protected List<String> labels = NSLKDDUtil.LABELS;
-    protected int labelIdx = 66;
+    protected List<String> labels;
+    protected int labelIdx;
     protected MultiLayerNetwork network;
+    protected DataPathUtil PATH;
+    protected String OUT_DIR;
+    protected int TEST_EVERY_N_MINIBATCHES = (supervised)? numBatches/2: numBatches+1;
 
-    protected int TEST_EVERY_N_MINIBATCHES = (supervised)? numBatches/2: numBatches+ 1;
-    protected DataPathUtil PATH;    // = new DataPathUtil(dataSet); //This needs to be set AFTER parsing command line args
-    protected String OUT_DIR;   // = PATH.OUT_DIR;
+    // TODO setup approach to load models and compare... use Arbiter?
+    // TODO add early stopping
 
     public void run(String[] args) throws Exception {
         // Parse command line arguments if they exist
@@ -128,76 +123,62 @@ public class NIDSMain {
         PATH = new DataPathUtil(dataSet);
         OUT_DIR = PATH.OUT_DIR;
 
-        // TODO setup approach to load models and compare... use Arbiter?
-        // TODO add early stopping
-        buildModel();
-        if(useHistogram){
-            network.setListeners(new ScoreIterationListener(1), new HistogramIterationListener(1));
-        } else {
-            network.setListeners(new ScoreIterationListener(1));
-        }
-
-        switch(modelType.toLowerCase()){
-            case "mlp":
-            case "rnn":
-                supervised = true;
-        }
-
+        // set Labels
         switch(dataSet.toLowerCase()){
             case "unsw_nb15":
                 labels = NB15Util.LABELS;
+                labelIdx = NB15Util.LABELIDX;
                 break;
             case "nslkdd":
                 labels = NSLKDDUtil.LABELS;
+                labelIdx = NSLKDDUtil.LABELIDX;
                 break;
             default:
                 throw new UnsupportedOperationException("Not implemented: " + dataSet);
         }
 
+        System.out.println("\nLoad data....");
+        boolean rnn = modelType.toLowerCase().equals("rnn");
+        MultipleEpochsIterator trainData = loadData(batchSize, PATH, labelIdx, numEpochs, numBatches, nOut, true, rnn);
+        MultipleEpochsIterator testData = loadData(batchSize, PATH, labelIdx, 1, numTestBatches, nOut, false, rnn);
 
-        switch (version) {
-            case "Standard":
-                StandardNIDS standard = new StandardNIDS();
-                standard.labels = this.labels;
-                standard.labelIdx = this.labelIdx;
-                System.out.println("\nLoad data....");
-                boolean rnn = modelType.toLowerCase().equals("rnn");
-                MultipleEpochsIterator trainData = standard.loadData(batchSize, PATH, labelIdx, numEpochs, numBatches, nOut, true, rnn);
-                MultipleEpochsIterator testData = standard.loadData(batchSize, PATH, labelIdx, 1, numTestBatches, nOut, false, rnn);
-                network = standard.trainModel(network, trainData, testData);
-                trainTime = standard.trainTime;
-                System.out.println("\nFinal evaluation....");
-                if(supervised){
-                    standard.evaluatePerformance(network, testData);
-                    testTime = standard.testTime;
-                } else {
-                    DataSet test = testData.next(1);
-//                    INDArray result = network.scoreExamples(test,false);
-                    // TODO get summary result...
-//                    System.out.println("\nFinal evaluation score: " +  result);
-                }
-                break;
-//            case "SparkStandAlone":
-//            case "SparkCluster":
-//                SparkNIDS spark = new SparkNIDS();
-//                JavaSparkContext sc = (version == "SparkStandAlone")? spark.setupLocalSpark(): spark.setupClusterSpark();
-//                System.out.println("\nLoad data....");
-//                JavaRDD<DataSet> trainSparkData = spark.loadData(sc, DataPath.TRAIN_DATA_PATH + trainFile);
-//                SparkDl4jMultiLayer sparkNetwork = new SparkDl4jMultiLayer(sc, network);
-//                network = spark.trainModel(sparkNetwork, trainSparkData);
-//                trainSparkData.unpersist();
-//
-//                sparkNetwork = new SparkDl4jMultiLayer(sc, network);
-//                JavaRDD<DataSet> testSparkData = spark.loadData(sc, DataPath.TEST_DATA_PATH + testFile);
-//                System.out.println("\nFinal evaluation....");
-//                spark.evaluatePerformance(sparkNetwork, testSparkData);
-//                testSparkData.unpersist();
-//                break;
+        System.out.println("\nBuild model....");
+        buildModel();
+
+        System.out.println("Train model....");
+        network = trainModel(network, trainData, testData);
+
+        System.out.println("\nFinal evaluation....");
+        if(supervised){
+            evaluateSupervisedPerformance(network, testData);
+        } else {
+            evaluateUnsupervisedPerformance(testData);
         }
 
+        System.out.println("\nSave model and params....");
         saveAndPrintResults(network);
         System.out.println("\n==========================Example Finished==============================");
         System.exit(0);
+    }
+
+
+    protected MultipleEpochsIterator loadData(int batchSize, DataPathUtil dataPath, int labelIdx, int numEpochs, int numBatches,
+                                              int nOut, boolean train, boolean rnn) throws Exception{
+        DataSetIterator iter;
+        if(rnn){
+            CSVSequenceRecordReader rr = new CSVSequenceRecordReader(0,",");
+            String path = (train ? dataPath.PRE_TRAIN_DATA_DIR : dataPath.PRE_TEST_DATA_DIR);
+            rr.initialize(new FileSplit(new File(path)));
+            iter = new SequenceRecordReaderDataSetIterator(rr,batchSize,nOut,labelIdx,false);
+        } else {
+
+            CSVRecordReader rr = new CSVRecordReader(0,",");
+            rr.initialize(new FileSplit(new File(train ? dataPath.NORM_TRAIN_DATA_FILE : dataPath.NORM_TEST_DATA_FILE)));
+            iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
+        }
+
+        return new MultipleEpochsIterator(numEpochs, iter);
+
     }
 
     protected void buildModel(){
@@ -225,6 +206,7 @@ public class NIDSMain {
                         1e-2,
                         1e-6
                 ).buildModel();
+                supervised = true;
                 break;
             case "RNN":
                 // reference: http://sacj.cs.uct.ac.za/index.php/sacj/article/viewFile/248/150
@@ -244,30 +226,87 @@ public class NIDSMain {
                         truncatedBPTTLength,
                         123
                         ).buildModel();
+                supervised = true;
                 break;
             case "Denoise":
                 network = new BasicAutoEncoderModel(
-                        new int[]{nIn, 500, 100},
-                        new int[]{500, 100, nOut},
+                        new int[]{nIn, 200, 100},
+                        new int[]{200, 100, nOut},
                         iterations,
-                        "relu",
+                        "softsign",
                         WeightInit.XAVIER,
-                        1e-1,
-                        1e-3
+                        OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
+                        Updater.SGD,
+                        LossFunctions.LossFunction.MSE,
+                        1e-3,
+                        1e-2,
+                        seed
                         ).buildModel();
+                supervised = false;
                 break;
             case "MLPAuto":
                 network = new MLPAutoEncoderModel(
                         new int[]{nIn,50,200,300,200,50},
                         new int[]{50,200,300,200,50,nOut},
                         iterations,
-                        "leakyrelu",
-                        WeightInit.RELU,
-                        1e-4,
-                        1e-4
+                        "softplus",
+                        WeightInit.XAVIER,
+                        OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
+                        Updater.NESTEROVS,
+                        LossFunctions.LossFunction.MCXENT,
+                        1e-3,
+                        1,
+                        seed
                 ).buildModel();
+                supervised = false;
                 break;
         }
+
+        if(useHistogram)
+            network.setListeners(new ScoreIterationListener(1), new HistogramIterationListener(1));
+        else
+            network.setListeners(new ScoreIterationListener(1));
+
+    }
+
+    protected MultiLayerNetwork trainModel(MultiLayerNetwork net, MultipleEpochsIterator iter, MultipleEpochsIterator testIter){
+        org.nd4j.linalg.dataset.api.DataSet next;
+        startTime = System.currentTimeMillis();
+
+        int countTrain = 0;
+        while(iter.hasNext()  && countTrain++ < numBatches) {
+            next = iter.next();
+            if(next == null) break;
+            net.fit(next);
+            if (countTrain % TEST_EVERY_N_MINIBATCHES == 0 && supervised) {
+                //Test:
+                log.info("--- Evaluation after {} examples ---",countTrain*batchSize);
+                evaluateSupervisedPerformance(net, testIter);
+                testIter.reset();
+            }
+        }
+        if(!iter.hasNext()) iter.reset();
+        endTime = System.currentTimeMillis();
+        trainTime = (int) (endTime - startTime) / 60000;
+        return net;
+    }
+
+    protected void evaluateSupervisedPerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
+        startTime = System.currentTimeMillis();
+        Evaluation eval = net.evaluate(iter, labels);
+        endTime = System.currentTimeMillis();
+        System.out.println(eval.stats());
+        System.out.print("False Alarm Rate: " + eval.falseAlarmRate());
+        testTime = (int) (endTime - startTime) / 60000;
+
+    }
+
+    protected void evaluateUnsupervisedPerformance(MultipleEpochsIterator iter){
+        org.nd4j.linalg.dataset.DataSet test = iter.next(1);
+        INDArray result = network.scoreExamples(test,false);
+        // TODO get summary result...
+        INDArray r = result.slice(0);
+        System.out.println("\nFinal evaluation score: " +  result);
 
     }
 
@@ -275,6 +314,7 @@ public class NIDSMain {
         System.out.println("\n============================Time========================================");
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
+        // TODO setup to use NETWORK_CONFIG_FILE and param version from DataPath
         if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIR);
     }
 

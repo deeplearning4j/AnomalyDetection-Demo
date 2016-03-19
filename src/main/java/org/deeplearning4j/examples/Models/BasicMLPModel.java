@@ -51,7 +51,6 @@ public class BasicMLPModel {
     }
 
     public MultiLayerNetwork buildModel() {
-        System.out.println("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .seed(seed)
                 .iterations(iterations)

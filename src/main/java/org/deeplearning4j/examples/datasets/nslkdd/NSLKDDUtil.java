@@ -27,6 +27,9 @@ public class NSLKDDUtil {
             "buffer_overflow", "imap", "warezmaster", "phf", "land", "loadmodule", "spy", "perl", "processtable",
             "named", "xterm", "httptunnel", "saint", "ps", "mailbomb", "sendmail", "snmpgetattack", "apache2",
             "xlock", "xsnoop", "udpstorm", "snmpguess", "worm", "sqlattack", "mscan");
+    public static final int LABELIDX = 66;
+    public static final int NIN = 112;
+    public static final int NOUT = 40;
 
     public static Schema getCsvSchema(){
 

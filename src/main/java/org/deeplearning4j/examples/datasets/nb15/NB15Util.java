@@ -35,6 +35,7 @@ public class NB15Util {
 
     public static final List<String> LABELS  = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS",
             "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
+    public static final int LABELIDX = 66;
 
     public static Schema getCsvSchema(){
 

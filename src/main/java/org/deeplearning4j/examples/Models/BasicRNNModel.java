@@ -51,7 +51,6 @@ public class BasicRNNModel {
     }
 
     public MultiLayerNetwork buildModel() {
-        System.out.println("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .iterations(iterations)
                 .weightInit(weightInit)
