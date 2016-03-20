@@ -9,12 +9,15 @@ import org.deeplearning4j.examples.dataProcessing.api.DataAction;
 import org.deeplearning4j.examples.dataProcessing.api.filter.Filter;
 import org.deeplearning4j.examples.dataProcessing.api.Transform;
 import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
+import org.deeplearning4j.examples.dataProcessing.api.reduce.IReducer;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.deeplearning4j.examples.dataProcessing.api.schema.SequenceSchema;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.ConvertFromSequence;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.ConvertToSequence;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceSplit;
 import org.deeplearning4j.examples.dataProcessing.spark.filter.SparkFilterFunction;
+import org.deeplearning4j.examples.dataProcessing.spark.reduce.MapToPairForReducerFunction;
+import org.deeplearning4j.examples.dataProcessing.spark.reduce.ReducerFunction;
 import org.deeplearning4j.examples.dataProcessing.spark.sequence.SparkGroupToSequenceFunction;
 import org.deeplearning4j.examples.dataProcessing.spark.sequence.SparkMapToPairByColumnFunction;
 import org.deeplearning4j.examples.dataProcessing.spark.sequence.SparkSequenceFilterFunction;
@@ -109,9 +112,17 @@ public class SparkTransformExecutor {
                 ConvertFromSequence cfs = d.getConvertFromSequence();
 
                 throw new RuntimeException("Not yet implemented");
-            } else if(d.getSequenceSplit() != null ){
+            } else if(d.getSequenceSplit() != null ) {
                 SequenceSplit sequenceSplit = d.getSequenceSplit();
                 currentSequence = currentSequence.flatMap(new SequenceSplitFunction(sequenceSplit));
+            } else if(d.getReducer() != null){
+                IReducer reducer = d.getReducer();
+
+                if(currentWritables == null) throw new IllegalStateException("Error during execution: current writables are null. "
+                    + "Trying to execute a reduce operation on a sequence?");
+                JavaPairRDD<String,Collection<Writable>> pair = currentWritables.mapToPair(new MapToPairForReducerFunction(reducer));
+
+                currentWritables = pair.groupByKey().map(new ReducerFunction(reducer));
             } else {
                 throw new RuntimeException("Unknown/not implemented action: d");
             }

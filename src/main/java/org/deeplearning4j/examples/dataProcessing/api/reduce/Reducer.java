@@ -31,6 +31,7 @@ import java.util.*;
 public class Reducer implements IReducer, Serializable {
 
     private Schema schema;
+    private final List<String> keyColumnsList;
     private final Set<String> keyColumns;
     private final ReduceOp defaultOp;
     private final Map<String,ReduceOp> opMap;
@@ -39,6 +40,8 @@ public class Reducer implements IReducer, Serializable {
         if(builder.keyColumns == null || builder.keyColumns.length == 0){
             throw new IllegalArgumentException("No keys specified");
         }
+        this.keyColumnsList = new ArrayList<>(builder.keyColumns.length);
+        Collections.addAll(keyColumnsList,builder.keyColumns);
         this.keyColumns = new HashSet<>();
         Collections.addAll(keyColumns,builder.keyColumns);
         this.defaultOp = builder.defaultOp;
@@ -48,6 +51,16 @@ public class Reducer implements IReducer, Serializable {
     @Override
     public void setInputSchema(Schema schema){
         this.schema = schema;
+    }
+
+    @Override
+    public Schema getInputSchema(){
+        return schema;
+    }
+
+    @Override
+    public List<String> getKeyColumns(){
+        return keyColumnsList;
     }
 
     /** Get the output schema, given the input schema */

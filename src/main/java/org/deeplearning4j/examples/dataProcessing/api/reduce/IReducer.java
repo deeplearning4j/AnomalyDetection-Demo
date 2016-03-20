@@ -11,8 +11,12 @@ public interface IReducer {
 
     void setInputSchema(Schema schema);
 
+    Schema getInputSchema();
+
     Schema transform(Schema schema);
 
     List<Writable> reduce(List<List<Writable>> examplesList);
+
+    List<String> getKeyColumns();
 
 }
