@@ -30,6 +30,16 @@ public class LongAnalysis extends NumericalColumnAnalysis {
     }
 
     @Override
+    public double getMinDouble() {
+        return min;
+    }
+
+    @Override
+    public double getMaxDouble() {
+        return max;
+    }
+
+    @Override
     public ColumnType getColumnType() {
         return ColumnType.Long;
     }

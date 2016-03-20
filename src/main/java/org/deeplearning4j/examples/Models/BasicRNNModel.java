@@ -64,7 +64,7 @@ public class BasicRNNModel {
                 .regularization(true)
                 .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue).gradientNormalizationThreshold(1.0)
                 .l2(l2)
-                .list(3)
+                .list()
                 .layer(0, new GravesLSTM.Builder().nIn(nIn[0]).nOut(nOut[0]).build())
                 .layer(1, new GravesLSTM.Builder().nIn(nIn[1]).nOut(nOut[1]).build())
                 .layer(2, new RnnOutputLayer.Builder(lossFunctions)

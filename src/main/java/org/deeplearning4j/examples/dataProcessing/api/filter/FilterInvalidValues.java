@@ -9,7 +9,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by Alex on 4/03/2016.
+ * FilterInvalidValues: a filter operation that removes any examples (or sequences) if the examples/sequences contains
+ * invalid values in any of a specified set of columns.
+ * Invalid values are determined with respect to the schema
  */
 public class FilterInvalidValues implements Filter {
 
@@ -17,27 +19,31 @@ public class FilterInvalidValues implements Filter {
     private String[] columnsToFilterIfInvalid;
     private int[] columnIdxs;
 
-    public FilterInvalidValues(String... columnsToFilterIfInvalid){
-        if(columnsToFilterIfInvalid == null || columnsToFilterIfInvalid.length == 0) throw new IllegalArgumentException("Cannot filter 0/null columns");
+    /**
+     * @param columnsToFilterIfInvalid Columns to check for invalid values
+     */
+    public FilterInvalidValues(String... columnsToFilterIfInvalid) {
+        if (columnsToFilterIfInvalid == null || columnsToFilterIfInvalid.length == 0)
+            throw new IllegalArgumentException("Cannot filter 0/null columns");
         this.columnsToFilterIfInvalid = columnsToFilterIfInvalid;
     }
 
     @Override
-    public void setSchema(Schema schema){
+    public void setSchema(Schema schema) {
         this.schema = schema;
         this.columnIdxs = new int[columnsToFilterIfInvalid.length];
-        for( int i=0; i<columnsToFilterIfInvalid.length; i++ ){
+        for (int i = 0; i < columnsToFilterIfInvalid.length; i++) {
             this.columnIdxs[i] = schema.getIndexOfColumn(columnsToFilterIfInvalid[i]);
         }
     }
 
     @Override
     public boolean removeExample(Collection<Writable> writables) {
-        List<Writable> list = (writables instanceof List ? ((List<Writable>)writables) : new ArrayList<>(writables));
+        List<Writable> list = (writables instanceof List ? ((List<Writable>) writables) : new ArrayList<>(writables));
 
-        for( int i : columnIdxs){
+        for (int i : columnIdxs) {
             ColumnMetaData meta = schema.getMetaData(i);
-            if(!meta.isValid(list.get(i))) return true; //Remove if not valid
+            if (!meta.isValid(list.get(i))) return true; //Remove if not valid
         }
         return false;
     }
@@ -45,8 +51,8 @@ public class FilterInvalidValues implements Filter {
     @Override
     public boolean removeSequence(Collection<Collection<Writable>> sequence) {
         //If _any_ of the values are invalid, remove the entire sequence
-        for(Collection<Writable> c : sequence ){
-            if(removeExample(c)) return true;
+        for (Collection<Writable> c : sequence) {
+            if (removeExample(c)) return true;
         }
         return false;
     }

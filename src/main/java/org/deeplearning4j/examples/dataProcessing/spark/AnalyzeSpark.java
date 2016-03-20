@@ -143,10 +143,17 @@ public class AnalyzeSpark {
                         hist = stringLength.histogram(maxHistogramBuckets);
                     }
 
-                    list.add(new StringAnalysis(countUnique,(int)min,(int)max,stringLengthStats.mean(),
-                            stringLengthStats.sampleStdev(),stringLengthStats.sampleVariance(),stringLengthStats.count(),
-                            hist._1(),hist._2()));
-
+                    list.add(new StringAnalysis.Builder()
+                            .countTotal(stringLengthStats.count())
+                            .countUnique(countUnique)
+                            .minLength((int)min)
+                            .maxLength((int)max)
+                            .meanLength(stringLengthStats.mean())
+                            .sampleStdevLength(stringLengthStats.sampleStdev())
+                            .sampleVarianceLength(stringLengthStats.sampleVariance())
+                            .histogramBuckets(hist._1())
+                            .histogramBucketCounts(hist._2())
+                            .build());
 
                     break;
                 case Integer:
@@ -173,7 +180,7 @@ public class AnalyzeSpark {
                         hist1 = doubleRDD1.histogram(maxHistogramBuckets);
                     }
 
-                    IntegerAnalysis ia = IntegerAnalysis.builder()
+                    IntegerAnalysis ia = new IntegerAnalysis.Builder()
                             .min((int)stats1.min())
                             .max((int)stats1.max())
                             .mean(stats1.mean())
@@ -212,7 +219,7 @@ public class AnalyzeSpark {
                         histLong = doubleRDDLong.histogram(maxHistogramBuckets);
                     }
 
-                    LongAnalysis la = LongAnalysis.builder()
+                    LongAnalysis la = new LongAnalysis.Builder()
                             .min((long)statsLong.min())
                             .max((long)statsLong.max())
                             .mean(statsLong.mean())
@@ -248,7 +255,7 @@ public class AnalyzeSpark {
                         hist2 = doubleRDD.histogram(maxHistogramBuckets);
                     }
 
-                    DoubleAnalysis ra = DoubleAnalysis.builder()
+                    DoubleAnalysis ra = new DoubleAnalysis.Builder()
                             .min(stats.min())
                             .max(stats.max())
                             .mean(stats.mean())
@@ -279,7 +286,7 @@ public class AnalyzeSpark {
 
                     break;
                 case Bytes:
-                    list.add(new BytesAnalysis());
+                    list.add(new BytesAnalysis.Builder().build());  //TODO
                     break;
             }
 

@@ -72,7 +72,7 @@ public class StringAnalysis implements ColumnAnalysis {
             return this;
         }
 
-        public Builder meanLength(int meanLength) {
+        public Builder meanLength(double meanLength) {
             this.meanLength = meanLength;
             return this;
         }

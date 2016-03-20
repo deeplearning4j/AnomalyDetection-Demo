@@ -18,7 +18,9 @@
 package org.deeplearning4j.examples.ui.components;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class RenderableComponentString extends RenderableComponent {
     public static final String COMPONENT_TYPE = "string";

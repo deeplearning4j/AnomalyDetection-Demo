@@ -2,51 +2,47 @@ package org.deeplearning4j.examples.dataProcessing.api;
 
 import lombok.Data;
 import org.deeplearning4j.examples.dataProcessing.api.filter.Filter;
+import org.deeplearning4j.examples.dataProcessing.api.reduce.IReducer;
+import org.deeplearning4j.examples.dataProcessing.api.reduce.Reducer;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.ConvertFromSequence;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.ConvertToSequence;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceSplit;
 
 import java.io.Serializable;
 
-/**
- * Created by Alex on 5/03/2016.
- */
+
 @Data
 public class DataAction implements Serializable {
 
-    private final Transform transform;
-    private final Filter filter;
-    private final ConvertToSequence convertToSequence;
-    private final ConvertFromSequence convertFromSequence;
-    private final SequenceSplit sequenceSplit;
-
-    private DataAction(Transform transform, Filter filter, ConvertToSequence convertToSequence,
-                       ConvertFromSequence convertFromSequence, SequenceSplit sequenceSplit ) {
-        this.transform = transform;
-        this.filter = filter;
-        this.convertToSequence = convertToSequence;
-        this.convertFromSequence = convertFromSequence;
-        this.sequenceSplit = sequenceSplit;
-    }
+    private Transform transform;
+    private Filter filter;
+    private ConvertToSequence convertToSequence;
+    private ConvertFromSequence convertFromSequence;
+    private SequenceSplit sequenceSplit;
+    private IReducer reducer;
 
     public DataAction(Transform transform) {
-        this(transform, null, null, null, null);
+        this.transform = transform;
     }
 
     public DataAction(Filter filter) {
-        this(null, filter, null, null, null);
+        this.filter = filter;
     }
 
     public DataAction(ConvertToSequence convertToSequence) {
-        this(null, null, convertToSequence, null, null);
+        this.convertToSequence = convertToSequence;
     }
 
     public DataAction(ConvertFromSequence convertFromSequence) {
-        this(null, null, null, convertFromSequence, null);
+        this.convertFromSequence = convertFromSequence;
     }
 
     public DataAction(SequenceSplit sequenceSplit){
-        this(null,null,null,null,sequenceSplit);
+        this.sequenceSplit = sequenceSplit;
+    }
+
+    public DataAction(IReducer reducer){
+        this.reducer = reducer;
     }
 
 }

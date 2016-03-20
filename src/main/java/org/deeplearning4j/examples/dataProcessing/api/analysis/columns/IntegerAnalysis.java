@@ -29,6 +29,16 @@ public class IntegerAnalysis extends NumericalColumnAnalysis {
         return "IntegerAnalysis(min=" + min + ",max=" + max + "," + super.toString() + ")";
     }
 
+    @Override
+    public double getMinDouble() {
+        return min;
+    }
+
+    @Override
+    public double getMaxDouble() {
+        return max;
+    }
+
 
     @Override
     public ColumnType getColumnType() {

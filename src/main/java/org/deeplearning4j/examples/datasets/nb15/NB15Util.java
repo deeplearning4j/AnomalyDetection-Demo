@@ -125,7 +125,8 @@ public class NB15Util {
                 .transform(new StringToCategoricalTransform("state", "FIN", "CON", "INT", "RST", "REQ", "other"))
                 .transform(new IntegerToCategoricalTransform("equal ips and ports", Arrays.asList("notEqual", "equal")))
                 .transform(new IntegerToCategoricalTransform("is ftp login", Arrays.asList("not ftp", "ftp login")))
-                .convertToSequence("destination ip",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+//                .convertToSequence("destination ip",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
+                .convertToSequence("source",new StringComparator("timestamp end"), SequenceSchema.SequenceType.TimeSeriesAperiodic)
                 .splitSequence(new SplitMaxLengthSequence(1000,false))
                 .removeColumns("timestamp start", "timestamp end", "source ip", "destination ip") //Don't need timestamps, except for ordering time steps within each sequence; don't need IPs (except for conversion to sequence)
                 .build();

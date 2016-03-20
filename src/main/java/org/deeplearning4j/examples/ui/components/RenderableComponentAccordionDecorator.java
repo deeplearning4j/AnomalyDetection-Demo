@@ -18,9 +18,11 @@
 package org.deeplearning4j.examples.ui.components;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**Renderable component within an accordion-type component
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class RenderableComponentAccordionDecorator extends RenderableComponent {
     public static final String COMPONENT_TYPE = "accordion";

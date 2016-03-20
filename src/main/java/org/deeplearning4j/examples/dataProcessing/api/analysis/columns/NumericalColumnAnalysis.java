@@ -43,6 +43,10 @@ public abstract class NumericalColumnAnalysis implements ColumnAnalysis {
                 + ",countMaxValue=" + countMaxValue + ",count=" + countTotal;
     }
 
+    public abstract double getMinDouble();
+
+    public abstract double getMaxDouble();
+
     @SuppressWarnings("unchecked")
     public abstract static class Builder<T extends Builder<T>> {
         protected double mean;

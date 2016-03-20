@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.ui.components;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * Created by Alex on 15/03/2016.
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class RenderableComponentStackedAreaChart extends RenderableComponent {
 
