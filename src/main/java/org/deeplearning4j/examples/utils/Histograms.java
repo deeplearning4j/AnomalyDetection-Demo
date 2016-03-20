@@ -3,9 +3,9 @@ package org.deeplearning4j.examples.utils;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.ColumnAnalysis;
+import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.DoubleAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.LongAnalysis;
-import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -59,7 +59,7 @@ public class Histograms {
                     counts = la.getHistogramBucketCounts();
                     break;
                 case Double:
-                    RealAnalysis ra = (RealAnalysis) a;
+                    DoubleAnalysis ra = (DoubleAnalysis) a;
                     bins = ra.getHistogramBuckets();
                     counts = ra.getHistogramBucketCounts();
                     break;
@@ -161,7 +161,7 @@ public class Histograms {
                     counts = la.getHistogramBucketCounts();
                     break;
                 case Double:
-                    RealAnalysis ra = (RealAnalysis) a;
+                    DoubleAnalysis ra = (DoubleAnalysis) a;
                     bins = ra.getHistogramBuckets();
                     counts = ra.getHistogramBucketCounts();
                     break;

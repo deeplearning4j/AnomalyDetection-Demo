@@ -4,9 +4,9 @@ import lombok.Data;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.ColumnAnalysis;
+import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.DoubleAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.IntegerAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.LongAnalysis;
-import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.RealAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.filter.Filter;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.deeplearning4j.examples.dataProcessing.api.schema.SequenceSchema;
@@ -196,8 +196,8 @@ public class TransformProcess implements Serializable {
                     } else if(ca instanceof LongAnalysis) {
                         LongAnalysis la = (LongAnalysis) ca;
                         countMin = la.getCountMinValue();
-                    } else if(ca instanceof RealAnalysis){
-                        RealAnalysis ra = (RealAnalysis)ca;
+                    } else if(ca instanceof DoubleAnalysis){
+                        DoubleAnalysis ra = (DoubleAnalysis)ca;
                         countMin = ra.getCountMinValue();
                     } else {
                         //TODO

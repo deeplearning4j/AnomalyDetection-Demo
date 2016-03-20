@@ -1,18 +1,16 @@
 package org.deeplearning4j.examples.dataProcessing.api.analysis.columns;
 
+import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
+
 import java.io.Serializable;
 
 /**
- * Created by Alex on 4/03/2016.
+ * Interface for column analysis
  */
 public interface ColumnAnalysis extends Serializable {
 
-    double getMean();
+    long getCountTotal();
 
-    double getMin();
-
-    double getMax();
-
-    long getTotalCount();
+    ColumnType getColumnType();
 
 }

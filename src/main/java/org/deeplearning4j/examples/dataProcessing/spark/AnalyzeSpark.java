@@ -248,7 +248,7 @@ public class AnalyzeSpark {
                         hist2 = doubleRDD.histogram(maxHistogramBuckets);
                     }
 
-                    RealAnalysis ra = RealAnalysis.builder()
+                    DoubleAnalysis ra = DoubleAnalysis.builder()
                             .min(stats.min())
                             .max(stats.max())
                             .mean(stats.mean())
@@ -265,7 +265,7 @@ public class AnalyzeSpark {
 
                     list.add(ra);
 
-//                    list.add(new RealAnalysis(stats.min(),stats.max(),stats.mean(),stats.sampleStdev(),stats.sampleVariance(),
+//                    list.add(new DoubleAnalysis(stats.min(),stats.max(),stats.mean(),stats.sampleStdev(),stats.sampleVariance(),
 //                            counterR.getCountZero(),counterR.getCountNegative(),counterR.getCountPositive(),stats.count(),
 //                            hist2._1(),hist2._2()));
                     break;

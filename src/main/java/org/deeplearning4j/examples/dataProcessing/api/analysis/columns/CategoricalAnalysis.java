@@ -2,17 +2,21 @@ package org.deeplearning4j.examples.dataProcessing.api.analysis.columns;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
- * Created by Alex on 4/03/2016.
+ * Analysis for categorical columns
+ *
+ * @author Alex Black
  */
-@AllArgsConstructor @Data
-public class CategoricalAnalysis implements ColumnAnalysis{
+@AllArgsConstructor
+@Data
+public class CategoricalAnalysis implements ColumnAnalysis {
 
-    private final Map<String,Long> mapOfCounts;
+    private final Map<String, Long> mapOfCounts;
 
 
     @Override
@@ -21,26 +25,15 @@ public class CategoricalAnalysis implements ColumnAnalysis{
     }
 
     @Override
-    public double getMean() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public double getMin() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public double getMax() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public long getTotalCount() {
+    public long getCountTotal() {
         Collection<Long> counts = mapOfCounts.values();
         long sum = 0;
-        for(Long l : counts) sum += l;
+        for (Long l : counts) sum += l;
         return sum;
     }
 
+    @Override
+    public ColumnType getColumnType() {
+        return ColumnType.Categorical;
+    }
 }

@@ -141,7 +141,7 @@ public class PreprocessingNB15PreSplit {
 //                    counts = la.getHistogramBucketCounts();
 //                    break;
 //                case Double:
-//                    RealAnalysis ra = (RealAnalysis) a;
+//                    DoubleAnalysis ra = (DoubleAnalysis) a;
 //                    bins = ra.getHistogramBuckets();
 //                    counts = ra.getHistogramBucketCounts();
 //                    break;
