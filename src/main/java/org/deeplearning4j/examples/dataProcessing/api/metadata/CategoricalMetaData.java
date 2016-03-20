@@ -8,13 +8,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by Alex on 5/03/2016.
+/**Metadata for categorical columns.
+ * Here, each
  */
 public class CategoricalMetaData implements ColumnMetaData {
 
     private List<String> stateNames;
-    private Set<String> stateNamesSet;
+    private Set<String> stateNamesSet;  //For fast lookup
 
     public CategoricalMetaData(String... stateNames){
         this(Arrays.asList(stateNames));
@@ -42,14 +42,14 @@ public class CategoricalMetaData implements ColumnMetaData {
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("CategoricalMetaData(");
+        sb.append("CategoricalMetaData(stateNames=[");
         boolean first = true;
         for(String s : stateNamesSet){
             if(!first) sb.append(",");
-            sb.append(s);
+            sb.append("\"").append(s).append("\"");
             first = false;
         }
-        sb.append(")");
+        sb.append("])");
         return sb.toString();
     }
 }

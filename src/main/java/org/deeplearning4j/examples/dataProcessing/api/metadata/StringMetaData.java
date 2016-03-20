@@ -3,21 +3,29 @@ package org.deeplearning4j.examples.dataProcessing.api.metadata;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 
-/**
- * Created by Alex on 5/03/2016.
+/**Metadata for an String column
+ * @author Alex Black
  */
 public class StringMetaData implements ColumnMetaData {
 
-    private String regex;
-    private int minLength;
-    private int maxLength;
+    //regex + min/max length are nullable: null -> no restrictions on these
+    private final String regex;
+    private final Integer minLength;
+    private final Integer maxLength;
 
     /** Default constructor with no restrictions on allowable strings */
     public StringMetaData(){
-        this(null,0,Integer.MAX_VALUE);
+        this(null,null,null);
     }
 
-    public StringMetaData(String mustMatchRegex, int minLength, int maxLength){
+    /**
+     *
+     * @param mustMatchRegex Nullable. If not null: this is a regex that each string must match in order for the entry
+     *                       to be considered valid.
+     * @param minLength Min allowable String length. If null: no restriction on min String length
+     * @param maxLength Max allowable String length. If null: no restriction on max String length
+     */
+    public StringMetaData(String mustMatchRegex, Integer minLength, Integer maxLength){
         this.regex = mustMatchRegex;
         this.minLength = minLength;
         this.maxLength = maxLength;
@@ -33,14 +41,27 @@ public class StringMetaData implements ColumnMetaData {
     public boolean isValid(Writable writable) {
         String str = writable.toString();
         int len = str.length();
-        boolean matches = (len >= minLength && len <= maxLength);
-        if(!matches) return false;
+        if(minLength != null && len < minLength ) return false;
+        if(maxLength != null && len > maxLength ) return false;
+
         return regex == null || str.matches(regex);
     }
 
     @Override
     public String toString(){
-        return "StringMetaData(minLengthAllowed=" + minLength + ",maxLengthAllowed="+ maxLength + ",regex=" + regex + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append("StringMetaData(");
+        if(minLength != null) sb.append("minLengthAllowed=").append(minLength);
+        if(maxLength != null){
+            if(minLength != null) sb.append(",");
+            sb.append("maxLengthAllowed=").append(maxLength);
+        }
+        if(regex != null){
+            if(minLength != null || maxLength != null) sb.append(",");
+            sb.append("regex=").append(regex);
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
 }

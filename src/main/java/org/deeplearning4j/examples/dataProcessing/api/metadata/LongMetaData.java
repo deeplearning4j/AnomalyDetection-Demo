@@ -5,21 +5,22 @@ import org.canova.api.io.data.LongWritable;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 
-/**
- * Created by Alex on 5/03/2016.
+/**Metadata for an long column
+ * @author Alex Black
  */
 public class LongMetaData implements ColumnMetaData {
 
-    private long minValue;
-    private long maxValue;
+    //min/max are nullable: null -> no restriction on min/max values
+    private final Long min;
+    private final Long max;
 
     public LongMetaData(){
-        this(Long.MIN_VALUE,Long.MAX_VALUE);
+        this(null,null);
     }
 
-    public LongMetaData(long minValue, long maxValue){
-        this.minValue = minValue;
-        this.maxValue = maxValue;
+    public LongMetaData(Long min, Long max){
+        this.min = min;
+        this.max = max;
     }
 
     @Override
@@ -39,11 +40,22 @@ public class LongMetaData implements ColumnMetaData {
                 return false;
             }
         }
-        return value >= minValue && value <= maxValue;
+        if(min != null && value < min) return false;
+        if(max != null && value > max) return false;
+        
+        return true;
     }
 
     @Override
     public String toString(){
-        return "LongMetaData(minAllowed=" + minValue + ",maxAllowed="+ maxValue + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append("LongMetaData(");
+        if(min != null) sb.append("minAllowed=").append(min);
+        if(max != null){
+            if(min != null) sb.append(",");
+            sb.append("maxAllowed=").append(max);
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }

@@ -3,21 +3,27 @@ package org.deeplearning4j.examples.dataProcessing.api.metadata;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 
-/**
- * Created by Alex on 5/03/2016.
+/**Metadata for an integer column
+ * @author Alex Black
  */
 public class IntegerMetaData implements ColumnMetaData {
 
-    private int minValue;
-    private int maxValue;
+    //min/max are nullable: null -> no restriction on min/max values
+    private final Integer min;
+    private final Integer max;
 
     public IntegerMetaData(){
-        this(Integer.MIN_VALUE,Integer.MAX_VALUE);
+        this(null,null);
     }
 
-    public IntegerMetaData(int minValue, int maxValue){
-        this.minValue = minValue;
-        this.maxValue = maxValue;
+    /**
+     *
+     * @param min Min allowed value. If null: no restriction on min value value in this column
+     * @param max Max allowed value. If null: no restiction on max value in this column
+     */
+    public IntegerMetaData(Integer min, Integer max){
+        this.min = min;
+        this.max = max;
     }
 
     @Override
@@ -33,11 +39,22 @@ public class IntegerMetaData implements ColumnMetaData {
         }catch(NumberFormatException e){
             return false;
         }
-        return value >= minValue && value <= maxValue;
+
+        if(min != null && value < min) return false;
+        if(max != null && value > max) return false;
+        return true;
     }
 
     @Override
     public String toString(){
-        return "IntegerMetaData(minAllowed=" + minValue + ",maxAllowed="+ maxValue + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append("IntegerMetaData(");
+        if(min != null) sb.append("minAllowed=").append(min);
+        if(max != null){
+            if(min != null) sb.append(",");
+            sb.append("maxAllowed=").append(max);
+        }
+        sb.append(")");
+        return sb.toString();
     }
 }

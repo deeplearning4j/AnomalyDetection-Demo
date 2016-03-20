@@ -3,8 +3,8 @@ package org.deeplearning4j.examples.dataProcessing.api.metadata;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 
-/**
- * Created by Alex on 5/03/2016.
+/**TimeMetaData: Meta data for a time column
+ * @author Alex Black
  */
 public class TimeMetaData implements ColumnMetaData {
 
