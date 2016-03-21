@@ -12,6 +12,7 @@ import org.deeplearning4j.examples.dataProcessing.spark.SparkTransformExecutor;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.deeplearning4j.examples.dataProcessing.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.datasets.iscx.ISCXUtil;
+import org.deeplearning4j.examples.ui.SparkConnectFactory;
 import org.deeplearning4j.examples.utils.SparkExport;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
@@ -28,7 +29,7 @@ public class PreprocessingSequence extends PreprocessingPreSplit {
 
     public static void main(String[] args) throws Exception {
         setup(args[0], true);
-        JavaSparkContext sc = setupSparkContext();
+        JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
         Triple<TransformProcess, Schema, JavaRDD<List<List<Writable>>>> dataNormalized = null;

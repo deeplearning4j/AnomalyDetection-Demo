@@ -89,4 +89,20 @@ public class NB15TableConverter implements TableConverter {
                 .headerColor("#CCCCCC")
                 .build();
     }
+
+    //TODO: find a better (but still general-purspose) design for this
+    @Override
+    public Map<String,Integer> getColumnMap(){
+        Map<String,Integer> columnMap = new HashMap<>();
+        columnMap.put("source-dest bytes",schema.getIndexOfColumn("source-dest bytes"));
+        columnMap.put("dest-source bytes",schema.getIndexOfColumn("dest-source bytes"));
+        columnMap.put("source ip",schema.getIndexOfColumn("source ip"));
+        columnMap.put("destination ip",schema.getIndexOfColumn("destination ip"));
+        columnMap.put("source port",schema.getIndexOfColumn("source port"));
+        columnMap.put("destination port",schema.getIndexOfColumn("destination port"));
+        columnMap.put("service", schema.getIndexOfColumn("service"));
+
+        return columnMap;
+    }
+
 }

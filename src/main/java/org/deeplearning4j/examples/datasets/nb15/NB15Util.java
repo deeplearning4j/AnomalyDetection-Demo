@@ -34,7 +34,12 @@ public class NB15Util {
 
     public static final List<String> LABELS  = Arrays.asList("none", "Exploits", "Reconnaissance", "DoS",
             "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis");
+    public static final List<String> SERVICES = Arrays.asList("-", "dns", "http", "smtp", "ftp-data", "ftp",
+            "ssh", "pop3", "snmp", "ssl", "irc", "radius", "dhcp");
     public static final int LABELIDX = 66;
+    public static final int NIN = 66;
+    public static final int NOUT = 10;
+    public static final int NORMALIDX = 0;
 
     public static Schema getCsvSchema(){
 

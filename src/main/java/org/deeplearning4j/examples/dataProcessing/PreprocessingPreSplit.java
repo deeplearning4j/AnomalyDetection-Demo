@@ -10,6 +10,7 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
 import org.deeplearning4j.examples.dataProcessing.api.split.RandomSplit;
 import org.deeplearning4j.examples.datasets.iscx.ISCXUtil;
+import org.deeplearning4j.examples.ui.SparkConnectFactory;
 import org.deeplearning4j.examples.utils.SparkUtils;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.utils.DataPathUtil;
@@ -60,7 +61,7 @@ public class PreprocessingPreSplit {
     public static void main(String[] args) throws Exception {
         setup(args[0], false);
 
-        JavaSparkContext sc = setupSparkContext();
+        JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
         SparkTransformExecutor executor = new SparkTransformExecutor();
         JavaRDD<List<Writable>> preprocessedData;
         Triple<TransformProcess, Schema, JavaRDD<List<Writable>>> dataNormalized = null;
@@ -168,14 +169,6 @@ public class PreprocessingPreSplit {
 
         // Per-column statis summary
         dataAnalyis = AnalyzeSpark.analyze(schema, data, buckets);
-    }
-
-    public static JavaSparkContext setupSparkContext() {
-        SparkConf sparkConf = new SparkConf();
-        sparkConf.setMaster("local[*]");
-        sparkConf.setAppName(dataSet);
-        sparkConf.set("spark.driver.maxResultSize", "2G");
-        return new JavaSparkContext(sparkConf);
     }
 
     public static Schema defineSchema(String outDir, TransformProcess seq) throws IOException {

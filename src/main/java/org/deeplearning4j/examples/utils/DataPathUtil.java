@@ -43,7 +43,7 @@ public class DataPathUtil {
     public final String NORM_TEST_DATA_FILE;
     public final String NETWORK_CONFIG_FILE;
     public final String NETWORK_PARAMS_FILE;
-
+    public final String NETWORK_UPDATER_FILE;
 
     public static final String REPO_BASE_DIR = FilenameUtils.concat(System.getProperty("user.dir"), "src/main/resources/");
 
@@ -87,6 +87,7 @@ public class DataPathUtil {
         // for saving model and params
         this.NETWORK_CONFIG_FILE = FilenameUtils.concat(OUT_DIR,"config.json");
         this.NETWORK_PARAMS_FILE = FilenameUtils.concat(OUT_DIR,"params.bin");
+        this.NETWORK_UPDATER_FILE = FilenameUtils.concat(OUT_DIR,"updater.bin");
 
         // setup folders if the do not exist
         if(!new File(IN_DIR).exists()) new File(IN_DIR).mkdirs();

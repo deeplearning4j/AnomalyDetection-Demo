@@ -16,7 +16,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by Alex on 5/03/2016.
+ *
+ * References:
+ *  http://www.ijarcce.com/upload/2015/june-15/IJARCCE%2096.pdf
+ *  http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=7C05CDF892E875A01EDF75C2970CBDB9?doi=10.1.1.680.6760&rep=rep1&type=pdf
  */
 public class NSLKDDUtil {
 
@@ -26,9 +29,17 @@ public class NSLKDDUtil {
             "buffer_overflow", "imap", "warezmaster", "phf", "land", "loadmodule", "spy", "perl", "processtable",
             "named", "xterm", "httptunnel", "saint", "ps", "mailbomb", "sendmail", "snmpgetattack", "apache2",
             "xlock", "xsnoop", "udpstorm", "snmpguess", "worm", "sqlattack", "mscan");
+    public static final List<String> SERVICES = Arrays.asList("other", "private", "http", "ftp_data","name",
+            "netbios_ns", "eco_i", "mtp", "telnet", "finger", "domain_u", "supdup", "uucp_path", "Z39_50",
+            "smtp", "csnet_ns", "uucp", "netbios_dgm", "urp_i", "auth", "domain", "ftp", "bgp", "ldap","ecr_i",
+            "gopher", "vmnet", "systat", "http_443", "efs", "whois","imap4", "iso_tsap", "echo", "klogin", "link",
+            "sunrpc", "login","kshell", "sql_net", "time", "hostnames", "exec", "ntp_u","discard", "nntp", "courier",
+            "ctf", "ssh", "daytime", "netstat", "nnsp", "IRC", "pop_3", "netbios_ssn", "remote_job","pop_2","printer",
+            "rje", "shell", "X11");
     public static final int LABELIDX = 66;
     public static final int NIN = 112;
     public static final int NOUT = 40;
+    public static final int NORMALIDX = 0; // TODO find where this is?
 
     public static Schema getCsvSchema(){
 

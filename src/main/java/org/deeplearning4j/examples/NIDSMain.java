@@ -1,5 +1,6 @@
 package org.deeplearning4j.examples;
 
+import org.apache.commons.io.FileUtils;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.records.reader.impl.CSVSequenceRecordReader;
 import org.canova.api.split.FileSplit;
@@ -20,17 +21,20 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.weights.HistogramIterationListener;
-import org.deeplearning4j.util.NetSaverLoaderUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
 
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -42,6 +46,8 @@ import java.util.List;
  *
  * Steps:
  * - Download dataset and store in System.getProperty("user.home"), "data/NIDS/<name of dataset>"
+ *      - https://console.aws.amazon.com/s3/home?region=us-west-2#&bucket=anomaly-data&prefix=nids/UNSW/input/
+ *      - https://www.unsw.adfa.edu.au/australian-centre-for-cyber-security/cybersecurity/ADFA-NB15-Datasets/
  * - Run SplitTrainTestRaw and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
  * - Run PreprocessingPreSplit and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
  * - Run NIDSMain (or TrainMLP) and pass in values for below and/or update variables below to train and store the model
@@ -73,10 +79,6 @@ public class NIDSMain {
     protected int iterations = 1;
     @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-dataS")
     protected static String dataSet = "NSLKDD";
-//    @Option(name="--trainFile",usage="Train filename",aliases="-trFN")
-//    protected String trainFile = "0NSL_KDDnormalized0.csv";
-//    @Option(name="--testFile",usage="Test filename",aliases="-teFN")
-//    protected String testFile = "1NSL_KDDnormalized0.csv";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
 
@@ -182,29 +184,22 @@ public class NIDSMain {
     }
 
     protected void buildModel(){
-        // TODO generalize
-//         int[] nIn;
-//         int[] nOut;
-//         int iterations;
-//         String activation;
-//         WeightInit weightInit;
-//         OptimizationAlgorithm optimizationAlgorithm;
-//         Updater updater;
-//         LossFunctions.LossFunction lossFunctions;
-//         double learningRate;
-//         double l2;
-//        long seed;
-
         switch (modelType) {
             case "MLP":
+                // NSLKDD got .98% with 512, RMSProp & leakyrelu
                 network = new BasicMLPModel(
-                        new int[]{nIn, 512, 512},
-                        new int[]{512, 512, nOut},
+                        new int[]{nIn, 256, 256},
+                        new int[]{256, 256, nOut},
                         iterations,
                         "leakyrelu",
                         WeightInit.XAVIER,
+                        OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
+                        Updater.NESTEROVS,
+                        LossFunctions.LossFunction.MCXENT,
                         1e-2,
-                        1e-6
+                        1e-5,
+                        1,
+                        123
                 ).buildModel();
                 supervised = true;
                 break;
@@ -230,16 +225,17 @@ public class NIDSMain {
                 break;
             case "Denoise":
                 network = new BasicAutoEncoderModel(
-                        new int[]{nIn, 200, 100},
-                        new int[]{200, 100, nOut},
+                        new int[]{nIn, 60, 25},
+                        new int[]{60, 25, nOut},
                         iterations,
                         "softsign",
                         WeightInit.XAVIER,
                         OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
                         Updater.SGD,
-                        LossFunctions.LossFunction.MSE,
-                        1e-3,
-                        1e-2,
+                        LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD,
+                        5e-3,
+                        1,
+                        0.3,
                         seed
                         ).buildModel();
                 supervised = false;
@@ -263,9 +259,9 @@ public class NIDSMain {
         }
 
         if(useHistogram)
-            network.setListeners(new ScoreIterationListener(1), new HistogramIterationListener(1));
+            network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
         else
-            network.setListeners(new ScoreIterationListener(1));
+            network.setListeners(new ScoreIterationListener(listenerFreq));
 
     }
 
@@ -310,12 +306,21 @@ public class NIDSMain {
 
     }
 
-    protected void saveAndPrintResults(MultiLayerNetwork net){
+    protected void saveAndPrintResults(MultiLayerNetwork net) {
         System.out.println("\n============================Time========================================");
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
-        // TODO setup to use NETWORK_CONFIG_FILE and param version from DataPath
-        if (saveModel) NetSaverLoaderUtils.saveNetworkAndParameters(net, OUT_DIR);
+        try {
+            FileUtils.writeStringToFile(new File(PATH.NETWORK_CONFIG_FILE), net.conf().toJson());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try(DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(PATH.NETWORK_PARAMS_FILE)))){
+            Nd4j.write(net.params(),dos);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 

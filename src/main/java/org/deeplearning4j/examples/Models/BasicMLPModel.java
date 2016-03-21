@@ -27,16 +27,18 @@ public class BasicMLPModel {
     protected LossFunctions.LossFunction lossFunctions;
     protected double learningRate;
     protected double l2;
+    protected double momentum;
     protected long seed;
 
-    public BasicMLPModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit, double learningRate, double l2){
+    public BasicMLPModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit,
+                         double learningRate, double l2){
         this(nIn, nOut, iterations, activation, weightInit, OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
-                Updater.NESTEROVS, LossFunctions.LossFunction.MCXENT, learningRate, l2, 123);
+                Updater.NESTEROVS, LossFunctions.LossFunction.MCXENT, learningRate, l2, 0.9, 123);
     }
 
     public BasicMLPModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit,
                          OptimizationAlgorithm optimizationAlgorithm, Updater updater, LossFunctions.LossFunction lossFunctions,
-                         double learningRate , double l2, long seed) {
+                         double learningRate , double l2, double momentum, long seed) {
         this.nIn = nIn;
         this.nOut = nOut;
         this.iterations = iterations;
@@ -47,6 +49,7 @@ public class BasicMLPModel {
         this.lossFunctions = lossFunctions;
         this.learningRate = learningRate;
         this.l2 = l2;
+        this.momentum = momentum;
         this.seed = seed;
     }
 
@@ -58,7 +61,7 @@ public class BasicMLPModel {
                 .weightInit(weightInit)
                 .optimizationAlgo(optimizationAlgorithm)
                 .learningRate(learningRate)
-                .momentum(0.9)
+                .momentum(momentum)
                 .regularization(true)
                 .l2(l2)
                 .list()

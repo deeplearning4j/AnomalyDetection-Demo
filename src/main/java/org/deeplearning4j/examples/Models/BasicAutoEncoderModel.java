@@ -33,14 +33,15 @@ public class BasicAutoEncoderModel {
     protected long seed = 123;
 
 
-    public BasicAutoEncoderModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit, double learningRate, double l2){
+    public BasicAutoEncoderModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit, double learningRate, double l2, double corruptionLevel){
         this(nIn, nOut, iterations, activation, weightInit, OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
-                Updater.NESTEROVS, LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD, learningRate, l2, 123);
+                Updater.NESTEROVS, LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD, learningRate, l2, corruptionLevel, 123);
     }
 
     public BasicAutoEncoderModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit,
-                                 OptimizationAlgorithm optimizationAlgorithm, Updater updater, LossFunctions.LossFunction lossFunctions,
-                                 double learningRate , double l2, long seed) {
+                                 OptimizationAlgorithm optimizationAlgorithm, Updater updater,
+                                 LossFunctions.LossFunction lossFunctions, double learningRate , double l2,
+                                 double corruptionLevel, long seed) {
         this.nIn = nIn;
         this.nOut = nOut;
         this.iterations = iterations;
@@ -52,6 +53,7 @@ public class BasicAutoEncoderModel {
         this.lossFunctions = lossFunctions;
         this.learningRate = learningRate;
         this.l2 = l2;
+        this.corruptionLevel = corruptionLevel;
         this.seed = seed;
     }
 
