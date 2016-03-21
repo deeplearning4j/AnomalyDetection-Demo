@@ -10,15 +10,14 @@ import org.nd4j.linalg.factory.Nd4j;
 import scala.Tuple3;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by Alex on 10/03/2016.
  */
-public class Predict3Function implements FlatMapFunction<Iterator<Tuple3<Long,INDArray,Collection<Writable>>>,
-        Tuple3<Long,INDArray,Collection<Writable>>> {
+public class Predict3Function implements FlatMapFunction<Iterator<Tuple3<Long,INDArray,List<Writable>>>,
+        Tuple3<Long,INDArray,List<Writable>>> {
     public static final int DEFAULT_BATCH_SIZE = 64;
 
     private final Broadcast<String> config;
@@ -38,7 +37,7 @@ public class Predict3Function implements FlatMapFunction<Iterator<Tuple3<Long,IN
     }
 
     @Override
-    public Iterable<Tuple3<Long,INDArray,Collection<Writable>>> call(Iterator<Tuple3<Long, INDArray, Collection<Writable>>> iter) throws Exception {
+    public Iterable<Tuple3<Long,INDArray,List<Writable>>> call(Iterator<Tuple3<Long, INDArray, List<Writable>>> iter) throws Exception {
 
         if(net == null){
             String conf = config.getValue();
@@ -50,13 +49,13 @@ public class Predict3Function implements FlatMapFunction<Iterator<Tuple3<Long,IN
             net.setParams(p);
         }
 
-        List<Tuple3<Long,INDArray,Collection<Writable>>> predictions = new ArrayList<>();
+        List<Tuple3<Long,INDArray,List<Writable>>> predictions = new ArrayList<>();
         List<INDArray> collected = new ArrayList<>(batchSize);
         List<Long> exampleNums = new ArrayList<>(batchSize);
-        List<Collection<Writable>> writables = new ArrayList<>(batchSize);
+        List<List<Writable>> writables = new ArrayList<>(batchSize);
         while(iter.hasNext()) {
             for (int i = 0; i < batchSize && iter.hasNext(); i++) {
-                Tuple3<Long,INDArray,Collection<Writable>> t2 = iter.next();
+                Tuple3<Long,INDArray,List<Writable>> t2 = iter.next();
                 collected.add(t2._2());
                 exampleNums.add(t2._1());
                 writables.add(t2._3());
@@ -67,7 +66,7 @@ public class Predict3Function implements FlatMapFunction<Iterator<Tuple3<Long,IN
             for(int i=0; i<collected.size(); i++ ){
                 INDArray outi = out.getRow(i).dup();
                 Long keyi = exampleNums.get(i);
-                Collection<Writable> cw = writables.get(i);
+                List<Writable> cw = writables.get(i);
                 predictions.add(new Tuple3<>(keyi,outi,cw));
             }
             

@@ -3,7 +3,6 @@ package org.deeplearning4j.examples.dataProcessing.api.sequence;
 import org.canova.api.writable.Writable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class SplitMaxLengthSequence implements SequenceSplit {
         this.equalSplits = equalSplits;
     }
 
-    public List<Collection<Collection<Writable>>> split(Collection<Collection<Writable>> sequence) {
+    public List<List<List<Writable>>> split(List<List<Writable>> sequence) {
         int n = sequence.size();
         if(n <= maxSequenceLength) return Collections.singletonList(sequence);
         int splitSize;
@@ -39,9 +38,9 @@ public class SplitMaxLengthSequence implements SequenceSplit {
             splitSize = maxSequenceLength;
         }
 
-        List<Collection<Collection<Writable>>> out = new ArrayList<>();
-        List<Collection<Writable>> current = new ArrayList<>(splitSize);
-        for(Collection<Writable> step : sequence ){
+        List<List<List<Writable>>> out = new ArrayList<>();
+        List<List<Writable>> current = new ArrayList<>(splitSize);
+        for(List<Writable> step : sequence ){
             if(current.size() >= splitSize ){
                 out.add(current);
                 current = new ArrayList<>(splitSize);

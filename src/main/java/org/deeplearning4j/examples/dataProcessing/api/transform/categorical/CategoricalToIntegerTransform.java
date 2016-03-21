@@ -75,7 +75,7 @@ public class CategoricalToIntegerTransform extends BaseTransform {
     }
 
     @Override
-    public Collection<Writable> map(Collection<Writable> writables) {
+    public List<Writable> map(List<Writable> writables) {
         int idx = getColumnIdx();
 
         int n = stateNames.size();

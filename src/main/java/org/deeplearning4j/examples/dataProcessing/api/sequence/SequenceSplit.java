@@ -11,6 +11,6 @@ import java.util.List;
  */
 public interface SequenceSplit extends Serializable {
 
-    List<Collection<Collection<Writable>>> split(Collection<Collection<Writable>> sequence);
+    List<List<List<Writable>>> split(List<List<Writable>> sequence);
 
 }

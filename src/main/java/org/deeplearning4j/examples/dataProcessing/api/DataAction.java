@@ -10,7 +10,7 @@ import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceSplit;
 
 import java.io.Serializable;
 
-
+/** A helper class used in TransformProcess to store the types of action to execute next. */
 @Data
 public class DataAction implements Serializable {
 

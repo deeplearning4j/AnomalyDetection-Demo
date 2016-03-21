@@ -6,7 +6,7 @@ import org.canova.api.io.data.IntWritable;
 import org.canova.api.writable.Writable;
 
 /**
- * Created by Alex on 5/03/2016.
+ * Replace an empty/missing integer with a certain value.
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -22,7 +22,7 @@ public class ReplaceEmptyIntegerWithValueTransform extends BaseIntegerTransform 
     @Override
     public Writable map(Writable writable) {
         String s = writable.toString();
-        if(s == null || s.isEmpty()) return new IntWritable(newValueOfEmptyIntegers);
+        if (s == null || s.isEmpty()) return new IntWritable(newValueOfEmptyIntegers);
         return writable;
     }
 }

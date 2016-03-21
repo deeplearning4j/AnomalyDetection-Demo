@@ -31,7 +31,7 @@ import java.util.List;
 public class SparkTransformExecutor {
 
 
-    public JavaRDD<Collection<Writable>> execute(JavaRDD<Collection<Writable>> inputWritables, TransformProcess sequence ) {
+    public JavaRDD<List<Writable>> execute(JavaRDD<List<Writable>> inputWritables, TransformProcess sequence ) {
         if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
@@ -40,7 +40,7 @@ public class SparkTransformExecutor {
 //        return inputWritables.flatMap(new SparkTransformProcessFunction(sequence));    //Only works if no toSequence or FromSequence ops are in the TransformSequenc...
     }
 
-    public JavaRDD<Collection<Collection<Writable>>> executeToSequence(JavaRDD<Collection<Writable>> inputWritables, TransformProcess sequence ) {
+    public JavaRDD<List<List<Writable>>> executeToSequence(JavaRDD<List<Writable>> inputWritables, TransformProcess sequence ) {
         if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
@@ -48,7 +48,7 @@ public class SparkTransformExecutor {
         return execute(inputWritables,null,sequence).getSecond();
     }
 
-    public JavaRDD<Collection<Writable>> executeSequenceToSeparate(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformProcess sequence ) {
+    public JavaRDD<List<Writable>> executeSequenceToSeparate(JavaRDD<List<List<Writable>>> inputSequence, TransformProcess sequence ) {
         if(sequence.getFinalSchema() instanceof SequenceSchema){
             throw new IllegalStateException("Cannot return sequence data with this method");
         }
@@ -56,7 +56,7 @@ public class SparkTransformExecutor {
         return execute(null,inputSequence,sequence).getFirst();
     }
 
-    public JavaRDD<Collection<Collection<Writable>>> executeSequenceToSequence(JavaRDD<Collection<Collection<Writable>>> inputSequence, TransformProcess sequence ) {
+    public JavaRDD<List<List<Writable>>> executeSequenceToSequence(JavaRDD<List<List<Writable>>> inputSequence, TransformProcess sequence ) {
         if(!(sequence.getFinalSchema() instanceof SequenceSchema)){
             throw new IllegalStateException("Cannot return non-sequence data with this method");
         }
@@ -65,11 +65,11 @@ public class SparkTransformExecutor {
     }
 
 
-    private Pair<JavaRDD<Collection<Writable>>,JavaRDD<Collection<Collection<Writable>>>>
-        execute(JavaRDD<Collection<Writable>> inputWritables, JavaRDD<Collection<Collection<Writable>>> inputSequence,
+    private Pair<JavaRDD<List<Writable>>,JavaRDD<List<List<Writable>>>>
+        execute(JavaRDD<List<Writable>> inputWritables, JavaRDD<List<List<Writable>>> inputSequence,
                 TransformProcess sequence ){
-        JavaRDD<Collection<Writable>> currentWritables = inputWritables;
-        JavaRDD<Collection<Collection<Writable>>> currentSequence = inputSequence;
+        JavaRDD<List<Writable>> currentWritables = inputWritables;
+        JavaRDD<List<List<Writable>>> currentSequence = inputSequence;
 
         List<DataAction> list = sequence.getActionList();
 
@@ -78,10 +78,10 @@ public class SparkTransformExecutor {
             if(d.getTransform() != null) {
                 Transform t = d.getTransform();
                 if(currentWritables != null){
-                    Function<Collection<Writable>, Collection<Writable>> function = new SparkTransformFunction(t);
+                    Function<List<Writable>, List<Writable>> function = new SparkTransformFunction(t);
                     currentWritables = currentWritables.map(function);
                 } else {
-                    Function<Collection<Collection<Writable>>, Collection<Collection<Writable>>> function =
+                    Function<List<List<Writable>>, List<List<Writable>>> function =
                             new SparkSequenceTransformFunction(t);
                     currentSequence = currentSequence.map(function);
                 }
@@ -101,8 +101,8 @@ public class SparkTransformExecutor {
                 //First: convert to PairRDD
                 Schema schema = cts.getInputSchema();
                 int colIdx = schema.getIndexOfColumn(cts.getKeyColumn());
-                JavaPairRDD<Writable, Collection<Writable>> withKey = currentWritables.mapToPair(new SparkMapToPairByColumnFunction(colIdx));
-                JavaPairRDD<Writable, Iterable<Collection<Writable>>> grouped = withKey.groupByKey();
+                JavaPairRDD<Writable, List<Writable>> withKey = currentWritables.mapToPair(new SparkMapToPairByColumnFunction(colIdx));
+                JavaPairRDD<Writable, Iterable<List<Writable>>> grouped = withKey.groupByKey();
 
                 //Now: convert to a sequence...
                 currentSequence = grouped.map(new SparkGroupToSequenceFunction(cts.getComparator()));
@@ -120,7 +120,7 @@ public class SparkTransformExecutor {
 
                 if(currentWritables == null) throw new IllegalStateException("Error during execution: current writables are null. "
                     + "Trying to execute a reduce operation on a sequence?");
-                JavaPairRDD<String,Collection<Writable>> pair = currentWritables.mapToPair(new MapToPairForReducerFunction(reducer));
+                JavaPairRDD<String,List<Writable>> pair = currentWritables.mapToPair(new MapToPairForReducerFunction(reducer));
 
                 currentWritables = pair.groupByKey().map(new ReducerFunction(reducer));
             } else {

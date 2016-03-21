@@ -5,18 +5,19 @@ import org.apache.spark.api.java.function.Function;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.Transform;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
- * Created by Alex on 5/03/2016.
+ * Spark function for transforming sequences using a Transform
+ * @author Alex Black
  */
 @AllArgsConstructor
-public class SparkSequenceTransformFunction implements Function<Collection<Collection<Writable>>,Collection<Collection<Writable>>> {
+public class SparkSequenceTransformFunction implements Function<List<List<Writable>>,List<List<Writable>>> {
 
     private final Transform transform;
 
     @Override
-    public Collection<Collection<Writable>> call(Collection<Collection<Writable>> v1) throws Exception {
+    public List<List<Writable>> call(List<List<Writable>> v1) throws Exception {
         return transform.mapSequence(v1);
     }
 }

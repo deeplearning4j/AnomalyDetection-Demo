@@ -19,13 +19,13 @@ public abstract class BaseColumnFilter implements Filter {
     }
 
     @Override
-    public boolean removeExample(Collection<Writable> writables) {
-        return removeExample(((List<Writable>)writables).get(columnIdx));
+    public boolean removeExample(List<Writable> writables) {
+        return removeExample(writables.get(columnIdx));
     }
 
     @Override
-    public boolean removeSequence(Collection<Collection<Writable>> sequence) {
-        for(Collection<Writable> c : sequence){
+    public boolean removeSequence(List<List<Writable>> sequence) {
+        for(List<Writable> c : sequence){
             if(removeExample(c)) return true;
         }
         return false;

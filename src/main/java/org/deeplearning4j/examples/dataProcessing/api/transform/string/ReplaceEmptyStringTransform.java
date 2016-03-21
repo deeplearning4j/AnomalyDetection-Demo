@@ -6,7 +6,7 @@ import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
 
 /**
- * Created by Alex on 5/03/2016.
+ * Replace empty String values with the specified String
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

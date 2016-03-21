@@ -1,20 +1,22 @@
 package org.deeplearning4j.examples.dataProcessing.api.dataquality.columns;
 
 /**
- * Created by Alex on 5/03/2016.
+ * Quality of a Bytes column
+ *
+ * @author Alex Black
  */
 public class BytesQuality extends ColumnQuality {
 
-    public BytesQuality(){
-        this(0,0,0,0);
+    public BytesQuality() {
+        this(0, 0, 0, 0);
     }
 
-    public BytesQuality(long countValid, long countInvalid, long countMissing, long countTotal){
-        super(countValid,countInvalid,countMissing,countTotal);
+    public BytesQuality(long countValid, long countInvalid, long countMissing, long countTotal) {
+        super(countValid, countInvalid, countMissing, countTotal);
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "BytesQuality(" + super.toString() + ")";
     }
 

@@ -6,19 +6,24 @@ import org.canova.api.records.reader.RecordReader;
 import org.canova.api.split.StringSplit;
 import org.canova.api.writable.Writable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
- * Created by Alex on 4/03/2016.
+ * Convert a String to a List<Writable> using a Canova record reader
+ *
  */
 @AllArgsConstructor
-public class StringToWritablesFunction implements Function<String,Collection<Writable>> {
+public class StringToWritablesFunction implements Function<String,List<Writable>> {
 
     private RecordReader recordReader;
 
     @Override
-    public Collection<Writable> call(String s) throws Exception {
+    public List<Writable> call(String s) throws Exception {
         recordReader.initialize(new StringSplit(s));
-        return recordReader.next();
+        Collection<Writable> next = recordReader.next();
+        if(next instanceof List ) return (List<Writable>)next;
+        return new ArrayList<>(next);
     }
 }

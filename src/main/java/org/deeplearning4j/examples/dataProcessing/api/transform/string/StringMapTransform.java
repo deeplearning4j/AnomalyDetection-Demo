@@ -8,7 +8,9 @@ import org.canova.api.writable.Writable;
 import java.util.Map;
 
 /**
- * Created by Alex on 5/03/2016.
+ * A simple String -> String map function.
+ *
+ * @author Alex Black
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -18,7 +20,7 @@ public class StringMapTransform extends BaseStringTransform {
 
     /**
      *
-     * @param columnName
+     * @param columnName Name of the column
      * @param map Key: From. Value: To
      */
     public StringMapTransform(String columnName, Map<String, String> map) {

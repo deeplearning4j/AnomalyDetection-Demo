@@ -6,6 +6,7 @@ import org.canova.api.io.data.Text;
 import org.canova.api.writable.Writable;
 
 /**
+ * String transform that removes all whitespace charaters
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

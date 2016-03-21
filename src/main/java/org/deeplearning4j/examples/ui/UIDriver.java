@@ -47,7 +47,7 @@ public class UIDriver extends Application<NIDSConfig> {
     private List<String> serviceNames;
     private int normalClassIdx;
 
-    private LinkedBlockingQueue<Tuple3<Long,INDArray,Collection<Writable>>> predictions = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<Tuple3<Long,INDArray,List<Writable>>> predictions = new LinkedBlockingQueue<>();
     private AtomicBoolean shutdown = new AtomicBoolean(false);
 
     //Web targets: for posting results
@@ -140,14 +140,14 @@ public class UIDriver extends Application<NIDSConfig> {
     /** Method for adding a single prediction
      * @param prediction Tuple3 containing: Example number, INDArray of predictions (classification probability distribution), original writables for display
      */
-    public void addPrediction(Tuple3<Long,INDArray,Collection<Writable>> prediction){
+    public void addPrediction(Tuple3<Long,INDArray,List<Writable>> prediction){
         this.predictions.add(prediction);
     }
 
     /** Mthod for adding a multiple predictions
      * @param predictions Tuple3s containing: Example number, INDArray of predictions (classification probability distribution), original writables for display
      */
-    public void addPredictions(List<Tuple3<Long,INDArray,Collection<Writable>>> predictions){
+    public void addPredictions(List<Tuple3<Long,INDArray,List<Writable>>> predictions){
         this.predictions.addAll(predictions);
     }
 
@@ -164,7 +164,7 @@ public class UIDriver extends Application<NIDSConfig> {
         private long lastUpdateTime = 0;
         private LinkedList<Pair<Long,Double>> connectionRateHistory = new LinkedList<>();
         private LinkedList<Pair<Long,Double>> byteRateHistory = new LinkedList<>();
-        private LinkedList<Tuple3<Long,INDArray,Collection<Writable>>> lastAttacks = new LinkedList<>();
+        private LinkedList<Tuple3<Long,INDArray,List<Writable>>> lastAttacks = new LinkedList<>();
 
         //Keep a small history here, to smooth out the instantaneous rate calculations (i.e., delta(connections_now - connections_t-3)) etc
         private LinkedList<Long> flowCountHistory = new LinkedList<>();
@@ -192,7 +192,7 @@ public class UIDriver extends Application<NIDSConfig> {
                 serviceNamesHistory.put(s,list);
             }
 
-            List<Tuple3<Long,INDArray,Collection<Writable>>> list = new ArrayList<>(100);
+            List<Tuple3<Long,INDArray,List<Writable>>> list = new ArrayList<>(100);
             while(!shutdown.get()){
 
                 try{
@@ -209,8 +209,8 @@ public class UIDriver extends Application<NIDSConfig> {
                 int serviceCol = (columnsMap.containsKey("service") ? columnsMap.get("service") : -1);
 
                 Map<String,Integer> serviceCounts = new HashMap<>();
-                for(Tuple3<Long,INDArray,Collection<Writable>> t3 : list){
-                    Collection<Writable> c = t3._3();
+                for(Tuple3<Long,INDArray,List<Writable>> t3 : list){
+                    List<Writable> c = t3._3();
                     List<Writable> listWritables = (c instanceof List ? ((List<Writable>)c) : new ArrayList<>(c));
 
                     //Post the details to the web server:
@@ -346,7 +346,7 @@ public class UIDriver extends Application<NIDSConfig> {
 
                 String[][] table = new String[lastAttacks.size()][5];
                 int j=0;
-                for(Tuple3<Long,INDArray,Collection<Writable>> t3 : lastAttacks ){
+                for(Tuple3<Long,INDArray,List<Writable>> t3 : lastAttacks ){
                     List<Writable> l = (t3._3() instanceof List ? ((List<Writable>)t3._3()) : new ArrayList<>(t3._3()));
                     float[] probs = t3._2().data().asFloat();
                     int maxIdx = 0;

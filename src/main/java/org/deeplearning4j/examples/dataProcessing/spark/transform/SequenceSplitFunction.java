@@ -6,17 +6,18 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceSplit;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Alex on 17/03/2016.
  */
 @AllArgsConstructor
-public class SequenceSplitFunction implements FlatMapFunction<Collection<Collection<Writable>>,Collection<Collection<Writable>>>{
+public class SequenceSplitFunction implements FlatMapFunction<List<List<Writable>>,List<List<Writable>>>{
 
     private final SequenceSplit split;
 
     @Override
-    public Iterable<Collection<Collection<Writable>>> call(Collection<Collection<Writable>> collections) throws Exception {
+    public Iterable<List<List<Writable>>> call(List<List<Writable>> collections) throws Exception {
         return split.split(collections);
     }
 }

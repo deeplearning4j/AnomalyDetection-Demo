@@ -61,10 +61,10 @@ public class PreprocessingNB15 {
 
         JavaRDD<String> rawData = sc.textFile(PATH.IN_DIR);
 
-        JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
+        JavaRDD<List<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<Collection<Writable>> processedData = executor.execute(data, seq);
+        JavaRDD<List<Writable>> processedData = executor.execute(data, seq);
         processedData.cache();
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
@@ -74,15 +74,15 @@ public class PreprocessingNB15 {
         DataAnalysis da = AnalyzeSpark.analyze(preprocessedSchema, processedData);
 
         //Do train/test split:
-        List<JavaRDD<Collection<Writable>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData, RNG_SEED);
-        JavaRDD<Collection<Writable>> trainData = allData.get(0);
-        JavaRDD<Collection<Writable>> testData = allData.get(1);
+        List<JavaRDD<List<Writable>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData, RNG_SEED);
+        JavaRDD<List<Writable>> trainData = allData.get(0);
+        JavaRDD<List<Writable>> testData = allData.get(1);
 
         DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
-        Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<List<Writable>>> trainDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<List<Writable>>> testDataNormalized = normalize(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
         trainDataNormalized.getThird().cache();
@@ -136,8 +136,8 @@ public class PreprocessingNB15 {
         Histograms.exportPlots(normSchema, trainDataAnalyis, PATH.CHART_DIR_NORM);
     }
 
-    public static Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>>
-                normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input, SparkTransformExecutor executor) {
+    public static Triple<TransformProcess, Schema, JavaRDD<List<Writable>>>
+                normalize(Schema schema, DataAnalysis da, JavaRDD<List<Writable>> input, SparkTransformExecutor executor) {
         TransformProcess norm = new TransformProcess.Builder(schema)
                 .normalize("source port", Normalize.MinMax, da)
                 .normalize("destination port", Normalize.MinMax, da)
@@ -183,7 +183,7 @@ public class PreprocessingNB15 {
                 .build();
 
         Schema normSchema = norm.getFinalSchema();
-        JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
+        JavaRDD<List<Writable>> normalizedData = executor.execute(input, norm);
         return new Triple<>(norm, normSchema, normalizedData);
     }
 

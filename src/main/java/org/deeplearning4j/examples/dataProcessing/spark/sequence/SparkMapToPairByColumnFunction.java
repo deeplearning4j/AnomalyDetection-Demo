@@ -7,17 +7,20 @@ import org.canova.api.writable.Writable;
 import scala.Tuple2;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
- * Created by Alex on 11/03/2016.
+ * Spark function to map a n example to a pair, by using one of the columns as the key.
+ *
+ * @author Alex Black
  */
 @AllArgsConstructor
-public class SparkMapToPairByColumnFunction implements PairFunction<Collection<Writable>,Writable,Collection<Writable>> {
+public class SparkMapToPairByColumnFunction implements PairFunction<List<Writable>,Writable,List<Writable>> {
 
     private final int keyColumnIdx;
 
     @Override
-    public Tuple2<Writable, Collection<Writable>> call(Collection<Writable> writables) throws Exception {
-        return new Tuple2<>((Writable)CollectionUtils.get(writables,keyColumnIdx),writables);
+    public Tuple2<Writable, List<Writable>> call(List<Writable> writables) throws Exception {
+        return new Tuple2<>(writables.get(keyColumnIdx),writables);
     }
 }

@@ -15,6 +15,7 @@ import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;
 import org.nd4j.linalg.dataset.DataSet;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -57,13 +58,13 @@ public class SparkNIDS extends NIDSMain {
     }
 
 
-    protected JavaRDD<DataSet> loadData(JavaSparkContext sc, String dataPath) {
-        JavaRDD<String> rawStrings = sc.textFile(dataPath);
-        JavaRDD<Collection<Writable>> rdd = rawStrings.map(new StringToWritablesFunction(new CSVRecordReader(0,",")));
-        JavaRDD<DataSet> ds = rdd.map(new CanovaDataSetFunction(labelIdx, nOut, false));
-        ds.persist(StorageLevel.MEMORY_ONLY());
-        return ds;
-    }
+//    protected JavaRDD<DataSet> loadData(JavaSparkContext sc, String dataPath) {
+//        JavaRDD<String> rawStrings = sc.textFile(dataPath);
+//        JavaRDD<List<Writable>> rdd = rawStrings.map(new StringToWritablesFunction(new CSVRecordReader(0,",")));
+//        JavaRDD<DataSet> ds = rdd.map(new CanovaDataSetFunction(labelIdx, nOut, false));
+//        ds.persist(StorageLevel.MEMORY_ONLY());
+//        return ds;
+//    }
 
     protected MultiLayerNetwork trainModel(SparkDl4jMultiLayer model, JavaRDD<DataSet> data){
         System.out.println("Train model...");

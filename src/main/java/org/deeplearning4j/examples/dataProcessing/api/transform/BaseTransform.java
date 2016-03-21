@@ -8,8 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Created by Alex on 5/03/2016.
+/**BaseTransform: an abstact transform class, that handles transforming sequences by transforming each example individally
+ *
+ * @author Alex Black
  */
 public abstract class BaseTransform implements Transform {
 
@@ -21,10 +22,10 @@ public abstract class BaseTransform implements Transform {
     }
 
     @Override
-    public Collection<Collection<Writable>> mapSequence(Collection<Collection<Writable>> sequence){
+    public List<List<Writable>> mapSequence(List<List<Writable>> sequence){
 
-        List<Collection<Writable>> out = new ArrayList<>(sequence.size());
-        for(Collection<Writable> c : sequence){
+        List<List<Writable>> out = new ArrayList<>(sequence.size());
+        for(List<Writable> c : sequence){
             out.add(map(c));
         }
         return out;

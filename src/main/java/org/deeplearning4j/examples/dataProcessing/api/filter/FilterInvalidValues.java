@@ -5,7 +5,6 @@ import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.deeplearning4j.examples.dataProcessing.api.metadata.ColumnMetaData;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -38,20 +37,18 @@ public class FilterInvalidValues implements Filter {
     }
 
     @Override
-    public boolean removeExample(Collection<Writable> writables) {
-        List<Writable> list = (writables instanceof List ? ((List<Writable>) writables) : new ArrayList<>(writables));
-
+    public boolean removeExample(List<Writable> writables) {
         for (int i : columnIdxs) {
             ColumnMetaData meta = schema.getMetaData(i);
-            if (!meta.isValid(list.get(i))) return true; //Remove if not valid
+            if (!meta.isValid(writables.get(i))) return true; //Remove if not valid
         }
         return false;
     }
 
     @Override
-    public boolean removeSequence(Collection<Collection<Writable>> sequence) {
+    public boolean removeSequence(List<List<Writable>> sequence) {
         //If _any_ of the values are invalid, remove the entire sequence
-        for (Collection<Writable> c : sequence) {
+        for (List<Writable> c : sequence) {
             if (removeExample(c)) return true;
         }
         return false;

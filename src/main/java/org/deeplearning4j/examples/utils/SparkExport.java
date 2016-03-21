@@ -17,7 +17,7 @@ import java.util.*;
 public class SparkExport {
 
     //Quick and dirty CSV export (using Spark). Eventually, rework this to use Canova record writers on Spark
-    public static void exportCSVSpark(String directory, String delimiter, int outputSplits, JavaRDD<Collection<Writable>> data) {
+    public static void exportCSVSpark(String directory, String delimiter, int outputSplits, JavaRDD<List<Writable>> data) {
 
         //NOTE: Order is probably not random here...
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
@@ -27,7 +27,7 @@ public class SparkExport {
     }
 
     //Another quick and dirty CSV export (local). Dumps all values into a single file
-    public static void exportCSVLocal(File outputFile, String delimiter, JavaRDD<Collection<Writable>> data, int rngSeed) throws Exception {
+    public static void exportCSVLocal(File outputFile, String delimiter, JavaRDD<List<Writable>> data, int rngSeed) throws Exception {
 
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
         List<String> linesList = lines.collect();   //Requires all data in memory
@@ -39,7 +39,7 @@ public class SparkExport {
 
     //Another quick and dirty CSV export (local). Dumps all values into multiple files (specified number of files)
     public static void exportCSVLocal(String outputDir, String baseFileName, int numFiles, String delimiter,
-                                      JavaRDD<Collection<Writable>> data, int rngSeed) throws Exception {
+                                      JavaRDD<List<Writable>> data, int rngSeed) throws Exception {
 
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
         double[] split = new double[numFiles];
@@ -59,7 +59,7 @@ public class SparkExport {
 
     // No shuffling
     public static void exportCSVLocal(String outputDir, String baseFileName, int numFiles, String delimiter,
-                                      JavaRDD<Collection<Writable>> data) throws Exception {
+                                      JavaRDD<List<Writable>> data) throws Exception {
 
         JavaRDD<String> lines = data.map(new ToStringFunction(delimiter));
         double[] split = new double[numFiles];
@@ -76,12 +76,12 @@ public class SparkExport {
     }
 
     @AllArgsConstructor
-    private static class ToStringFunction implements Function<Collection<Writable>,String> {
+    private static class ToStringFunction implements Function<List<Writable>,String> {
 
         private final String delim;
 
         @Override
-        public String call(Collection<Writable> c) throws Exception {
+        public String call(List<Writable> c) throws Exception {
 
             StringBuilder sb = new StringBuilder();
             boolean first = true;
@@ -96,16 +96,16 @@ public class SparkExport {
     }
 
     @AllArgsConstructor
-    private static class SequenceToStringFunction implements Function<Collection<Collection<Writable>>,String> {
+    private static class SequenceToStringFunction implements Function<List<List<Writable>>,String> {
 
         private final String delim;
 
         @Override
-        public String call(Collection<Collection<Writable>> sequence) throws Exception {
+        public String call(List<List<Writable>> sequence) throws Exception {
 
             StringBuilder sb = new StringBuilder();
             boolean firstTimeStep = true;
-            for(Collection<Writable> c : sequence ) {
+            for(List<Writable> c : sequence ) {
                 if(!firstTimeStep) sb.append("\n");
                 boolean first = true;
                 for (Writable w : c) {
@@ -132,7 +132,7 @@ public class SparkExport {
     }
 
     //Quick and dirty CSV export: one file per sequence, with shuffling of the order of sequences
-    public static void exportCSVSequenceLocal(File baseDir, JavaRDD<Collection<Collection<Writable>>> sequences, long seed ) throws Exception {
+    public static void exportCSVSequenceLocal(File baseDir, JavaRDD<List<List<Writable>>> sequences, long seed ) throws Exception {
         baseDir.mkdirs();
         if(!baseDir.isDirectory()) throw new IllegalArgumentException("File is not a directory: " + baseDir.toString());
         String baseDirStr = baseDir.toString();

@@ -4,7 +4,7 @@ import org.canova.api.io.data.IntWritable;
 import org.canova.api.writable.Writable;
 
 /**
- * Created by Alex on 6/03/2016.
+ * Replace an invalid (non-integer) value in a column with a specified integer
  */
 public class ReplaceInvalidWithIntegerTransform extends BaseIntegerTransform {
 

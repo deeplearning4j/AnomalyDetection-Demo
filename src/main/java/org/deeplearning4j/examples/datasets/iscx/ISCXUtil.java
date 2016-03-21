@@ -85,22 +85,22 @@ public class ISCXUtil {
     }
 
 
-    public static Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>>
-    normalize(Schema schema, DataAnalysis da, JavaRDD<Collection<Writable>> input, SparkTransformExecutor executor) {
+    public static Triple<TransformProcess, Schema, JavaRDD<List<Writable>>>
+    normalize(Schema schema, DataAnalysis da, JavaRDD<List<Writable>> input, SparkTransformExecutor executor) {
 
         TransformProcess norm = getNormalizerSequence(schema,da);
         Schema normSchema = norm.getFinalSchema();
-        JavaRDD<Collection<Writable>> normalizedData = executor.execute(input, norm);
+        JavaRDD<List<Writable>> normalizedData = executor.execute(input, norm);
         return new Triple<>(norm, normSchema, normalizedData);
     }
 
 
-    public static Triple<TransformProcess, Schema, JavaRDD<Collection<Collection<Writable>>>>
-    normalizeSequence(Schema schema, DataAnalysis da, JavaRDD<Collection<Collection<Writable>>> input, SparkTransformExecutor executor) {
+    public static Triple<TransformProcess, Schema, JavaRDD<List<List<Writable>>>>
+    normalizeSequence(Schema schema, DataAnalysis da, JavaRDD<List<List<Writable>>> input, SparkTransformExecutor executor) {
 
         TransformProcess norm = getNormalizerSequence(schema,da);
         Schema normSchema = norm.getFinalSchema();
-        JavaRDD<Collection<Collection<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
+        JavaRDD<List<List<Writable>>> normalizedData = executor.executeSequenceToSequence(input, norm);
         return new Triple<>(norm, normSchema, normalizedData);
     }
 

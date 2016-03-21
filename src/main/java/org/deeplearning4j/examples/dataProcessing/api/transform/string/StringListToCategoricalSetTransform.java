@@ -11,7 +11,11 @@ import org.deeplearning4j.examples.dataProcessing.api.transform.BaseTransform;
 import java.util.*;
 
 /**
- * Created by Alex on 9/03/2016.
+ * Convert a delimited String to a list of binary categorical columns.
+ * Suppose the possible String values were {"a","b","c","d"} and the String column value to be converted contained
+ * the String "a,c", then the 4 output columns would have values ["true","false","true","false"]
+ *
+ * @author Alex Black
  */
 public class StringListToCategoricalSetTransform extends BaseTransform {
 
@@ -24,7 +28,14 @@ public class StringListToCategoricalSetTransform extends BaseTransform {
 
     private int columIdx = -1;
 
-
+    /**
+     *
+     * @param columnName The name of the column to convert
+     * @param newColumnNames The names of the new columns to create
+     * @param categoryTokens The possible tokens that may be present. Note this list must have the same length and order
+     *                       as the newColumnNames list
+     * @param delim The delimiter for the Strings to convert
+     */
     public StringListToCategoricalSetTransform(String columnName, List<String> newColumnNames, List<String> categoryTokens,
                                                String delim) {
         if(newColumnNames.size() !=  categoryTokens.size()) throw new IllegalArgumentException("Names/tokens sizes cannot differ");
@@ -82,7 +93,7 @@ public class StringListToCategoricalSetTransform extends BaseTransform {
     }
 
     @Override
-    public Collection<Writable> map(Collection<Writable> writables) {
+    public List<Writable> map(List<Writable> writables) {
         int n = writables.size();
         List<Writable> out = new ArrayList<>(n);
 

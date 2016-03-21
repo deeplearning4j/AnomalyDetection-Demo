@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**FromRawCsvReceiver: goes from raw test data -> preprocessed -> normalized -> INDArray
  * Idea is to keep the raw data around so we can eventually plot it in the UI
  */
-public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,Collection<Writable>>> {
+public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,List<Writable>>> {
 
     private static final Logger log = LoggerFactory.getLogger(FromRawCsvReceiver.class);
 
@@ -91,15 +91,16 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,Collection
 
                         //Load the raw data:
                         Collection<Writable> raw = rr.next();
+                        List<Writable> rawList = (raw instanceof List ? ((List<Writable>)raw) : new ArrayList<>(raw));
 
                         //Do preprocessing, then normalization:
-                        Collection<Writable> preproc = preprocess.execute(raw);
+                        List<Writable> preproc = preprocess.execute(rawList);
                         if(preproc == null) continue;   //may be null if filtered
-                        Collection<Writable> norm = normalizer.execute(preproc);
+                        List<Writable> norm = normalizer.execute(preproc);
 
                         DataSet ds = getDataSet(norm);
 
-                        Tuple3<Long,INDArray,Collection<Writable>> out = new Tuple3<>(exampleNum,ds.getFeatures(),raw);
+                        Tuple3<Long,INDArray,List<Writable>> out = new Tuple3<>(exampleNum,ds.getFeatures(),rawList);
                         store(out);
                     }
                     long end = System.currentTimeMillis();
@@ -132,12 +133,7 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,Collection
 
 
     //Method taken from RecordReaderDataSetIterator
-    private DataSet getDataSet(Collection<Writable> record) {
-        List<Writable> currList;
-        if (record instanceof List)
-            currList = (List<Writable>) record;
-        else
-            currList = new ArrayList<>(record);
+    private DataSet getDataSet(List<Writable> record) {
 
 //        //allow people to specify label index as -1 and infer the last possible label
 //        if (numPossibleLabels >= 1 && labelIndex < 0) {
@@ -145,10 +141,10 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,Collection
 //        }
 
         INDArray label = null;
-        INDArray featureVector = Nd4j.create(labelIndex >= 0 ? currList.size()-1 : currList.size());
+        INDArray featureVector = Nd4j.create(labelIndex >= 0 ? record.size()-1 : record.size());
         int featureCount = 0;
-        for (int j = 0; j < currList.size(); j++) {
-            Writable current = currList.get(j);
+        for (int j = 0; j < record.size(); j++) {
+            Writable current = record.get(j);
             if (current.toString().isEmpty())
                 continue;
             if (labelIndex >= 0 && j == labelIndex) {

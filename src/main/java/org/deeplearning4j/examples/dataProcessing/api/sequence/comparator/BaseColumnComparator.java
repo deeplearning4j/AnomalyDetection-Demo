@@ -1,11 +1,9 @@
 package org.deeplearning4j.examples.dataProcessing.api.sequence.comparator;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.schema.SequenceSchema;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceComparator;
 
-import java.util.Collection;
 import java.util.List;
 
 /**Compare/sort a sequence by the values of a specific column
@@ -29,13 +27,12 @@ public abstract class BaseColumnComparator implements SequenceComparator {
     }
 
     @Override
-    public int compare(Collection<Writable> o1, Collection<Writable> o2) {
+    public int compare(List<Writable> o1, List<Writable> o2) {
         return compare(get(o1,columnIdx),get(o2,columnIdx));
     }
 
-    private static Writable get(Collection<Writable> c, int idx){
-        if(c instanceof List) return ((List<Writable>)c).get(idx);
-        return (Writable)CollectionUtils.get(c,idx);
+    private static Writable get(List<Writable> c, int idx){
+        return c.get(idx);
     }
 
     protected abstract int compare(Writable w1, Writable w2);

@@ -12,6 +12,7 @@ import org.deeplearning4j.examples.dataProcessing.api.dataquality.DataQualityAna
 import org.deeplearning4j.examples.dataProcessing.spark.misc.StringToWritablesFunction;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Alex on 4/03/2016.
@@ -32,7 +33,7 @@ public class AnalysisISCX {
 
         JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
 
-        JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
+        JavaRDD<List<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis

@@ -54,7 +54,7 @@ public abstract class BaseColumnTransform extends BaseTransform {
     public abstract ColumnMetaData getNewColumnMetaData(ColumnMetaData oldColumnType);
 
     @Override
-    public Collection<Writable> map(Collection<Writable> writables) {
+    public List<Writable> map(List<Writable> writables) {
         int n = writables.size();
         List<Writable> out = new ArrayList<>(n);
 

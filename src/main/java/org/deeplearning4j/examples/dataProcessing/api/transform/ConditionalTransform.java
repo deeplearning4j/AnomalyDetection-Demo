@@ -44,7 +44,7 @@ public class ConditionalTransform extends BaseTransform {
     }
 
     @Override
-    public Collection<Writable> map(Collection<Writable> writables) {
+    public List<Writable> map(List<Writable> writables) {
         List<Writable> out = new ArrayList<>(writables);
 
         int idx = inputSchema.getIndexOfColumn(column);

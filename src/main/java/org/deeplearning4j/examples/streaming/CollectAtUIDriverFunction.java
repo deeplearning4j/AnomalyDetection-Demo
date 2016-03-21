@@ -18,13 +18,13 @@ import java.util.List;
  * Created by Alex on 14/03/2016.
  */
 @NoArgsConstructor
-public class CollectAtUIDriverFunction implements Function2<JavaRDD<Tuple3<Long, INDArray, Collection<Writable>>>,Time,Void> {
+public class CollectAtUIDriverFunction implements Function2<JavaRDD<Tuple3<Long, INDArray, List<Writable>>>,Time,Void> {
 
     @Override
-    public Void call(JavaRDD<Tuple3<Long, INDArray, Collection<Writable>>> v1, Time time) throws Exception {
+    public Void call(JavaRDD<Tuple3<Long, INDArray, List<Writable>>> v1, Time time) throws Exception {
         UIDriver uiDriver = UIDriver.getInstance();
 
-        List<Tuple3<Long, INDArray, Collection<Writable>>> list = v1.collect();
+        List<Tuple3<Long, INDArray, List<Writable>>> list = v1.collect();
 
 //        System.out.println("*** " + time + " - " + list);
         uiDriver.addPredictions(list);

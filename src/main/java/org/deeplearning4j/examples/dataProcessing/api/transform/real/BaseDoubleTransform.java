@@ -10,10 +10,9 @@ import org.deeplearning4j.examples.dataProcessing.api.transform.BaseColumnTransf
 /**
  *
  */
-
 @EqualsAndHashCode(callSuper = true)
 @Data
-public abstract class BaseDoubleTransform extends BaseColumnTransform {   //implements Transform {
+public abstract class BaseDoubleTransform extends BaseColumnTransform {
 
     public BaseDoubleTransform(String column){
         super(column);
@@ -23,7 +22,6 @@ public abstract class BaseDoubleTransform extends BaseColumnTransform {   //impl
 
     @Override
     public ColumnMetaData getNewColumnMetaData(ColumnMetaData oldColumnMeta){
-//        return oldColumnMeta;
         if(oldColumnMeta instanceof DoubleMetaData) return oldColumnMeta;
         else return new DoubleMetaData();
     }

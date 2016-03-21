@@ -52,13 +52,13 @@ public class AnalyzeSpark {
 
     public static final int DEFAULT_HISTOGRAM_BUCKETS = 30;
 
-    public static SequenceDataAnalysis analyzeSequence(Schema schema, JavaRDD<Collection<Collection<Writable>>> data) {
+    public static SequenceDataAnalysis analyzeSequence(Schema schema, JavaRDD<List<List<Writable>>> data) {
         return analyzeSequence(schema,data,DEFAULT_HISTOGRAM_BUCKETS);
     }
 
-    public static SequenceDataAnalysis analyzeSequence(Schema schema, JavaRDD<Collection<Collection<Writable>>> data, int maxHistogramBuckets) {
+    public static SequenceDataAnalysis analyzeSequence(Schema schema, JavaRDD<List<List<Writable>>> data, int maxHistogramBuckets) {
         data.cache();
-        JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
+        JavaRDD<List<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
         DataAnalysis da = analyze(schema, fmSeq);
         //Analyze the length of the sequences:
         JavaRDD<Integer> seqLengths = data.map(new SequenceLengthFunction());
@@ -99,11 +99,11 @@ public class AnalyzeSpark {
     }
 
 
-    public static DataAnalysis analyze(Schema schema, JavaRDD<Collection<Writable>> data) {
+    public static DataAnalysis analyze(Schema schema, JavaRDD<List<Writable>> data) {
         return analyze(schema,data,DEFAULT_HISTOGRAM_BUCKETS);
     }
 
-    public static DataAnalysis analyze(Schema schema, JavaRDD<Collection<Writable>> data, int maxHistogramBuckets) {
+    public static DataAnalysis analyze(Schema schema, JavaRDD<List<Writable>> data, int maxHistogramBuckets) {
 
         data.cache();
 
@@ -297,7 +297,7 @@ public class AnalyzeSpark {
         return new DataAnalysis(schema,list);
     }
 
-    public static List<Writable> sampleFromColumn(int count, String columnName, Schema schema, JavaRDD<Collection<Writable>> data){
+    public static List<Writable> sampleFromColumn(int count, String columnName, Schema schema, JavaRDD<List<Writable>> data){
 
         int colIdx = schema.getIndexOfColumn(columnName);
         JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(colIdx));
@@ -305,18 +305,18 @@ public class AnalyzeSpark {
         return ithColumn.takeSample(false,count);
     }
 
-    public static List<Writable> getUnique(String columnName, Schema schema, JavaRDD<Collection<Writable>> data){
+    public static List<Writable> getUnique(String columnName, Schema schema, JavaRDD<List<Writable>> data){
         int colIdx = schema.getIndexOfColumn(columnName);
         JavaRDD<Writable> ithColumn = data.map(new SelectColumnFunction(colIdx));
 
         return ithColumn.distinct().collect();
     }
 
-    public static List<Collection<Writable>> sample(int count, JavaRDD<Collection<Writable>> data){
+    public static List<List<Writable>> sample(int count, JavaRDD<List<Writable>> data){
         return data.takeSample(false,count);
     }
 
-    public static List<Collection<Collection<Writable>>> sampleSequence(int count, JavaRDD<Collection<Collection<Writable>>> data ){
+    public static List<List<List<Writable>>> sampleSequence(int count, JavaRDD<List<List<Writable>>> data ){
         return data.takeSample(false,count);
     }
 
@@ -341,7 +341,7 @@ public class AnalyzeSpark {
                 LongQuality initialLong = new LongQuality();
                 return ithColumn.aggregate(initialLong,new LongQualityAddFunction((LongMetaData)meta),new LongQualityMergeFunction());
             case Double:
-                RealQuality initialReal = new RealQuality();
+                DoubleQuality initialReal = new DoubleQuality();
                 return ithColumn.aggregate(initialReal,new RealQualityAddFunction((DoubleMetaData)meta), new RealQualityMergeFunction());
             case Categorical:
                 CategoricalQuality initialCat = new CategoricalQuality();
@@ -355,12 +355,12 @@ public class AnalyzeSpark {
         }
     }
 
-    public static DataQualityAnalysis analyzeQualitySequence(Schema schema, JavaRDD<Collection<Collection<Writable>>> data){
-        JavaRDD<Collection<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
+    public static DataQualityAnalysis analyzeQualitySequence(Schema schema, JavaRDD<List<List<Writable>>> data){
+        JavaRDD<List<Writable>> fmSeq = data.flatMap(new SequenceFlatMapFunction());
         return analyzeQuality(schema, fmSeq);
     }
 
-    public static DataQualityAnalysis analyzeQuality(Schema schema, JavaRDD<Collection<Writable>> data){
+    public static DataQualityAnalysis analyzeQuality(Schema schema, JavaRDD<List<Writable>> data){
 
         data.cache();
         int nColumns = schema.numColumns();
@@ -378,7 +378,7 @@ public class AnalyzeSpark {
     }
 
 
-    public static List<Writable> sampleInvalidColumns(int count, String columnName, Schema schema, JavaRDD<Collection<Writable>> data){
+    public static List<Writable> sampleInvalidColumns(int count, String columnName, Schema schema, JavaRDD<List<Writable>> data){
 
         //First: filter out all valid entries, to leave only invalid entries
 

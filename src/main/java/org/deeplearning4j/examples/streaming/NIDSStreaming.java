@@ -89,11 +89,11 @@ public class NIDSStreaming {
 
         //Register our streaming object for receiving data into the system:
         //FromRawCsvReceiver handles loading raw data, normalization, and conversion of normalized training data to INDArrays
-        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> dataStream = sc.receiverStream(
+        JavaDStream<Tuple3<Long, INDArray, List<Writable>>> dataStream = sc.receiverStream(
                 new FromRawCsvReceiver(PATH.RAW_TEST_FILE, preproc, norm, CSV_LABEL_IDX, CSV_NOUT, GENERATION_RATE));
 
         //Pass each instance through the network:
-        JavaDStream<Tuple3<Long, INDArray, Collection<Writable>>> predictionStream = dataStream.mapPartitions(
+        JavaDStream<Tuple3<Long, INDArray, List<Writable>>> predictionStream = dataStream.mapPartitions(
                 new Predict3Function(sc.sc().broadcast(conf),sc.sc().broadcast(params),64));
 
         //And finally push the predictions to the UI driver so they can be displayed:

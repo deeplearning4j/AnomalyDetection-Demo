@@ -1,7 +1,7 @@
 package org.deeplearning4j.examples.dataProcessing.api;
 
 /**
- * Created by Alex on 4/03/2016.
+ * The type of column.
  */
 public enum ColumnType {
     String,

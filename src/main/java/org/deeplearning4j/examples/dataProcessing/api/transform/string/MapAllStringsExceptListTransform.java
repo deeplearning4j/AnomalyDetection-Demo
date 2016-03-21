@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created by Alex on 6/03/2016.
+ * This method maps all String values, except those is the specified list, to a single String  value
+ *
+ * @author Alex Black
  */
 public class MapAllStringsExceptListTransform extends BaseStringTransform {
 

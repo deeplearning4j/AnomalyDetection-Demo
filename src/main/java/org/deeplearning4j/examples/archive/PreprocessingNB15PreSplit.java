@@ -24,7 +24,6 @@ import org.deeplearning4j.examples.utils.SparkExport;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collection;
 import java.util.List;
 
 /**Preprocessing and normalization for NB15 that does splitting of the raw data as the first step.
@@ -64,10 +63,10 @@ public class PreprocessingNB15PreSplit {
 
         //Now that split is done: do preprocessing and normalization on training data
         JavaRDD<String> rawTrainData = sc.textFile(PATH.RAW_TRAIN_FILE);
-        JavaRDD<Collection<Writable>> writableTrainData = rawTrainData.map(new StringToWritablesFunction(new CSVRecordReader()));
+        JavaRDD<List<Writable>> writableTrainData = rawTrainData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<Collection<Writable>> preprocessedTrainData = executor.execute(writableTrainData, seq);
+        JavaRDD<List<Writable>> preprocessedTrainData = executor.execute(writableTrainData, seq);
         preprocessedTrainData.cache();
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
@@ -78,7 +77,7 @@ public class PreprocessingNB15PreSplit {
         DataAnalysis trainDataAnalysis = AnalyzeSpark.analyze(preprocessedSchema, preprocessedTrainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> trainDataNormalized = NB15Util.normalize(preprocessedSchema, trainDataAnalysis, preprocessedTrainData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<List<Writable>>> trainDataNormalized = NB15Util.normalize(preprocessedSchema, trainDataAnalysis, preprocessedTrainData, executor);
 
         preprocessedTrainData.unpersist();
         trainDataNormalized.getThird().cache();

@@ -21,14 +21,6 @@ public class RemoveColumnsTransform extends BaseTransform {
         this.columnsToRemove = columnsToRemove;
     }
 
-//    public Set<Integer> getIndicesToRemove(){
-//        if(indicesToRemove == null){
-//            indicesToRemove = new HashSet<>();
-//            for( int i : columnsToRemoveIdx) indicesToRemove.add(i);
-//        }
-//        return indicesToRemove;
-//    }
-
     @Override
     public void setInputSchema(Schema schema){
         super.setInputSchema(schema);
@@ -78,7 +70,7 @@ public class RemoveColumnsTransform extends BaseTransform {
     }
 
     @Override
-    public Collection<Writable> map(Collection<Writable> writables) {
+    public List<Writable> map(List<Writable> writables) {
 
         List<Writable> outList = new ArrayList<>(writables.size()-columnsToRemove.length);
 

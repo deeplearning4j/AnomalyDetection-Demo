@@ -9,18 +9,21 @@ import scala.Tuple2;
 import java.util.*;
 
 /**
- * Created by Alex on 11/03/2016.
+ * Spark function for grouping independent values/examples into a sequence, and then sorting them
+ * using a provided {@link SequenceComparator}
+ *
+ * @author Alex Black
  */
 @AllArgsConstructor
-public class SparkGroupToSequenceFunction implements Function<Tuple2<Writable,Iterable<Collection<Writable>>>,Collection<Collection<Writable>>> {
+public class SparkGroupToSequenceFunction implements Function<Tuple2<Writable,Iterable<List<Writable>>>,List<List<Writable>>> {
 
     private final SequenceComparator comparator;
 
     @Override
-    public Collection<Collection<Writable>> call(Tuple2<Writable, Iterable<Collection<Writable>>> tuple) throws Exception {
+    public List<List<Writable>> call(Tuple2<Writable, Iterable<List<Writable>>> tuple) throws Exception {
 
-        List<Collection<Writable>> list = new ArrayList<>();
-        for (Collection<Writable> writables : tuple._2()) list.add(writables);
+        List<List<Writable>> list = new ArrayList<>();
+        for (List<Writable> writables : tuple._2()) list.add(writables);
 
         Collections.sort(list,comparator);
 

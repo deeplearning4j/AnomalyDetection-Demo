@@ -28,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**Preprocessing and normalization for NB15 that does splitting of the raw data as the first step.
@@ -63,8 +62,8 @@ public class PreprocessingPreSplit {
 
         JavaSparkContext sc = setupSparkContext();
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<Collection<Writable>> preprocessedData;
-        Triple<TransformProcess, Schema, JavaRDD<Collection<Writable>>> dataNormalized = null;
+        JavaRDD<List<Writable>> preprocessedData;
+        Triple<TransformProcess, Schema, JavaRDD<List<Writable>>> dataNormalized = null;
 
         if (rawSplit) {
             // TODO call rawSplit file to setup
@@ -72,7 +71,7 @@ public class PreprocessingPreSplit {
             for (String inputPath : inputDir) {
 
                 JavaRDD<String> rawTrainData = sc.textFile(inputPath);
-                JavaRDD<Collection<Writable>> writableData = rawTrainData.map(new StringToWritablesFunction(new CSVRecordReader()));
+                JavaRDD<List<Writable>> writableData = rawTrainData.map(new StringToWritablesFunction(new CSVRecordReader()));
                 preprocessedData = executor.execute(writableData, transformProcess);
                 preprocessedData.cache();
 
@@ -163,7 +162,7 @@ public class PreprocessingPreSplit {
         SparkExport.exportStringLocal(new File(path.PRE_TEST_DATA_DIR), split.get(1), 12345);
     }
 
-    public static void runAnalysis(Schema schema, JavaRDD<Collection<Writable>> data) {
+    public static void runAnalysis(Schema schema, JavaRDD<List<Writable>> data) {
         //Analyze the quality of the columns (missing values, etc), on a per column basis
         dqa = AnalyzeSpark.analyzeQuality(schema, data);
 

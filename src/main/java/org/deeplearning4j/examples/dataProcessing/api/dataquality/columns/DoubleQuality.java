@@ -8,18 +8,18 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class RealQuality extends ColumnQuality {
+public class DoubleQuality extends ColumnQuality {
 
     private final long countNonReal;
     private final long countNaN;
     private final long countInfinite;
 
-    public RealQuality(){
+    public DoubleQuality(){
         this(0,0,0,0,0,0,0);
     }
 
-    public RealQuality(long countValid, long countInvalid, long countMissing, long countTotal, long countNonReal,
-                          long countNaN, long countInfinite){
+    public DoubleQuality(long countValid, long countInvalid, long countMissing, long countTotal, long countNonReal,
+                         long countNaN, long countInfinite){
         super(countValid,countInvalid,countMissing,countTotal);
         this.countNonReal = countNonReal;
         this.countNaN = countNaN;
@@ -27,8 +27,8 @@ public class RealQuality extends ColumnQuality {
     }
 
 
-    public RealQuality add(RealQuality other){
-        return new RealQuality(
+    public DoubleQuality add(DoubleQuality other){
+        return new DoubleQuality(
                 countValid + other.countValid,
                 countInvalid + other.countInvalid,
                 countMissing + other.countMissing,
@@ -40,7 +40,7 @@ public class RealQuality extends ColumnQuality {
 
     @Override
     public String toString(){
-        return "RealQuality(" + super.toString() + ", countNonReal=" + countNonReal + ", countNaN="
+        return "DoubleQuality(" + super.toString() + ", countNonReal=" + countNonReal + ", countNaN="
                 + countNaN + ", countInfinite=" + countInfinite + ")";
     }
 

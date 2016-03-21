@@ -11,7 +11,7 @@ import org.deeplearning4j.examples.dataProcessing.api.dataquality.DataQualityAna
 import org.deeplearning4j.examples.dataProcessing.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.dataProcessing.spark.misc.StringToWritablesFunction;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Alex on 4/03/2016.
@@ -34,7 +34,7 @@ public class AnalysisNB15 {
         String basePath = new ClassPathResource(inputName).getFile().getAbsolutePath();
         JavaRDD<String> rawData = sc.textFile(basePath);
 
-        JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
+        JavaRDD<List<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis

@@ -37,7 +37,6 @@ import org.deeplearning4j.examples.utils.SparkUtils;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -96,10 +95,10 @@ public class PreprocessingNB15Sequence {
 
         JavaRDD<String> rawData = sc.textFile(IN_DIRECTORY);
 
-        JavaRDD<Collection<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
+        JavaRDD<List<Writable>> data = rawData.map(new StringToWritablesFunction(new CSVRecordReader()));
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<Collection<Collection<Writable>>> processedData = executor.executeToSequence(data, seq);
+        JavaRDD<List<List<Writable>>> processedData = executor.executeToSequence(data, seq);
         processedData.cache();
 
         //Analyze the quality of the columns (missing values, etc), on a per column basis
@@ -109,15 +108,15 @@ public class PreprocessingNB15Sequence {
         DataAnalysis da = AnalyzeSpark.analyzeSequence(preprocessedSchema, processedData);
 
         //Do train/test split:
-        List<JavaRDD<Collection<Collection<Writable>>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData, RNG_SEED);
-        JavaRDD<Collection<Collection<Writable>>> trainData = allData.get(0);
-        JavaRDD<Collection<Collection<Writable>>> testData = allData.get(1);
+        List<JavaRDD<List<List<Writable>>>> allData = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), processedData, RNG_SEED);
+        JavaRDD<List<List<Writable>>> trainData = allData.get(0);
+        JavaRDD<List<List<Writable>>> testData = allData.get(1);
 
         DataAnalysis trainDataAnalysis = AnalyzeSpark.analyzeSequence(preprocessedSchema, trainData);
 
         //Same normalization scheme for both. Normalization scheme based only on test data, however
-        Triple<TransformProcess, Schema, JavaRDD<Collection<Collection<Writable>>>> trainDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, trainData, executor);
-        Triple<TransformProcess, Schema, JavaRDD<Collection<Collection<Writable>>>> testDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, testData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<List<List<Writable>>>> trainDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, trainData, executor);
+        Triple<TransformProcess, Schema, JavaRDD<List<List<Writable>>>> testDataNormalized = NB15Util.normalizeSequence(preprocessedSchema, trainDataAnalysis, testData, executor);
 
         processedData.unpersist();
         trainDataNormalized.getThird().cache();

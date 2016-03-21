@@ -9,23 +9,15 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by Alex on 4/03/2016.
+ * Select out the value from a single column
  */
 @AllArgsConstructor
-public class SelectColumnFunction implements Function<Collection<Writable>,Writable> {
+public class SelectColumnFunction implements Function<List<Writable>,Writable> {
 
     private final int column;
 
     @Override
-    public Writable call(Collection<Writable> writables) throws Exception {
-        if(writables instanceof List) return ((List<Writable>)writables).get(column);
-        else {
-            Iterator<Writable> it = writables.iterator();
-            int count = 0;
-            Writable w = null;
-            while(count++ < column) w = it.next();
-            if(w == null) throw new RuntimeException();
-            return w;
-        }
+    public Writable call(List<Writable> writables) throws Exception {
+        return writables.get(column);
     }
 }

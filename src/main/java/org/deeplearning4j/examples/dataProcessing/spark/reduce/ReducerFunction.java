@@ -7,23 +7,23 @@ import org.deeplearning4j.examples.dataProcessing.api.reduce.IReducer;
 import scala.Tuple2;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by Alex on 20/03/2016.
+ * Spark function for executing a reduction of a set of examples by key
+ *
+ * @author Alex Black
  */
 @AllArgsConstructor
-public class ReducerFunction implements Function<Tuple2<String,Iterable<Collection<Writable>>>,Collection<Writable>> {
+public class ReducerFunction implements Function<Tuple2<String,Iterable<List<Writable>>>,List<Writable>> {
 
     private final IReducer reducer;
 
     @Override
-    public Collection<Writable> call(Tuple2<String, Iterable<Collection<Writable>>> t2) throws Exception {
+    public List<Writable> call(Tuple2<String, Iterable<List<Writable>>> t2) throws Exception {
         List<List<Writable>> list = new ArrayList<>();
-        for(Collection<Writable> c : t2._2()){
-            if(c instanceof List) list.add((List<Writable>)c);
-            else list.add(new ArrayList<>(c));
+        for(List<Writable> c : t2._2()){
+            list.add(c);
         }
         return reducer.reduce(list);
     }

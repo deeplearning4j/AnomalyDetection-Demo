@@ -23,7 +23,6 @@ import org.deeplearning4j.examples.dataProcessing.api.transform.real.SubtractMea
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -120,8 +119,8 @@ public class TransformProcess implements Serializable {
      * @param input
      * @return
      */
-    public Collection<Writable> execute(Collection<Writable> input) {
-        Collection<Writable> currValues = input;
+    public List<Writable> execute(List<Writable> input) {
+        List<Writable> currValues = input;
 
         for (DataAction d : actionList) {
             if (d.getTransform() != null) {
@@ -148,7 +147,7 @@ public class TransformProcess implements Serializable {
     /**
      * Execute the full sequence of transformations for a single time series (sequence). May return null if example is filtered
      */
-    public Collection<Collection<Writable>> executeSequence(Collection<Collection<Writable>> inputSequence) {
+    public List<List<Writable>> executeSequence(List<List<Writable>> inputSequence) {
 
 
         throw new UnsupportedOperationException("Not yet implemented");
