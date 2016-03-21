@@ -18,6 +18,8 @@ import org.deeplearning4j.examples.dataProcessing.api.transform.column.RemoveCol
 import org.deeplearning4j.examples.dataProcessing.api.transform.normalize.Normalize;
 import org.deeplearning4j.examples.dataProcessing.api.transform.real.DoubleLog2Normalizer;
 import org.deeplearning4j.examples.dataProcessing.api.transform.real.DoubleMinMaxNormalizer;
+import org.deeplearning4j.examples.dataProcessing.api.transform.real.StandardizeNormalizer;
+import org.deeplearning4j.examples.dataProcessing.api.transform.real.SubtractMeanNormalizer;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -225,10 +227,17 @@ public class TransformProcess implements Serializable {
             double min = nca.getMinDouble();
             double max = nca.getMaxDouble();
             double mean = nca.getMean();
+            double sigma = nca.getSampleStdev();
 
             switch (type) {
                 case MinMax:
                     return transform(new DoubleMinMaxNormalizer(column, min, max));
+                case MinMax2:
+                    return transform(new DoubleMinMaxNormalizer(column,min,max,-1,1));
+                case Standardize:
+                    return transform(new StandardizeNormalizer(column,mean,sigma));
+                case SubtractMean:
+                    return transform(new SubtractMeanNormalizer(column,mean));
                 case Log2Mean:
                     return transform(new DoubleLog2Normalizer(column, mean, min, 0.5));
                 case Log2MeanExcludingMin:

@@ -6,7 +6,6 @@ import org.canova.api.writable.Writable;
 /**
  *
  */
-
 public class DoubleLog2Normalizer extends BaseDoubleTransform {
 
     protected static final double log2 = Math.log(2);
