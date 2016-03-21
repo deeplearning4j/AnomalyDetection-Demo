@@ -101,12 +101,7 @@ public class NIDSStreaming {
             norm = (TransformProcess) ois.readObject();
         }
 
-
-        SparkConf sparkConf = new SparkConf();
-        sparkConf.setMaster("local[*]");
-        sparkConf.setAppName("NB15Streaming");
-        JavaStreamingContext sc = new JavaStreamingContext(sparkConf, Durations.seconds(1));    //Batches: emitted every 1 second
-//        JavaStreamingContext sc = SparkConnectFactory.getStreamingContext(numSec, "NIDSStreaming");
+        JavaStreamingContext sc = SparkConnectFactory.getStreamingContext(numSec, "NIDSStreaming");
 
         //Register our streaming object for receiving data into the system:
         //FromRawCsvReceiver handles loading raw data, normalization, and conversion of normalized training data to INDArrays
