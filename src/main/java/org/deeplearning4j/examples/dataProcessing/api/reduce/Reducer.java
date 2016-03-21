@@ -115,8 +115,9 @@ public class Reducer implements IReducer, Serializable {
 
     @Override
     public List<Writable> reduce(List<List<Writable>> examplesList){
-
         //Go through each writable, and reduce according to whatever strategy is specified
+
+        if(schema == null) throw new IllegalStateException("Error: Schema has not been set");
 
         int nCols = schema.numColumns();
         List<String> colNames = schema.getColumnNames();
@@ -377,6 +378,10 @@ public class Reducer implements IReducer, Serializable {
         /** Reduce the specified columns by counting the number of unique values */
         public Builder countUniqueColumns(String... columns){
             return add(ReduceOp.CountUnique,columns);
+        }
+
+        public Reducer build(){
+            return new Reducer(this);
         }
     }
 

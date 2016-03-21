@@ -33,12 +33,12 @@ public class NSLKDDUtil {
     public static Schema getCsvSchema(){
 
         Schema csvSchema = new Schema.Builder()
-                .addColumnReal("duration")
+                .addColumnDouble("duration")
                 .addColumnCategorical("transaction_protocol", "udp", "tcp", "icmp")
                 .addColumnString("service")
                 .addColumnCategorical("connection_status", "SF", "S0", "REJ", "RSTR", "SH", "RSTO",
                         "S1", "RSTOS0", "S3", "S2", "OTH")
-                .addColumnsReal("src_bytes", "dst_bytes")
+                .addColumnsDouble("src_bytes", "dst_bytes")
                 .addColumnInteger("land")
                 .addColumnsInteger("num_wrong_fragment", "num_urgent",
                         "num_hot", "num_fail_logins", "logged_in",
@@ -46,11 +46,11 @@ public class NSLKDDUtil {
                         "num_root", "num_file_creations", "num_shells",
                         "num_access_files","num_outbound_cmds", "is_host_login","is_guest_login")
                 .addColumnsInteger("dst_count", "srv_count")
-                .addColumnsReal("serror_rate", "srv_serror_rate",
+                .addColumnsDouble("serror_rate", "srv_serror_rate",
                         "rerror_rate", "srv_rerror_rate", "same_srv_rate",
                         "diff_srv_rate", "srv_diff_host_rate")
                 .addColumnsInteger("dst_host_count", "dst_host_srv_count")
-                .addColumnsReal("dst_host_same_srv_rate", "dst_host_diff_srv_rate",
+                .addColumnsDouble("dst_host_same_srv_rate", "dst_host_diff_srv_rate",
                         "dst_host_same_src_port_rate", "dst_host_srv_diff_host_rate",
                         "dst_host_serror_rate", "dst_host_srv_serror_rate",
                         "dst_host_rerror_rate", "dst_host_srv_rerror_rate")

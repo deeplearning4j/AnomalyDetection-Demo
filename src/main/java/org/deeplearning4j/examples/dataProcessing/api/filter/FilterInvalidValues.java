@@ -15,32 +15,52 @@ import java.util.List;
 public class FilterInvalidValues implements Filter {
 
     private Schema schema;
-    private String[] columnsToFilterIfInvalid;
+    private final boolean filterAnyInvalid;
+    private final String[] columnsToFilterIfInvalid;
     private int[] columnIdxs;
+
+    /** Filter examples that have invalid values in ANY column. */
+    public FilterInvalidValues(){
+        filterAnyInvalid = true;
+        columnsToFilterIfInvalid = null;
+    }
 
     /**
      * @param columnsToFilterIfInvalid Columns to check for invalid values
      */
     public FilterInvalidValues(String... columnsToFilterIfInvalid) {
         if (columnsToFilterIfInvalid == null || columnsToFilterIfInvalid.length == 0)
-            throw new IllegalArgumentException("Cannot filter 0/null columns");
+            throw new IllegalArgumentException("Cannot filter 0/null columns: columns to filter on must be specified");
         this.columnsToFilterIfInvalid = columnsToFilterIfInvalid;
+        filterAnyInvalid = false;
     }
 
     @Override
     public void setSchema(Schema schema) {
         this.schema = schema;
-        this.columnIdxs = new int[columnsToFilterIfInvalid.length];
-        for (int i = 0; i < columnsToFilterIfInvalid.length; i++) {
-            this.columnIdxs[i] = schema.getIndexOfColumn(columnsToFilterIfInvalid[i]);
+        if(!filterAnyInvalid) {
+            this.columnIdxs = new int[columnsToFilterIfInvalid.length];
+            for (int i = 0; i < columnsToFilterIfInvalid.length; i++) {
+                this.columnIdxs[i] = schema.getIndexOfColumn(columnsToFilterIfInvalid[i]);
+            }
         }
     }
 
     @Override
     public boolean removeExample(List<Writable> writables) {
-        for (int i : columnIdxs) {
-            ColumnMetaData meta = schema.getMetaData(i);
-            if (!meta.isValid(writables.get(i))) return true; //Remove if not valid
+        if(!filterAnyInvalid) {
+            //Filter only on specific columns
+            for (int i : columnIdxs) {
+                ColumnMetaData meta = schema.getMetaData(i);
+                if (!meta.isValid(writables.get(i))) return true; //Remove if not valid
+            }
+        } else {
+            //Filter or ALL columns
+            int nCols = schema.numColumns();
+            for( int i=0; i<nCols; i++ ){
+                ColumnMetaData meta = schema.getMetaData(i);
+                if (!meta.isValid(writables.get(i))) return true; //Remove if not valid
+            }
         }
         return false;
     }

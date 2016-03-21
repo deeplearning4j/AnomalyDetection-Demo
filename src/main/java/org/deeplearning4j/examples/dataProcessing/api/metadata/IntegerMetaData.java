@@ -1,16 +1,18 @@
 package org.deeplearning4j.examples.dataProcessing.api.metadata;
 
+import lombok.Data;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 
 /**Metadata for an integer column
  * @author Alex Black
  */
+@Data
 public class IntegerMetaData implements ColumnMetaData {
 
     //min/max are nullable: null -> no restriction on min/max values
-    private final Integer min;
-    private final Integer max;
+    private final Integer minAllowedValue;
+    private final Integer maxAllowedValue;
 
     public IntegerMetaData(){
         this(null,null);
@@ -22,8 +24,8 @@ public class IntegerMetaData implements ColumnMetaData {
      * @param max Max allowed value. If null: no restiction on max value in this column
      */
     public IntegerMetaData(Integer min, Integer max){
-        this.min = min;
-        this.max = max;
+        this.minAllowedValue = min;
+        this.maxAllowedValue = max;
     }
 
     @Override
@@ -40,8 +42,8 @@ public class IntegerMetaData implements ColumnMetaData {
             return false;
         }
 
-        if(min != null && value < min) return false;
-        if(max != null && value > max) return false;
+        if(minAllowedValue != null && value < minAllowedValue) return false;
+        if(maxAllowedValue != null && value > maxAllowedValue) return false;
         return true;
     }
 
@@ -49,10 +51,10 @@ public class IntegerMetaData implements ColumnMetaData {
     public String toString(){
         StringBuilder sb = new StringBuilder();
         sb.append("IntegerMetaData(");
-        if(min != null) sb.append("minAllowed=").append(min);
-        if(max != null){
-            if(min != null) sb.append(",");
-            sb.append("maxAllowed=").append(max);
+        if(minAllowedValue != null) sb.append("minAllowed=").append(minAllowedValue);
+        if(maxAllowedValue != null){
+            if(minAllowedValue != null) sb.append(",");
+            sb.append("maxAllowed=").append(maxAllowedValue);
         }
         sb.append(")");
         return sb.toString();
