@@ -37,7 +37,7 @@ public class TrainMLP {
     protected static String dataSet;
     protected static DataPathUtil PATH;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
 
         dataSet = args[0]; //"UNSW_NB15";
         PATH = new DataPathUtil(dataSet);

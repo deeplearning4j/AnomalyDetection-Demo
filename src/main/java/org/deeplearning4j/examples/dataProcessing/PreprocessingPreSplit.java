@@ -58,7 +58,7 @@ public class PreprocessingPreSplit {
     public static List<String> inputDir;
     public static List<String> trainTestDir;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         setup(args[0], false);
 
         JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);

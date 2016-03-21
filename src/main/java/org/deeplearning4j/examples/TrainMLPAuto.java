@@ -7,7 +7,7 @@ public class TrainMLPAuto {
 
 
     public static void main(String... args) throws Exception {
-        
+
         NIDSMain.main(
                 "--dataSet", "NSLKDD",
                 "--modelType", "MLPAuto",

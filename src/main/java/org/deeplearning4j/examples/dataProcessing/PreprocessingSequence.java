@@ -27,7 +27,7 @@ import java.util.List;
 public class PreprocessingSequence extends PreprocessingPreSplit {
 
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         setup(args[0], true);
         JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
 

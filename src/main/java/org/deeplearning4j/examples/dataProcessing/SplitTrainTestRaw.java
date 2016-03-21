@@ -22,7 +22,7 @@ public class SplitTrainTestRaw {
     protected static double FRACTION_TRAIN = 0.75;
     protected static String dataSet;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         dataSet = args[0];
         DataPathUtil PATH = new DataPathUtil(dataSet);
 
