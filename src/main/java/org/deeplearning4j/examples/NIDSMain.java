@@ -41,10 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -59,14 +56,13 @@ import java.util.concurrent.TimeUnit;
  * - Download dataset and store in System.getProperty("user.home"), "data/NIDS/<name of dataset>"
  *      - https://console.aws.amazon.com/s3/home?region=us-west-2#&bucket=anomaly-data&prefix=nids/UNSW/input/
  *      - https://www.unsw.adfa.edu.au/australian-centre-for-cyber-security/cybersecurity/ADFA-NB15-Datasets/
- * - Run SplitTrainTestRaw and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
  * - Run PreprocessingPreSplit and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
  * - Run NIDSMain (or TrainMLP) and pass in values for below and/or update variables below to train and store the model
  * - Run NIDSStreaming to run SparkStreamin and access analysis GUI of streaming results
  *
  * Steps for RNN training:
  * - Download data set as above
- * - Run
+ * - Run ...
  */
 
 public class NIDSMain {
@@ -126,7 +122,6 @@ public class NIDSMain {
     protected int TEST_EVERY_N_EPOCHS = 20;
 
     // TODO setup approach to load models and compare... use Arbiter?
-    // TODO add early stopping
 
     public void run(String[] args) throws Exception {
         // Parse command line arguments if they exist
@@ -164,11 +159,11 @@ public class NIDSMain {
         System.out.println("\nLoad data....");
         boolean rnn = modelType.toLowerCase().equals("rnn");
         MultipleEpochsIterator trainData = loadData(batchSize, PATH, labelIdx, numEpochs, numBatches, nOut, true, rnn);
-        MultipleEpochsIterator testData = loadData(batchSize, PATH, labelIdx, 1, numTestBatches, nOut, false, rnn);
+        MultipleEpochsIterator testData = loadData(testBatchSize, PATH, labelIdx, 1, numTestBatches, nOut, false, rnn);
 
         System.out.println("\nBuild model....");
         buildModel();
-        
+
         System.out.println("Train model....");
 
         if (earlyStop) {
@@ -177,11 +172,12 @@ public class NIDSMain {
             EarlyStoppingResult result = trainer.fit();
             printEarlyStopResults(result);
         } else {
-            network = trainModel(network, trainData, testData);
             if(useHistogram)
                 network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
             else
                 network.setListeners(new ScoreIterationListener(listenerFreq));
+
+            network = trainModel(network, trainData, testData);
 
             System.out.println("\nFinal evaluation....");
             if (supervised) {
@@ -220,7 +216,7 @@ public class NIDSMain {
         switch (modelType) {
             case "MLP":
                 // NSLKDD got .98% with 512, RMSProp & leakyrelu
-                network = new BasicMLPModel(
+                BasicMLPModel mlpmodel = new BasicMLPModel(
                         new int[]{nIn, 256, 256},
                         new int[]{256, 256, nOut},
                         iterations,
@@ -232,15 +228,16 @@ public class NIDSMain {
                         1e-2,
                         1e-5,
                         1,
-                        123
-                ).buildModel();
+                        seed);
+                conf = mlpmodel.conf();
+                network = mlpmodel.buildModel(conf);
                 supervised = true;
                 break;
             case "RNN":
                 // reference: http://sacj.cs.uct.ac.za/index.php/sacj/article/viewFile/248/150
                 // partial config for this and from examples repo
                 // use 1000 epochs
-                network = new BasicRNNModel(
+                BasicRNNModel rnnmodel = new BasicRNNModel(
                         new int[]{nIn, 10, 10},
                         new int[]{10, 10, nOut},
                         iterations,
@@ -252,12 +249,13 @@ public class NIDSMain {
                         5e-3,
                         1e-5,
                         truncatedBPTTLength,
-                        123
-                        ).buildModel();
+                        seed);
+                conf = rnnmodel.conf();
+                network = rnnmodel.buildModel(conf);
                 supervised = true;
                 break;
             case "Denoise":
-                network = new BasicAutoEncoderModel(
+                BasicAutoEncoderModel aemodel = new BasicAutoEncoderModel(
                         new int[]{nIn, 60, 25},
                         new int[]{60, 25, nOut},
                         iterations,
@@ -269,12 +267,13 @@ public class NIDSMain {
                         5e-3,
                         1,
                         0.3,
-                        seed
-                        ).buildModel();
+                        seed);
+                conf = aemodel.conf();
+                network = aemodel.buildModel(conf);
                 supervised = false;
                 break;
             case "MLPAuto":
-                network = new MLPAutoEncoderModel(
+                MLPAutoEncoderModel maemodel = new MLPAutoEncoderModel(
                         new int[]{nIn,50,200,300,200,50},
                         new int[]{50,200,300,200,50,nOut},
                         iterations,
@@ -285,8 +284,9 @@ public class NIDSMain {
                         LossFunctions.LossFunction.MCXENT,
                         1e-3,
                         1,
-                        seed
-                ).buildModel();
+                        seed);
+                conf = maemodel.conf();
+                network = maemodel.buildModel(conf);
                 supervised = false;
                 break;
         }
@@ -368,16 +368,25 @@ public class NIDSMain {
         System.out.println("\n============================Time========================================");
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
+        // Save config
         try {
             FileUtils.writeStringToFile(new File(PATH.NETWORK_CONFIG_FILE), net.conf().toJson());
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // Save params
         try(DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(PATH.NETWORK_PARAMS_FILE)))){
             Nd4j.write(net.params(),dos);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // Save Updater
+        try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(PATH.NETWORK_UPDATER_FILE)))){
+            oos.writeObject(net.getUpdater());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
     }
 

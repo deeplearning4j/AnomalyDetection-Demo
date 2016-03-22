@@ -83,7 +83,10 @@ public class BasicAutoEncoderModel {
     }
 
     public MultiLayerNetwork buildModel() {
-        MultiLayerConfiguration conf = conf();
+        return buildModel(conf());
+    }
+
+    public MultiLayerNetwork buildModel(MultiLayerConfiguration conf) {
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();
         return network;

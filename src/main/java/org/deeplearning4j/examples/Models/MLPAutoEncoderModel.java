@@ -79,8 +79,10 @@ public class MLPAutoEncoderModel {
     }
 
     public MultiLayerNetwork buildModel() {
-        MultiLayerConfiguration conf = conf();
+        return buildModel(conf());
+    }
 
+    public MultiLayerNetwork buildModel(MultiLayerConfiguration conf) {
         MultiLayerNetwork net = new MultiLayerNetwork(conf);
         net.init();
         return net;

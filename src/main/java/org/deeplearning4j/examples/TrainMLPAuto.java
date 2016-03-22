@@ -6,18 +6,21 @@ package org.deeplearning4j.examples;
 public class TrainMLPAuto {
 
 
-    public static void main(String... args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
         NIDSMain.main(
                 "--dataSet", "NSLKDD",
                 "--modelType", "MLPAuto",
                 "--batchSize", "128",
                 "--numBatches", "20",
+                "--numTestBatches", "10",
                 "--numEpochs", "2",
                 "--iterations", "1",
                 "--nIn", "112",
                 "--nOut", "40",
-                "--useHistogramListener"
+//                "--earlyStop",
+                "--useHistogramListener",
+                "--saveModel"
         );
     }
 }

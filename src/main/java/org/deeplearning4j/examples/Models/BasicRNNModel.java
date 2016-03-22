@@ -73,9 +73,12 @@ public class BasicRNNModel {
             .backpropType(BackpropType.TruncatedBPTT).tBPTTForwardLength(truncatedBPTTLength).tBPTTBackwardLength(truncatedBPTTLength)
             .build();
     }
-    public MultiLayerNetwork buildModel() {
-        MultiLayerConfiguration conf = conf();
 
+    public MultiLayerNetwork buildModel() {
+        return buildModel(conf());
+    }
+
+    public MultiLayerNetwork buildModel(MultiLayerConfiguration conf) {
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();
         return network;

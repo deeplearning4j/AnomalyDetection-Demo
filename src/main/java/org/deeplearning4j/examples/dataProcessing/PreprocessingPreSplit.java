@@ -65,9 +65,8 @@ public class PreprocessingPreSplit {
         JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
         SparkTransformExecutor executor = new SparkTransformExecutor();
 
-
         if (rawSplit) {
-            SplitTrainTestRaw.main(dataSet);
+            SplitTrainTestRaw.split(dataSet, sc);
             int i = 0;
             for (String inputPath : inputDir) {
 

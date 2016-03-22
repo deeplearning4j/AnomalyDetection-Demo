@@ -1,16 +1,15 @@
 package org.deeplearning4j.examples.dataProcessing;
 
-        import org.apache.spark.SparkConf;
-        import org.apache.spark.api.java.JavaRDD;
-        import org.apache.spark.api.java.JavaSparkContext;
-        import org.deeplearning4j.examples.utils.DataPathUtil;
-        import org.deeplearning4j.examples.dataProcessing.api.split.RandomSplit;
-        import org.deeplearning4j.examples.utils.SparkConnectFactory;
-        import org.deeplearning4j.examples.utils.SparkExport;
-        import org.deeplearning4j.examples.utils.SparkUtils;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.deeplearning4j.examples.utils.DataPathUtil;
+import org.deeplearning4j.examples.dataProcessing.api.split.RandomSplit;
+import org.deeplearning4j.examples.utils.SparkConnectFactory;
+import org.deeplearning4j.examples.utils.SparkExport;
+import org.deeplearning4j.examples.utils.SparkUtils;
 
-        import java.io.File;
-        import java.util.List;
+import java.io.File;
+import java.util.List;
 
 /**
  * Split the raw data into train and test sets, without any modifications to the data
@@ -21,13 +20,14 @@ public class SplitTrainTestRaw {
 
     public static final long RNG_SEED = 12345;
     protected static double FRACTION_TRAIN = 0.75;
-    protected static String dataSet;
 
-    public static void main(String... args) throws Exception {
-        dataSet = args[0];
+
+    public static void split(String dataSet) throws Exception {
+        split(dataSet, SparkConnectFactory.getContext(dataSet));
+    }
+
+    public static void split(String dataSet, JavaSparkContext sc) throws Exception {
         DataPathUtil PATH = new DataPathUtil(dataSet);
-
-        JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
 
         JavaRDD<String> rawData = sc.textFile(PATH.IN_DIR);
 

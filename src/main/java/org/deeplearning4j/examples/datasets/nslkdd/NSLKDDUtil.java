@@ -36,7 +36,7 @@ public class NSLKDDUtil {
             "sunrpc", "login","kshell", "sql_net", "time", "hostnames", "exec", "ntp_u","discard", "nntp", "courier",
             "ctf", "ssh", "daytime", "netstat", "nnsp", "IRC", "pop_3", "netbios_ssn", "remote_job","pop_2","printer",
             "rje", "shell", "X11");
-    public static final int LABELIDX = 66;
+    public static final int LABELIDX = 112;
     public static final int NIN = 112;
     public static final int NOUT = 40;
     public static final int NORMALIDX = 0; // TODO find where this is?
