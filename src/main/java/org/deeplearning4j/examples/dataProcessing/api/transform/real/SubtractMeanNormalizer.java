@@ -19,4 +19,9 @@ public class SubtractMeanNormalizer extends BaseDoubleTransform {
     public Writable map(Writable writable) {
         return new DoubleWritable(writable.toDouble()-mean);
     }
+
+    @Override
+    public String toString() {
+        return "SubstractMean(mean=" + mean + ")";
+    }
 }

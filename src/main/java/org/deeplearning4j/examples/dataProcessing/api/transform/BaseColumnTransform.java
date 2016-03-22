@@ -33,6 +33,7 @@ public abstract class BaseColumnTransform extends BaseTransform {
 
     @Override
     public Schema transform(Schema schema) {
+        if(columnNumber == -1) throw new IllegalStateException("columnNumber == -1 -> setInputSchema not called?");
         List<ColumnMetaData> oldMeta = schema.getColumnMetaData();
         List<ColumnMetaData> newMeta = new ArrayList<>(oldMeta.size());
 

@@ -6,7 +6,6 @@ import org.deeplearning4j.examples.dataProcessing.api.analysis.DataAnalysis;
 import org.deeplearning4j.examples.dataProcessing.api.analysis.columns.*;
 import org.deeplearning4j.examples.dataProcessing.api.filter.Filter;
 import org.deeplearning4j.examples.dataProcessing.api.reduce.IReducer;
-import org.deeplearning4j.examples.dataProcessing.api.reduce.Reducer;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.deeplearning4j.examples.dataProcessing.api.schema.SequenceSchema;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.ConvertFromSequence;
@@ -16,8 +15,8 @@ import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceSplit;
 import org.deeplearning4j.examples.dataProcessing.api.transform.categorical.CategoricalToOneHotTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.RemoveColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.normalize.Normalize;
-import org.deeplearning4j.examples.dataProcessing.api.transform.real.DoubleLog2Normalizer;
-import org.deeplearning4j.examples.dataProcessing.api.transform.real.DoubleMinMaxNormalizer;
+import org.deeplearning4j.examples.dataProcessing.api.transform.real.Log2Normalizer;
+import org.deeplearning4j.examples.dataProcessing.api.transform.real.MinMaxNormalizer;
 import org.deeplearning4j.examples.dataProcessing.api.transform.real.StandardizeNormalizer;
 import org.deeplearning4j.examples.dataProcessing.api.transform.real.SubtractMeanNormalizer;
 
@@ -230,22 +229,22 @@ public class TransformProcess implements Serializable {
 
             switch (type) {
                 case MinMax:
-                    return transform(new DoubleMinMaxNormalizer(column, min, max));
+                    return transform(new MinMaxNormalizer(column, min, max));
                 case MinMax2:
-                    return transform(new DoubleMinMaxNormalizer(column,min,max,-1,1));
+                    return transform(new MinMaxNormalizer(column,min,max,-1,1));
                 case Standardize:
                     return transform(new StandardizeNormalizer(column,mean,sigma));
                 case SubtractMean:
                     return transform(new SubtractMeanNormalizer(column,mean));
                 case Log2Mean:
-                    return transform(new DoubleLog2Normalizer(column, mean, min, 0.5));
+                    return transform(new Log2Normalizer(column, mean, min, 0.5));
                 case Log2MeanExcludingMin:
                     long countMin = nca.getCountMinValue();
 
                     //mean including min value: (sum/totalCount)
                     //mean excluding min value: (sum - countMin*min)/(totalCount - countMin)
                     double meanExMin = (mean * ca.getCountTotal() - countMin * min) / (ca.getCountTotal() - countMin);
-                    return transform(new DoubleLog2Normalizer(column, meanExMin, min, 0.5));
+                    return transform(new Log2Normalizer(column, meanExMin, min, 0.5));
                 default:
                     throw new RuntimeException("Unknown/not implemented normalization type: " + type);
             }
