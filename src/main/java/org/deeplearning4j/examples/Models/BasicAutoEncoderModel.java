@@ -57,8 +57,9 @@ public class BasicAutoEncoderModel {
         this.seed = seed;
     }
 
-    public MultiLayerNetwork buildModel() {
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+
+    public MultiLayerConfiguration conf(){
+        return new NeuralNetConfiguration.Builder()
                 .iterations(iterations)
                 .seed(seed)
                 .activation(activation)
@@ -79,6 +80,10 @@ public class BasicAutoEncoderModel {
                 .pretrain(true).backprop(false)
                 .build();
 
+    }
+
+    public MultiLayerNetwork buildModel() {
+        MultiLayerConfiguration conf = conf();
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();
         return network;

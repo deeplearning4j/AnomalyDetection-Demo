@@ -1,7 +1,5 @@
 package org.deeplearning4j.examples;
 
-import org.deeplearning4j.examples.dataProcessing.PreprocessingPreSplit;
-import org.deeplearning4j.examples.dataProcessing.SplitTrainTestRaw;
 
 /**
  * Run to split, preprocess and train model.
@@ -11,9 +9,8 @@ import org.deeplearning4j.examples.dataProcessing.SplitTrainTestRaw;
 public class FullPipelineRun {
 
     public static void main(String... args) throws Exception {
-        SplitTrainTestRaw.main("UNSW_NB15");
-        PreprocessingPreSplit.main("UNSW_NB15");
         NIDSMain.main(
+                "--preProcess",
                 "--dataSet", "UNSW_NB15",
                 "--modelType", "MLP",
                 "--batchSize", "128",

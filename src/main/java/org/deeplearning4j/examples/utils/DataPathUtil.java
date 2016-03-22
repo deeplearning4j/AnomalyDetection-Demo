@@ -44,6 +44,7 @@ public class DataPathUtil {
     public final String NETWORK_CONFIG_FILE;
     public final String NETWORK_PARAMS_FILE;
     public final String NETWORK_UPDATER_FILE;
+    public final String EARLY_STOP_DIR;
 
     public static final String REPO_BASE_DIR = FilenameUtils.concat(System.getProperty("user.dir"), "src/main/resources/");
 
@@ -89,6 +90,8 @@ public class DataPathUtil {
         this.NETWORK_PARAMS_FILE = FilenameUtils.concat(OUT_DIR,"params.bin");
         this.NETWORK_UPDATER_FILE = FilenameUtils.concat(OUT_DIR,"updater.bin");
 
+        this.EARLY_STOP_DIR = FilenameUtils.concat(OUT_DIR,"earlystop/");
+
         // setup folders if the do not exist
         if(!new File(IN_DIR).exists()) new File(IN_DIR).mkdirs();
         if(!new File(PRE_DIR).exists()) new File(PRE_DIR).mkdirs();
@@ -97,6 +100,7 @@ public class DataPathUtil {
         if(!new File(PRE_TRAIN_DATA_DIR).exists()) new File(PRE_TRAIN_DATA_DIR).mkdirs();
         if(!new File(PRE_TEST_DATA_DIR).exists()) new File(PRE_TEST_DATA_DIR).mkdirs();
         if(!new File(OUT_DIR).exists()) new File(OUT_DIR).mkdirs();
+        if(!new File(EARLY_STOP_DIR).exists()) new File(EARLY_STOP_DIR).mkdirs();
         if(!new File(CHART_DIR_ORIG).exists()) new File(CHART_DIR_ORIG).mkdirs();
         if(!new File(CHART_DIR_NORM).exists()) new File(CHART_DIR_NORM).mkdirs();
     }

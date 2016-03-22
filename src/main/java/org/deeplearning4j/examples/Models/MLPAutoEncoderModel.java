@@ -50,9 +50,8 @@ public class MLPAutoEncoderModel {
         this.seed = seed;
     }
 
-    public MultiLayerNetwork buildModel() {
-
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+    public MultiLayerConfiguration conf(){
+        return new NeuralNetConfiguration.Builder()
                 .iterations(iterations)
                 .activation(activation)
                 .dropOut(dropoutRate)
@@ -77,6 +76,10 @@ public class MLPAutoEncoderModel {
                         .lossFunction(LossFunctions.LossFunction.MSE)
                         .build())
                 .backprop(true).pretrain(true).build();
+    }
+
+    public MultiLayerNetwork buildModel() {
+        MultiLayerConfiguration conf = conf();
 
         MultiLayerNetwork net = new MultiLayerNetwork(conf);
         net.init();

@@ -8,7 +8,16 @@ import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.canova.SequenceRecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.iterator.DataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
+import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
+import org.deeplearning4j.earlystopping.EarlyStoppingModelSaver;
+import org.deeplearning4j.earlystopping.EarlyStoppingResult;
+import org.deeplearning4j.earlystopping.saver.LocalFileModelSaver;
+import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator;
+import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
+import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition;
+import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.examples.dataProcessing.PreprocessingPreSplit;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.models.BasicMLPModel;
@@ -16,6 +25,7 @@ import org.deeplearning4j.examples.models.BasicRNNModel;
 import org.deeplearning4j.examples.models.MLPAutoEncoderModel;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
+import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
@@ -35,7 +45,8 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * NIDS Main Class
@@ -79,6 +90,10 @@ public class NIDSMain {
     protected int iterations = 1;
     @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-dataS")
     protected static String dataSet = "NSLKDD";
+    @Option(name="--preProcess",usage="Preprocess model",aliases="-pM")
+    protected boolean preProcess = false;
+    @Option(name="--earlyStop",usage="Apply early stop",aliases="-eS")
+    protected boolean earlyStop = false;
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
     @Option(name="--useHistogramListener",usage="Add a histogram iteration listener",aliases="-hist")
@@ -104,9 +119,11 @@ public class NIDSMain {
     protected List<String> labels;
     protected int labelIdx;
     protected MultiLayerNetwork network;
+    protected MultiLayerConfiguration conf;
     protected DataPathUtil PATH;
     protected String OUT_DIR;
     protected int TEST_EVERY_N_MINIBATCHES = 5000;
+    protected int TEST_EVERY_N_EPOCHS = 20;
 
     // TODO setup approach to load models and compare... use Arbiter?
     // TODO add early stopping
@@ -126,7 +143,7 @@ public class NIDSMain {
         OUT_DIR = PATH.OUT_DIR;
 
         // set Labels
-        switch(dataSet.toLowerCase()){
+        switch (dataSet.toLowerCase()) {
             case "unsw_nb15":
                 labels = NB15Util.LABELS;
                 labelIdx = NB15Util.LABELIDX;
@@ -139,6 +156,11 @@ public class NIDSMain {
                 throw new UnsupportedOperationException("Not implemented: " + dataSet);
         }
 
+        if (preProcess) {
+            System.out.println("\nPreprocess data....");
+            PreprocessingPreSplit.main(dataSet);
+        }
+
         System.out.println("\nLoad data....");
         boolean rnn = modelType.toLowerCase().equals("rnn");
         MultipleEpochsIterator trainData = loadData(batchSize, PATH, labelIdx, numEpochs, numBatches, nOut, true, rnn);
@@ -146,23 +168,34 @@ public class NIDSMain {
 
         System.out.println("\nBuild model....");
         buildModel();
-
+        
         System.out.println("Train model....");
-        network = trainModel(network, trainData, testData);
 
-        System.out.println("\nFinal evaluation....");
-        if(supervised){
-            evaluateSupervisedPerformance(network, testData);
+        if (earlyStop) {
+            EarlyStoppingConfiguration esConf = earlyStopConfig(testData);
+            EarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConf, conf, trainData);
+            EarlyStoppingResult result = trainer.fit();
+            printEarlyStopResults(result);
         } else {
-            evaluateUnsupervisedPerformance(testData);
+            network = trainModel(network, trainData, testData);
+            if(useHistogram)
+                network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
+            else
+                network.setListeners(new ScoreIterationListener(listenerFreq));
+
+            System.out.println("\nFinal evaluation....");
+            if (supervised) {
+                evaluateSupervisedPerformance(network, testData);
+            } else {
+                evaluateUnsupervisedPerformance(testData);
+            }
+
+            System.out.println("\nSave model and params....");
+            saveAndPrintResults(network);
+            System.out.println("\n==========================Example Finished==============================");
+            System.exit(0);
         }
-
-        System.out.println("\nSave model and params....");
-        saveAndPrintResults(network);
-        System.out.println("\n==========================Example Finished==============================");
-        System.exit(0);
     }
-
 
     protected MultipleEpochsIterator loadData(int batchSize, DataPathUtil dataPath, int labelIdx, int numEpochs, int numBatches,
                                               int nOut, boolean train, boolean rnn) throws Exception{
@@ -258,11 +291,34 @@ public class NIDSMain {
                 break;
         }
 
-        if(useHistogram)
-            network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
-        else
-            network.setListeners(new ScoreIterationListener(listenerFreq));
+    }
 
+    protected EarlyStoppingConfiguration earlyStopConfig(DataSetIterator iter){
+        EarlyStoppingModelSaver saver = new LocalFileModelSaver(PATH.EARLY_STOP_DIR);
+        return new EarlyStoppingConfiguration.Builder()
+                .epochTerminationConditions(new MaxEpochsTerminationCondition(numEpochs)) //Max of 50 epochs
+                .evaluateEveryNEpochs(TEST_EVERY_N_EPOCHS)
+                .iterationTerminationConditions(new MaxTimeIterationTerminationCondition(10, TimeUnit.MINUTES)) //Max of 10 minutes
+                .scoreCalculator(new DataSetLossCalculator(iter, true))     //Calculate test set score
+                .modelSaver(saver)
+                .build();
+    }
+
+    protected void printEarlyStopResults(EarlyStoppingResult result){
+        System.out.println("Termination reason: " + result.getTerminationReason());
+        System.out.println("Termination details: " + result.getTerminationDetails());
+        System.out.println("Total epochs: " + result.getTotalEpochs());
+        System.out.println("Best epoch number: " + result.getBestModelEpoch());
+        System.out.println("Score at best epoch: " + result.getBestModelScore());
+
+        //Print score vs. epoch
+        Map<Integer,Double> scoreVsEpoch = result.getScoreVsEpoch();
+        List<Integer> list = new ArrayList<>(scoreVsEpoch.keySet());
+        Collections.sort(list);
+        System.out.println("Score vs. Epoch:");
+        for( Integer i : list){
+            System.out.println(i + "\t" + scoreVsEpoch.get(i));
+        }
     }
 
     protected MultiLayerNetwork trainModel(MultiLayerNetwork net, MultipleEpochsIterator iter, MultipleEpochsIterator testIter){
@@ -300,10 +356,12 @@ public class NIDSMain {
     protected void evaluateUnsupervisedPerformance(MultipleEpochsIterator iter){
         org.nd4j.linalg.dataset.DataSet test = iter.next(1);
         INDArray result = network.scoreExamples(test,false);
-        // TODO get summary result...
-        INDArray r = result.slice(0);
-        System.out.println("\nFinal evaluation score: " +  result);
 
+        INDArray r = result.slice(0);
+        System.out.println("\nSingle evaluation score: " +  result);
+
+        DataSetLossCalculator calc = new DataSetLossCalculator(iter, true);
+        System.out.println("\nAverage evaluation score: " +  calc.calculateScore(network));
     }
 
     protected void saveAndPrintResults(MultiLayerNetwork net) {

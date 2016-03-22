@@ -50,28 +50,31 @@ public class BasicRNNModel {
         this.seed = seed;
     }
 
+    public MultiLayerConfiguration conf() {
+        return new NeuralNetConfiguration.Builder()
+            .iterations(iterations)
+            .weightInit(weightInit)
+            .dist(new UniformDistribution(-0.08, 0.08))
+            .activation(activation)
+            .optimizationAlgo(optimizationAlgorithm)
+            .updater(updater)
+            .learningRate(learningRate)
+            .rmsDecay(0.95)
+            .seed(seed)
+            .regularization(true)
+            .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue).gradientNormalizationThreshold(1.0)
+            .l2(l2)
+            .list()
+            .layer(0, new GravesLSTM.Builder().nIn(nIn[0]).nOut(nOut[0]).build())
+            .layer(1, new GravesLSTM.Builder().nIn(nIn[1]).nOut(nOut[1]).build())
+            .layer(2, new RnnOutputLayer.Builder(lossFunctions)
+                    .activation("softmax").nIn(nIn[2]).nOut(nOut[2]).build())
+            .pretrain(false).backprop(true)
+            .backpropType(BackpropType.TruncatedBPTT).tBPTTForwardLength(truncatedBPTTLength).tBPTTBackwardLength(truncatedBPTTLength)
+            .build();
+    }
     public MultiLayerNetwork buildModel() {
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .iterations(iterations)
-                .weightInit(weightInit)
-                .dist(new UniformDistribution(-0.08, 0.08))
-                .activation(activation)
-                .optimizationAlgo(optimizationAlgorithm)
-                .updater(updater)
-                .learningRate(learningRate)
-                .rmsDecay(0.95)
-                .seed(seed)
-                .regularization(true)
-                .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue).gradientNormalizationThreshold(1.0)
-                .l2(l2)
-                .list()
-                .layer(0, new GravesLSTM.Builder().nIn(nIn[0]).nOut(nOut[0]).build())
-                .layer(1, new GravesLSTM.Builder().nIn(nIn[1]).nOut(nOut[1]).build())
-                .layer(2, new RnnOutputLayer.Builder(lossFunctions)
-                        .activation("softmax").nIn(nIn[2]).nOut(nOut[2]).build())
-                .pretrain(false).backprop(true)
-                .backpropType(BackpropType.TruncatedBPTT).tBPTTForwardLength(truncatedBPTTLength).tBPTTBackwardLength(truncatedBPTTLength)
-                .build();
+        MultiLayerConfiguration conf = conf();
 
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();

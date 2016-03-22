@@ -53,8 +53,8 @@ public class BasicMLPModel {
         this.seed = seed;
     }
 
-    public MultiLayerNetwork buildModel() {
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+    public MultiLayerConfiguration conf(){
+        return new NeuralNetConfiguration.Builder()
                 .seed(seed)
                 .iterations(iterations)
                 .activation(activation)
@@ -71,13 +71,16 @@ public class BasicMLPModel {
                 .pretrain(false).backprop(true)
                 .build();
 
+    }
+
+    public MultiLayerNetwork buildModel() {
+        MultiLayerConfiguration conf = conf();
+
         MultiLayerNetwork network = new MultiLayerNetwork(conf);
         network.init();
         return network;
     }
-
     public ComputationGraph buildGraphModel() {
-        System.out.println("Build model....");
 
         ComputationGraphConfiguration conf = new NeuralNetConfiguration.Builder()
                 .iterations(iterations)
