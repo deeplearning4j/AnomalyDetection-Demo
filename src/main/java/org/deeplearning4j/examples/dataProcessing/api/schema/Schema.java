@@ -2,6 +2,7 @@ package org.deeplearning4j.examples.dataProcessing.api.schema;
 
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 import org.deeplearning4j.examples.dataProcessing.api.metadata.*;
+import org.joda.time.DateTimeZone;
 
 import java.io.Serializable;
 import java.util.*;
@@ -255,7 +256,7 @@ public class Schema implements Serializable {
         /**
          * Add a String column with no restrictions on the allowable values.
          *
-         * @param name    Name of  the column
+         * @param name Name of  the column
          */
         public Builder addColumnString(String name) {
             return addColumn(name, new StringMetaData());
@@ -278,10 +279,48 @@ public class Schema implements Serializable {
          * @param regex              Regex that the String must match in order to be considered value. If null: no regex restriction
          * @param minAllowableLength Minimum allowable length for the String to be considered valid
          * @param maxAllowableLength Maximum allowable length for the String to be considered valid
-         * @return
          */
         public Builder addColumnString(String name, String regex, Integer minAllowableLength, int maxAllowableLength) {
             return addColumn(name, new StringMetaData(regex, minAllowableLength, maxAllowableLength));
+        }
+
+        /**
+         * Add a Time column with no restrictions on the min/max allowable times
+         * <b>NOTE</b>: Time columns are represented by LONG (epoch millisecond) values. For time values in human-readable formats,
+         * use String columns + StringToTimeTransform
+         *
+         * @param columnName Name of the column
+         * @param timeZone   Time zone of the time column
+         */
+        public Builder addColumnTime(String columnName, TimeZone timeZone) {
+            return addColumnTime(columnName, DateTimeZone.forTimeZone(timeZone));
+        }
+
+        /**
+         * Add a Time column with no restrictions on the min/max allowable times
+         * <b>NOTE</b>: Time columns are represented by LONG (epoch millisecond) values. For time values in human-readable formats,
+         * use String columns + StringToTimeTransform
+         *
+         * @param columnName Name of the column
+         * @param timeZone   Time zone of the time column
+         */
+        public Builder addColumnTime(String columnName, DateTimeZone timeZone) {
+            return addColumnTime(columnName, timeZone, null, null);
+        }
+
+        /**
+         * Add a Time column with the specified restrictions
+         * <b>NOTE</b>: Time columns are represented by LONG (epoch millisecond) values. For time values in human-readable formats,
+         * use String columns + StringToTimeTransform
+         *
+         * @param columnName    Name of the column
+         * @param timeZone      Time zone of the time column
+         * @param minValidValue Minumum allowable time (in milliseconds). May be null.
+         * @param maxValidValue Maximum allowable time (in milliseconds). May be null.
+         */
+        public Builder addColumnTime(String columnName, DateTimeZone timeZone, Long minValidValue, Long maxValidValue) {
+            addColumn(columnName, new TimeMetaData(timeZone, minValidValue, maxValidValue));
+            return this;
         }
 
         /**

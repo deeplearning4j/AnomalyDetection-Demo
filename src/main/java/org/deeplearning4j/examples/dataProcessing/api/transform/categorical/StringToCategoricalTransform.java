@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by Alex on 6/03/2016.
+ * Convert a String column to a categorical column
  */
 public class StringToCategoricalTransform extends BaseColumnTransform {
 
@@ -32,5 +32,10 @@ public class StringToCategoricalTransform extends BaseColumnTransform {
     @Override
     public Writable map(Writable columnWritable) {
         return columnWritable;
+    }
+
+    @Override
+    public String toString(){
+        return "StringToCategoricalTransform(stateNames=" + stateNames + ")";
     }
 }

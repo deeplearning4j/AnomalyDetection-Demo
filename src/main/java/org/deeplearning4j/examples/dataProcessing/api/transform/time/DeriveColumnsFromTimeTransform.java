@@ -151,7 +151,7 @@ public class DeriveColumnsFromTimeTransform implements Transform {
         return sb.toString();
     }
 
-    public class Builder {
+    public static class Builder {
 
         private final String columnName;
         private String insertAfter;

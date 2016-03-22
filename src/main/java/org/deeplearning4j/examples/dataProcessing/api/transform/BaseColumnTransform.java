@@ -76,4 +76,7 @@ public abstract class BaseColumnTransform extends BaseTransform {
 
     public abstract Writable map(Writable columnWritable);
 
+    @Override
+    public abstract String toString();
+
 }

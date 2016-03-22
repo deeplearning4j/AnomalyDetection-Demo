@@ -24,12 +24,15 @@ import org.deeplearning4j.examples.dataProcessing.api.transform.real.MinMaxNorma
 import org.deeplearning4j.examples.dataProcessing.api.transform.real.StandardizeNormalizer;
 import org.deeplearning4j.examples.dataProcessing.api.transform.real.SubtractMeanNormalizer;
 import org.deeplearning4j.examples.dataProcessing.api.transform.string.*;
+import org.deeplearning4j.examples.dataProcessing.api.transform.time.DeriveColumnsFromTimeTransform;
+import org.deeplearning4j.examples.dataProcessing.api.transform.time.StringToTimeTransform;
+import org.joda.time.DateTimeFieldType;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -430,6 +433,95 @@ public class TestTransforms {
                 transform.map(Collections.singletonList((Writable)new Text("two"))));
         assertEquals(Collections.singletonList((Writable)new Text("three")),
                 transform.map(Collections.singletonList((Writable)new Text("three"))));
+    }
+
+
+    @Test
+    public void testStringToTimeTransform(){
+        Schema schema = getSchema(ColumnType.String);
+
+        //http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html
+        Transform transform = new StringToTimeTransform("column","YYYY-MM-dd HH:mm:ss", DateTimeZone.forID("UTC"));
+        transform.setInputSchema(schema);
+
+        Schema out = transform.transform(schema);
+
+        assertEquals(1, out.getColumnMetaData().size());
+        assertEquals(ColumnType.Time, out.getMetaData(0).getColumnType());
+
+        String in1 = "2016-01-01 12:30:45";
+        long out1 = 1451651445000L;
+
+        String in2 = "2015-06-30 23:59:59";
+        long out2 = 1435708799000L;
+
+        assertEquals(Collections.singletonList((Writable)new LongWritable(out1)),
+                transform.map(Collections.singletonList((Writable)new Text(in1))));
+        assertEquals(Collections.singletonList((Writable)new LongWritable(out2)),
+                transform.map(Collections.singletonList((Writable)new Text(in2))));
+    }
+
+    @Test
+    public void testDeriveColumnsFromTimeTransform(){
+        Schema schema = new Schema.Builder()
+                .addColumnTime("column",DateTimeZone.forID("UTC"))
+                .build();
+
+        Transform transform = new DeriveColumnsFromTimeTransform.Builder("column")
+                .addIntegerDerivedColumn("hour", DateTimeFieldType.hourOfDay())
+                .addIntegerDerivedColumn("day", DateTimeFieldType.dayOfMonth())
+                .addIntegerDerivedColumn("second", DateTimeFieldType.secondOfMinute())
+                .addStringDerivedColumn("humanReadable", new DateTimeFormatterBuilder()
+                        .appendYear(4,4)
+                        .appendLiteral("-")
+                        .appendMonthOfYear(2)
+                        .appendLiteral("-")
+                        .appendDayOfMonth(2)
+                        .appendLiteral(" ")
+                        .appendHourOfDay(2)
+                        .appendLiteral(":")
+                        .appendMinuteOfHour(2)
+                        .appendLiteral(":")
+                        .appendSecondOfMinute(2)
+                        .toFormatter()
+                        .withZone(DateTimeZone.forID("UTC")))
+                .build();
+
+        transform.setInputSchema(schema);
+        Schema out = transform.transform(schema);
+
+        assertEquals(5, out.getColumnMetaData().size());
+        assertEquals(ColumnType.Time, out.getMetaData(0).getColumnType());
+        assertEquals(ColumnType.Integer, out.getMetaData(1).getColumnType());
+        assertEquals(ColumnType.Integer, out.getMetaData(2).getColumnType());
+        assertEquals(ColumnType.Integer, out.getMetaData(3).getColumnType());
+        assertEquals(ColumnType.String, out.getMetaData(4).getColumnType());
+
+        assertEquals("column", out.getName(0));
+        assertEquals("hour", out.getName(1));
+        assertEquals("day", out.getName(2));
+        assertEquals("second", out.getName(3));
+        assertEquals("humanReadable", out.getName(4));
+
+        long in1 = 1451651445000L;      //"2016-01-01 12:30:45" GMT
+
+        List<Writable> out1 = new ArrayList<>();
+        out1.add(new LongWritable(in1));
+        out1.add(new IntWritable(12));  //hour
+        out1.add(new IntWritable(1));   //day
+        out1.add(new IntWritable(45));  //second
+        out1.add(new Text("2016-01-01 12:30:45"));
+
+        long in2 = 1435708799000L;      //"2015-06-30 23:59:59" GMT
+        List<Writable> out2 = new ArrayList<>();
+        out2.add(new LongWritable(in2));
+        out2.add(new IntWritable(23));  //hour
+        out2.add(new IntWritable(30));   //day
+        out2.add(new IntWritable(59));  //second
+        out2.add(new Text("2015-06-30 23:59:59"));
+
+        assertEquals(out1, transform.map(Collections.singletonList((Writable)new LongWritable(in1))));
+        assertEquals(out2, transform.map(Collections.singletonList((Writable)new LongWritable(in2))));
     }
 
 }
