@@ -1,4 +1,4 @@
-package org.deeplearning4j.examples;
+package org.deeplearning4j.examples.archive;
 
 import org.apache.commons.io.FileUtils;
 import org.canova.api.records.reader.impl.CSVRecordReader;

@@ -1,7 +1,6 @@
 package org.deeplearning4j.examples.dataProcessing;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
@@ -10,7 +9,7 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
 import org.deeplearning4j.examples.dataProcessing.api.split.RandomSplit;
 import org.deeplearning4j.examples.datasets.iscx.ISCXUtil;
-import org.deeplearning4j.examples.ui.SparkConnectFactory;
+import org.deeplearning4j.examples.utils.SparkConnectFactory;
 import org.deeplearning4j.examples.utils.SparkUtils;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.utils.DataPathUtil;
@@ -39,16 +38,18 @@ import java.util.List;
 public class PreprocessingPreSplit {
 
     public static final long RNG_SEED = 12345;
+    protected static double FRACTION_TRAIN = 0.75;
 
     public static boolean rawSplit = true;
     public static String dataSet;
     public static DataPathUtil path;
     public static TransformProcess transformProcess = null;
     public static DataQualityAnalysis dqa;
-    public static DataAnalysis dataAnalyis;
+    public static DataAnalysis dataAnalysis;
     public static DataAnalysis normDataAnalysis;
     public static Schema preprocessedSchema;
     public static Schema normSchema;
+    public static JavaRDD<List<Writable>> preprocessedData;
 
     public static int buckets = 0;
     public static String IN_DIRECTORY;
@@ -63,11 +64,10 @@ public class PreprocessingPreSplit {
 
         JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
         SparkTransformExecutor executor = new SparkTransformExecutor();
-        JavaRDD<List<Writable>> preprocessedData;
-        Triple<TransformProcess, Schema, JavaRDD<List<Writable>>> dataNormalized = null;
+
 
         if (rawSplit) {
-            // TODO call rawSplit file to setup
+            SplitTrainTestRaw.main(dataSet);
             int i = 0;
             for (String inputPath : inputDir) {
 
@@ -78,41 +78,24 @@ public class PreprocessingPreSplit {
 
                 runAnalysis(preprocessedSchema, preprocessedData);
 
-                //Same normalization scheme for both. Normalization scheme based only on test data, however
-                switch (dataSet) {
-                    case "UNSW_NB15":
-                        dataNormalized = NB15Util.normalize(preprocessedSchema, dataAnalyis, preprocessedData, executor);
-                        break;
-                    case "NSLKDD":
-                        dataNormalized = NSLKDDUtil.normalize(preprocessedSchema, dataAnalyis, preprocessedData, executor);
-                        break;
-                    case "ISCX":
-                        dataNormalized = ISCXUtil.normalize(preprocessedSchema, dataAnalyis, preprocessedData, executor);
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown data set: " + dataSet);
-                }
-
-                dataNormalized.getThird().cache();
-                normSchema = dataNormalized.getSecond();
-                normDataAnalysis = AnalyzeSpark.analyze(normSchema, dataNormalized.getThird());
-
-                //Save normalized data & schema
-                SparkExport.exportCSVLocal(trainTestDir.get(i), i + dataSet + "normalized", 1, ",", dataNormalized.getThird());
-                if (i == 0) {
-                    saveNormSchemaTransform(dataNormalized.getFirst());
-                }
-
+                normalizeAndSave(i, executor, preprocessedData);
                 i++;
-                preprocessedData.unpersist();
-                dataNormalized.getThird().unpersist();
             }
-            printAndStoreAnalysis();
-
         } else {
-            // TODO setup so that it loads raw straight, preprocess and then split
-            loadAndSplitRawData(sc, path.IN_DIR, 0.75);
+            JavaRDD<String> rawTrainData = sc.textFile(inputDir.get(0));
+            JavaRDD<List<Writable>> writableData = rawTrainData.map(new StringToWritablesFunction(new CSVRecordReader()));
+            preprocessedData = executor.execute(writableData, transformProcess);
+            preprocessedData.cache();
+
+            runAnalysis(preprocessedSchema, preprocessedData);
+            List<JavaRDD<List<Writable>>> split = SparkUtils.splitData(new RandomSplit(FRACTION_TRAIN), preprocessedData, RNG_SEED);
+
+            for(int i=0; i < 2; i++) {
+                normalizeAndSave(i, executor, split.get(i));
+            }
+
         }
+        printAndStoreAnalysis();
 
         sc.close();
 
@@ -145,7 +128,7 @@ public class PreprocessingPreSplit {
         preprocessedSchema = defineSchema(OUT_DIRECTORY, transformProcess);
         FileUtils.writeStringToFile(new File(OUT_DIRECTORY, "preprocessedDataSchema.txt"), preprocessedSchema.toString());
         // Paths
-        inputDir = Arrays.asList(path.RAW_TRAIN_FILE, path.RAW_TEST_FILE);
+        inputDir = rawSplit? Arrays.asList(path.RAW_TRAIN_FILE, path.RAW_TEST_FILE): Arrays.asList(path.IN_DIR);
         trainTestDir = Arrays.asList(path.PRE_TRAIN_DATA_DIR, path.PRE_TEST_DATA_DIR);
         IN_DIRECTORY = path.IN_DIR;
         OUT_DIRECTORY = path.PRE_DIR;
@@ -155,20 +138,12 @@ public class PreprocessingPreSplit {
 
     }
 
-    public static void loadAndSplitRawData(JavaSparkContext sc, String inputPath, double trainFraction) throws Exception {
-        JavaRDD<String> rawData = sc.textFile(inputPath);
-
-        List<JavaRDD<String>> split = SparkUtils.splitData(new RandomSplit(trainFraction), rawData, RNG_SEED);
-        SparkExport.exportStringLocal(new File(path.PRE_TRAIN_DATA_DIR), split.get(0), 12345);
-        SparkExport.exportStringLocal(new File(path.PRE_TEST_DATA_DIR), split.get(1), 12345);
-    }
-
     public static void runAnalysis(Schema schema, JavaRDD<List<Writable>> data) {
         //Analyze the quality of the columns (missing values, etc), on a per column basis
         dqa = AnalyzeSpark.analyzeQuality(schema, data);
 
         // Per-column statis summary
-        dataAnalyis = AnalyzeSpark.analyze(schema, data, buckets);
+        dataAnalysis = AnalyzeSpark.analyze(schema, data, buckets);
     }
 
     public static Schema defineSchema(String outDir, TransformProcess seq) throws IOException {
@@ -176,6 +151,37 @@ public class PreprocessingPreSplit {
         Schema schema = seq.getFinalSchema();
         FileUtils.writeStringToFile(new File(outDir, "preprocessedDataSchema.txt"), schema.toString());
         return schema;
+    }
+
+    public static void normalizeAndSave(int i, SparkTransformExecutor executor, JavaRDD<List<Writable>> data) throws Exception{
+        Triple<TransformProcess, Schema, JavaRDD<List<Writable>>> dataNormalized;
+
+        switch (dataSet) {
+            case "UNSW_NB15":
+                dataNormalized = NB15Util.normalize(preprocessedSchema, dataAnalysis, data, executor);
+                break;
+            case "NSLKDD":
+                dataNormalized = NSLKDDUtil.normalize(preprocessedSchema, dataAnalysis, data, executor);
+                break;
+            case "ISCX":
+                dataNormalized = ISCXUtil.normalize(preprocessedSchema, dataAnalysis, data, executor);
+                break;
+            default:
+                throw new RuntimeException("Unknown data set: " + dataSet);
+        }
+
+        dataNormalized.getThird().cache();
+        normSchema = dataNormalized.getSecond();
+        runAnalysis(normSchema, dataNormalized.getThird());
+
+        SparkExport.exportCSVLocal(trainTestDir.get(i), i + dataSet + "normalized", 1, ",", dataNormalized.getThird());
+
+        if (i == 0) {
+            saveNormSchemaTransform(dataNormalized.getFirst());
+        }
+
+        preprocessedData.unpersist();
+        dataNormalized.getThird().unpersist();
     }
 
     public static void printAnalysis(Object analysis, String tag) {
@@ -189,12 +195,12 @@ public class PreprocessingPreSplit {
         //Print analysis
         Thread.sleep(200);
         printAnalysis(dqa, "Data quality:");
-        printAnalysis(dataAnalyis, "Processed data summary:");
+        printAnalysis(dataAnalysis, "Processed data summary:");
         printAnalysis(normDataAnalysis, "Normalized data summary:");
 
         //Store histograms
         System.out.println("Storing charts...");
-        Histograms.plot(preprocessedSchema, dataAnalyis, CHART_DIRECTORY_ORIG);
+        Histograms.plot(preprocessedSchema, dataAnalysis, CHART_DIRECTORY_ORIG);
         Histograms.plot(normSchema, normDataAnalysis, CHART_DIRECTORY_NORM);
         System.out.println();
     }

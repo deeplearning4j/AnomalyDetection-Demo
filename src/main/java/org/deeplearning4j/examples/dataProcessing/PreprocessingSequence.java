@@ -12,7 +12,7 @@ import org.deeplearning4j.examples.dataProcessing.spark.SparkTransformExecutor;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
 import org.deeplearning4j.examples.dataProcessing.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.datasets.iscx.ISCXUtil;
-import org.deeplearning4j.examples.ui.SparkConnectFactory;
+import org.deeplearning4j.examples.utils.SparkConnectFactory;
 import org.deeplearning4j.examples.utils.SparkExport;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
@@ -52,13 +52,13 @@ public class PreprocessingSequence extends PreprocessingPreSplit {
 
             switch (dataSet) {
                 case "UNSW_NB15":
-                    dataNormalized = NB15Util.normalizeSequence(preprocessedSchema, dataAnalyis, toNormalize, executor);
+                    dataNormalized = NB15Util.normalizeSequence(preprocessedSchema, dataAnalysis, toNormalize, executor);
                     break;
                 case "NSLKDD":
-                    dataNormalized = NSLKDDUtil.normalizeSequence(preprocessedSchema, dataAnalyis, toNormalize, executor);
+                    dataNormalized = NSLKDDUtil.normalizeSequence(preprocessedSchema, dataAnalysis, toNormalize, executor);
                     break;
                 case "ISCX":
-                    dataNormalized = ISCXUtil.normalizeSequence(preprocessedSchema, dataAnalyis, toNormalize, executor);
+                    dataNormalized = ISCXUtil.normalizeSequence(preprocessedSchema, dataAnalysis, toNormalize, executor);
                     break;
                 default:
                     throw new RuntimeException("Unknown data set: " + dataSet);
@@ -88,7 +88,7 @@ public class PreprocessingSequence extends PreprocessingPreSplit {
         //Analyze the quality of the columns (missing values, etc), on a per column basis
         dqa = AnalyzeSpark.analyzeQualitySequence(schema, data);
         //Do analysis, on a per-column basis
-        dataAnalyis = AnalyzeSpark.analyzeSequence(schema, data);
+        dataAnalysis = AnalyzeSpark.analyzeSequence(schema, data);
     }
 
 

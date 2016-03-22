@@ -1,4 +1,4 @@
-package org.deeplearning4j.examples.ui;
+package org.deeplearning4j.examples.utils;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -19,7 +19,7 @@ public class SparkConnectFactory {
     public static SparkConf config(String name){
         SparkConf sparkConf = new SparkConf();
         sparkConf.setMaster("local[*]");
-//        sparkConf.set("spark.driver.maxResultSize", "2G");
+        sparkConf.set("spark.driver.maxResultSize", "2G");
         sparkConf.setAppName(name);
         return sparkConf;
     }

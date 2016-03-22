@@ -2,15 +2,13 @@ package org.deeplearning4j.examples.streaming;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.spark.SparkConf;
-import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDTableConverter;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
-import org.deeplearning4j.examples.ui.SparkConnectFactory;
+import org.deeplearning4j.examples.utils.SparkConnectFactory;
 import org.deeplearning4j.examples.ui.TableConverter;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
@@ -37,7 +35,7 @@ public class NIDSStreaming {
     public static final int GENERATION_RATE = 20;   //connections per second
     public static int numSec = 1;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String... args) throws Exception {
         DataPathUtil path = null;
         String checkpointDir;
         Schema schema;
@@ -51,7 +49,7 @@ public class NIDSStreaming {
         TransformProcess preProcessor;
         TransformProcess norm;
 
-        dataSet = "UNSW_NB15";//args[0];
+        dataSet = args[0];
         if (dataSet != null) {
             path = new DataPathUtil(dataSet);
             checkpointDir = FilenameUtils.concat(path.OUT_DIR, "/Checkpoint/");

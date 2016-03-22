@@ -5,6 +5,7 @@ package org.deeplearning4j.examples.dataProcessing;
         import org.apache.spark.api.java.JavaSparkContext;
         import org.deeplearning4j.examples.utils.DataPathUtil;
         import org.deeplearning4j.examples.dataProcessing.api.split.RandomSplit;
+        import org.deeplearning4j.examples.utils.SparkConnectFactory;
         import org.deeplearning4j.examples.utils.SparkExport;
         import org.deeplearning4j.examples.utils.SparkUtils;
 
@@ -26,11 +27,7 @@ public class SplitTrainTestRaw {
         dataSet = args[0];
         DataPathUtil PATH = new DataPathUtil(dataSet);
 
-        SparkConf sparkConf = new SparkConf();
-        sparkConf.setMaster("local[*]");
-        sparkConf.setAppName("TestSplit");
-        sparkConf.set("spark.driver.maxResultSize", "2G");
-        JavaSparkContext sc = new JavaSparkContext(sparkConf);
+        JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
 
         JavaRDD<String> rawData = sc.textFile(PATH.IN_DIR);
 

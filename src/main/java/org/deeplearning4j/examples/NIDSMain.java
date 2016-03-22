@@ -70,9 +70,9 @@ public class NIDSMain {
     @Option(name="--testBatchSize",usage="Test Batch size",aliases="-tB")
     protected int testBatchSize = batchSize;
     @Option(name="--numBatches",usage="Number of batches",aliases="-nB")
-    protected int numBatches = 200; // consider 20K
+    protected int numBatches = 20000; // consider 20K
     @Option(name="--numTestBatches",usage="Number of test batches",aliases="-nTB")
-    protected int numTestBatches = numBatches; // set to 2500 when full set
+    protected int numTestBatches = 2500; // set to 2500 when full set
     @Option(name="--numEpochs",usage="Number of epochs",aliases="-nE")
     protected int numEpochs = 2; // consider 60
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
@@ -81,16 +81,16 @@ public class NIDSMain {
     protected static String dataSet = "NSLKDD";
     @Option(name="--saveModel",usage="Save model",aliases="-sM")
     protected boolean saveModel = false;
+    @Option(name="--useHistogramListener",usage="Add a histogram iteration listener",aliases="-hist")
+    protected boolean useHistogram = false;
 
     @Option(name="--nIn",usage="Number of activations in",aliases="-nIn")
-    protected int nIn = 112;
+    protected int nIn = 66;
     @Option(name="--nOut",usage="Number activations out",aliases="-nOut")
-    protected int nOut = 40;
+    protected int nOut = 10;
 
     @Option(name="--truncatedBPTTLength",usage="Truncated BPTT length",aliases="-tBPTT")
     protected int truncatedBPTTLength = 20;
-    @Option(name="--useHistogramListener",usage="Add a histogram iteration listener",aliases="-hist")
-    protected boolean useHistogram = false;
 
     protected long startTime = 0;
     protected long endTime = 0;
@@ -106,7 +106,7 @@ public class NIDSMain {
     protected MultiLayerNetwork network;
     protected DataPathUtil PATH;
     protected String OUT_DIR;
-    protected int TEST_EVERY_N_MINIBATCHES = (supervised)? numBatches/2: numBatches+1;
+    protected int TEST_EVERY_N_MINIBATCHES = 5000;
 
     // TODO setup approach to load models and compare... use Arbiter?
     // TODO add early stopping
