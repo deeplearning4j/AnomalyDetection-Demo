@@ -15,6 +15,7 @@ import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceSplit;
 import org.deeplearning4j.examples.dataProcessing.api.transform.categorical.CategoricalToOneHotTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.DuplicateColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.RemoveColumnsTransform;
+import org.deeplearning4j.examples.dataProcessing.api.transform.column.RenameColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.integer.IntegerMathOpTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.longtransform.LongMathOpTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.normalize.Normalize;
@@ -66,6 +67,10 @@ public class TransformProcess implements Serializable {
                 currInputSchema = cfs.transform((SequenceSchema) currInputSchema);
             } else if (d.getSequenceSplit() != null) {
                 continue;   //no change to sequence schema
+            } else if (d.getReducer() != null) {
+                IReducer reducer = d.getReducer();
+                reducer.setInputSchema(currInputSchema);
+                currInputSchema = reducer.transform(currInputSchema);
             } else {
                 throw new RuntimeException("Unknown action: " + d);
             }
@@ -103,6 +108,9 @@ public class TransformProcess implements Serializable {
                 currInputSchema = cfs.transform((SequenceSchema) currInputSchema);
             } else if (d.getSequenceSplit() != null) {
                 continue;   //Sequence split -> no change to schema
+            } else if (d.getReducer() != null) {
+                IReducer reducer = d.getReducer();
+                currInputSchema = reducer.transform(currInputSchema);
             } else {
                 throw new RuntimeException("Unknown action: " + d);
             }
@@ -193,6 +201,26 @@ public class TransformProcess implements Serializable {
          */
         public Builder removeColumns(String... columnNames) {
             return transform(new RemoveColumnsTransform(columnNames));
+        }
+
+        /**
+         * Rename a single column
+         *
+         * @param oldName Original column name
+         * @param newName New column name
+         */
+        public Builder renameColumn(String oldName, String newName) {
+            return transform(new RenameColumnsTransform(oldName, newName));
+        }
+
+        /**
+         * Rename multiple columns
+         *
+         * @param oldNames List of original column names
+         * @param newNames List of new column names
+         */
+        public Builder renameColumns(List<String> oldNames, List<String> newNames) {
+            return transform(new RenameColumnsTransform(oldNames, newNames));
         }
 
         /**

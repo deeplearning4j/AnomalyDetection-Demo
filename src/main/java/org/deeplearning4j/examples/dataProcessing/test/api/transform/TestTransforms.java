@@ -20,6 +20,7 @@ import org.deeplearning4j.examples.dataProcessing.api.transform.categorical.Inte
 import org.deeplearning4j.examples.dataProcessing.api.transform.categorical.StringToCategoricalTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.DuplicateColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.RemoveColumnsTransform;
+import org.deeplearning4j.examples.dataProcessing.api.transform.column.RenameColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.integer.IntegerMathOpTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.integer.ReplaceEmptyIntegerWithValueTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.integer.ReplaceInvalidWithIntegerTransform;
@@ -618,6 +619,30 @@ public class TestTransforms {
         assertEquals(Collections.singletonList((Writable)new DoubleWritable(-5)), transform.map(Collections.singletonList((Writable)new DoubleWritable(-1))));
         assertEquals(Collections.singletonList((Writable)new DoubleWritable(0)), transform.map(Collections.singletonList((Writable)new DoubleWritable(0))));
         assertEquals(Collections.singletonList((Writable)new DoubleWritable(5)), transform.map(Collections.singletonList((Writable)new DoubleWritable(1))));
+    }
+
+    @Test
+    public void testRenameColumnsTransform(){
+
+        Schema schema = new Schema.Builder()
+                .addColumnDouble("col1")
+                .addColumnString("col2")
+                .addColumnInteger("col3")
+                .build();
+
+        Transform transform = new RenameColumnsTransform(Arrays.asList("col1","col3"), Arrays.asList("column1","column3"));
+        transform.setInputSchema(schema);
+
+        Schema out = transform.transform(schema);
+
+        assertEquals(3, out.getColumnMetaData().size());
+        assertEquals(ColumnType.Double, out.getMetaData(0).getColumnType());
+        assertEquals(ColumnType.String, out.getMetaData(1).getColumnType());
+        assertEquals(ColumnType.Integer, out.getMetaData(2).getColumnType());
+
+        assertEquals("column1", out.getName(0));
+        assertEquals("col2", out.getName(1));
+        assertEquals("column3", out.getName(2));
     }
 
 }

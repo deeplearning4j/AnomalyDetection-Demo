@@ -63,7 +63,6 @@ public class CategoricalToOneHotTransform extends BaseTransform {
 
             if(i++ == columnIdx){
                 //Convert this to one-hot:
-                int nClasses = stateNames.size();
                 for (String stateName : stateNames) {
                     String newName = s + "[" + stateName + "]";
                     outNames.add(newName);

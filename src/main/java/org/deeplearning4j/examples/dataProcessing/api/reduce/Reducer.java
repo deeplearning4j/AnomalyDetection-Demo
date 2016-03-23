@@ -68,6 +68,7 @@ public class Reducer implements IReducer, Serializable {
     public Schema transform(Schema schema){
         int nCols = schema.numColumns();
         List<String> colNames = schema.getColumnNames();
+        List<String> newNames = new ArrayList<>();
         List<ColumnMetaData> meta = schema.getColumnMetaData();
         List<ColumnMetaData> newMeta = new ArrayList<>(nCols);
 
@@ -78,6 +79,7 @@ public class Reducer implements IReducer, Serializable {
             if(keyColumns.contains(name)){
                 //No change to key columns
                 newMeta.add(inMeta);
+                newNames.add(name);
                 continue;
             }
 
@@ -86,23 +88,44 @@ public class Reducer implements IReducer, Serializable {
 
             switch(op){
                 case Min:
+                    newNames.add("min(" + name + ")");
+                    newMeta.add(inMeta);
+                    break;
                 case Max:
+                    newNames.add("max(" + name + ")");
+                    newMeta.add(inMeta);
+                    break;
                 case Range:
+                    newNames.add("range(" + name + ")");
+                    newMeta.add(inMeta);
+                    break;
                 case TakeFirst:
+                    newNames.add("first(" + name + ")");
+                    newMeta.add(inMeta);
+                    break;
                 case TakeLast:
-                    //No change
-                    //TODO: what if the inMeta has restrictions that no longer necessarily hold?
+                    newNames.add("last(" + name + ")");
                     newMeta.add(inMeta);
                     break;
                 case Sum:
+                    newNames.add("sum(" + name + ")");
+                    newMeta.add(inMeta);
+                    break;
                 case Mean:
+                    newNames.add("mean(" + name + ")");
+                    newMeta.add(new DoubleMetaData());
+                    break;
                 case Stdev:
-                    //Always double
+                    newNames.add("stdev(" + name + ")");
                     newMeta.add(new DoubleMetaData());
                     break;
                 case Count:
+                    newNames.add("count");
+                    newMeta.add(new IntegerMetaData(0,null));
+                    break;
                 case CountUnique:
                     //Always integer
+                    newNames.add("countUnique(" + name + ")");
                     newMeta.add(new IntegerMetaData(0,null));
                     break;
                 default:
@@ -110,7 +133,7 @@ public class Reducer implements IReducer, Serializable {
             }
         }
 
-        return schema.newSchema(colNames,newMeta);
+        return schema.newSchema(newNames,newMeta);
     }
 
     @Override
