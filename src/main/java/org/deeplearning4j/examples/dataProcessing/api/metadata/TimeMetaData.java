@@ -74,6 +74,11 @@ public class TimeMetaData implements ColumnMetaData {
         return !(maxValidTime != null && epochMillisec > maxValidTime);
     }
 
+    @Override
+    public TimeMetaData clone() {
+        return new TimeMetaData(timeZone,minValidTime,maxValidTime);
+    }
+
 
     @Override
     public String toString() {

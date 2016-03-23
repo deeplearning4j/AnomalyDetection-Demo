@@ -8,7 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**Metadata for categorical columns.
+/**
+ * Metadata for categorical columns.
  * Here, each
  */
 public class CategoricalMetaData implements ColumnMetaData {
@@ -16,11 +17,11 @@ public class CategoricalMetaData implements ColumnMetaData {
     private List<String> stateNames;
     private Set<String> stateNamesSet;  //For fast lookup
 
-    public CategoricalMetaData(String... stateNames){
+    public CategoricalMetaData(String... stateNames) {
         this(Arrays.asList(stateNames));
     }
 
-    public CategoricalMetaData(List<String> stateNames){
+    public CategoricalMetaData(List<String> stateNames) {
         this.stateNames = stateNames;
         stateNamesSet = new HashSet<>(stateNames);
     }
@@ -35,17 +36,22 @@ public class CategoricalMetaData implements ColumnMetaData {
         return stateNamesSet.contains(writable.toString());
     }
 
-    public List<String> getStateNames(){
+    @Override
+    public CategoricalMetaData clone() {
+        return new CategoricalMetaData(stateNames);
+    }
+
+    public List<String> getStateNames() {
         return stateNames;
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("CategoricalMetaData(stateNames=[");
         boolean first = true;
-        for(String s : stateNamesSet){
-            if(!first) sb.append(",");
+        for (String s : stateNamesSet) {
+            if (!first) sb.append(",");
             sb.append("\"").append(s).append("\"");
             first = false;
         }

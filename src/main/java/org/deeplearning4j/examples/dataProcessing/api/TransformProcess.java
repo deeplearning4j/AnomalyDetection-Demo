@@ -13,15 +13,16 @@ import org.deeplearning4j.examples.dataProcessing.api.sequence.ConvertToSequence
 import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceComparator;
 import org.deeplearning4j.examples.dataProcessing.api.sequence.SequenceSplit;
 import org.deeplearning4j.examples.dataProcessing.api.transform.categorical.CategoricalToOneHotTransform;
+import org.deeplearning4j.examples.dataProcessing.api.transform.column.DuplicateColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.RemoveColumnsTransform;
+import org.deeplearning4j.examples.dataProcessing.api.transform.integer.IntegerMathOpTransform;
+import org.deeplearning4j.examples.dataProcessing.api.transform.longtransform.LongMathOpTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.normalize.Normalize;
-import org.deeplearning4j.examples.dataProcessing.api.transform.real.Log2Normalizer;
-import org.deeplearning4j.examples.dataProcessing.api.transform.real.MinMaxNormalizer;
-import org.deeplearning4j.examples.dataProcessing.api.transform.real.StandardizeNormalizer;
-import org.deeplearning4j.examples.dataProcessing.api.transform.real.SubtractMeanNormalizer;
+import org.deeplearning4j.examples.dataProcessing.api.transform.real.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -195,6 +196,60 @@ public class TransformProcess implements Serializable {
         }
 
         /**
+         * Duplicate a single column
+         *
+         * @param columnName Name of the column to duplicate
+         * @param newName    Name of the new (duplicate) column
+         */
+        public Builder duplicateColumn(String columnName, String newName) {
+            return transform(new DuplicateColumnsTransform(Collections.singletonList(columnName), Collections.singletonList(newName)));
+        }
+
+
+        /**
+         * Duplicate a set of columns
+         *
+         * @param columnNames Names of the columns to duplicate
+         * @param newNames    Names of the new (duplicated) columns
+         */
+        public Builder duplicateColumns(List<String> columnNames, List<String> newNames) {
+            return transform(new DuplicateColumnsTransform(columnNames, newNames));
+        }
+
+        /**
+         * Perform a mathematical operation (add, subtract, scalar max etc) on the specified integer column
+         *
+         * @param columnName The integer column to perform the operation on
+         * @param mathOp     The mathematical operation
+         * @param scalar     The scalar value to use in the mathematical operation
+         */
+        public Builder integerMathOp(String columnName, MathOp mathOp, int scalar) {
+            return transform(new IntegerMathOpTransform(columnName, mathOp, scalar));
+        }
+
+        /**
+         * Perform a mathematical operation (add, subtract, scalar max etc) on the specified long column
+         *
+         * @param columnName The long column to perform the operation on
+         * @param mathOp     The mathematical operation
+         * @param scalar     The scalar value to use in the mathematical operation
+         */
+        public Builder longMathOp(String columnName, MathOp mathOp, long scalar) {
+            return transform(new LongMathOpTransform(columnName, mathOp, scalar));
+        }
+
+        /**
+         * Perform a mathematical operation (add, subtract, scalar max etc) on the specified double column
+         *
+         * @param columnName The integer column to perform the operation on
+         * @param mathOp     The mathematical operation
+         * @param scalar     The scalar value to use in the mathematical operation
+         */
+        public Builder doubleMathOp(String columnName, MathOp mathOp, double scalar) {
+            return transform(new DoubleMathOpTransform(columnName, mathOp, scalar));
+        }
+
+        /**
          * Convert the specified columns from a categorical representation to a one-hot representation.
          * This involves the creation of multiple new columns each.
          *
@@ -231,11 +286,11 @@ public class TransformProcess implements Serializable {
                 case MinMax:
                     return transform(new MinMaxNormalizer(column, min, max));
                 case MinMax2:
-                    return transform(new MinMaxNormalizer(column,min,max,-1,1));
+                    return transform(new MinMaxNormalizer(column, min, max, -1, 1));
                 case Standardize:
-                    return transform(new StandardizeNormalizer(column,mean,sigma));
+                    return transform(new StandardizeNormalizer(column, mean, sigma));
                 case SubtractMean:
-                    return transform(new SubtractMeanNormalizer(column,mean));
+                    return transform(new SubtractMeanNormalizer(column, mean));
                 case Log2Mean:
                     return transform(new Log2Normalizer(column, mean, min, 0.5));
                 case Log2MeanExcludingMin:
@@ -254,9 +309,9 @@ public class TransformProcess implements Serializable {
          * Convert a set of independent records/examples into a sequence, according to some key.
          * Within each sequence, values are ordered using the provided {@link SequenceComparator}
          *
-         * @param keyColumn     Column to use as a key (values with the same key will be combined into sequences)
-         * @param comparator    A SequenceComparator to order the values within each sequence (for example, by time or String order)
-         * @param sequenceType  The type of sequence
+         * @param keyColumn    Column to use as a key (values with the same key will be combined into sequences)
+         * @param comparator   A SequenceComparator to order the values within each sequence (for example, by time or String order)
+         * @param sequenceType The type of sequence
          */
         public Builder convertToSequence(String keyColumn, SequenceComparator comparator, SequenceSchema.SequenceType sequenceType) {
             actionList.add(new DataAction(new ConvertToSequence(keyColumn, comparator, sequenceType)));
@@ -266,7 +321,7 @@ public class TransformProcess implements Serializable {
         /**
          * Split sequences into 1 or more other sequences. Used for example to split large sequences into a set of smaller sequences
          *
-         * @param split    SequenceSplit that defines how splits will occur
+         * @param split SequenceSplit that defines how splits will occur
          */
         public Builder splitSequence(SequenceSplit split) {
             actionList.add(new DataAction(split));
@@ -276,9 +331,10 @@ public class TransformProcess implements Serializable {
         /**
          * Reduce (i.e., aggregate/combine) a set of examples (typically by key).
          * <b>Note</b>: In the current implementation, reduction operations can be performed only on standard (i.e., non-sequence) data
+         *
          * @param reducer Reducer to use
          */
-        public Builder reduce(IReducer reducer){
+        public Builder reduce(IReducer reducer) {
             actionList.add(new DataAction(reducer));
             return this;
         }

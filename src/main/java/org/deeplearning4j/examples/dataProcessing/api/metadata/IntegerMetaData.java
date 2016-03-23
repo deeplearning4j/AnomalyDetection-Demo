@@ -4,7 +4,9 @@ import lombok.Data;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 
-/**Metadata for an integer column
+/**
+ * Metadata for an integer column
+ *
  * @author Alex Black
  */
 @Data
@@ -14,16 +16,15 @@ public class IntegerMetaData implements ColumnMetaData {
     private final Integer minAllowedValue;
     private final Integer maxAllowedValue;
 
-    public IntegerMetaData(){
-        this(null,null);
+    public IntegerMetaData() {
+        this(null, null);
     }
 
     /**
-     *
      * @param min Min allowed value. If null: no restriction on min value value in this column
      * @param max Max allowed value. If null: no restiction on max value in this column
      */
-    public IntegerMetaData(Integer min, Integer max){
+    public IntegerMetaData(Integer min, Integer max) {
         this.minAllowedValue = min;
         this.maxAllowedValue = max;
     }
@@ -36,24 +37,29 @@ public class IntegerMetaData implements ColumnMetaData {
     @Override
     public boolean isValid(Writable writable) {
         int value;
-        try{
+        try {
             value = Integer.parseInt(writable.toString());
-        }catch(NumberFormatException e){
+        } catch (NumberFormatException e) {
             return false;
         }
 
-        if(minAllowedValue != null && value < minAllowedValue) return false;
-        if(maxAllowedValue != null && value > maxAllowedValue) return false;
+        if (minAllowedValue != null && value < minAllowedValue) return false;
+        if (maxAllowedValue != null && value > maxAllowedValue) return false;
         return true;
     }
 
     @Override
-    public String toString(){
+    public IntegerMetaData clone() {
+        return new IntegerMetaData(minAllowedValue, maxAllowedValue);
+    }
+
+    @Override
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("IntegerMetaData(");
-        if(minAllowedValue != null) sb.append("minAllowed=").append(minAllowedValue);
-        if(maxAllowedValue != null){
-            if(minAllowedValue != null) sb.append(",");
+        if (minAllowedValue != null) sb.append("minAllowed=").append(minAllowedValue);
+        if (maxAllowedValue != null) {
+            if (minAllowedValue != null) sb.append(",");
             sb.append("maxAllowed=").append(maxAllowedValue);
         }
         sb.append(")");

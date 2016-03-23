@@ -67,6 +67,11 @@ public class DoubleMetaData implements ColumnMetaData {
     }
 
     @Override
+    public DoubleMetaData clone() {
+        return new DoubleMetaData(min, max, allowNaN, allowInfinite);
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("DoubleMetaData(");
