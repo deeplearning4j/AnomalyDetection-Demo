@@ -80,9 +80,9 @@ public class NSLKDDTableConverter implements TableConverter {
         columnMap.put("duration",schema.getIndexOfColumn("duration"));
         columnMap.put("source-dest bytes",schema.getIndexOfColumn("src_bytes"));
         columnMap.put("dest-source bytes",schema.getIndexOfColumn("dst_bytes"));
-        columnMap.put("src_count",schema.getIndexOfColumn("src_count"));
+        columnMap.put("srv_count",schema.getIndexOfColumn("srv_count"));
         columnMap.put("dst_count",schema.getIndexOfColumn("dst_count"));
-        columnMap.put("state",schema.getIndexOfColumn("state"));
+        columnMap.put("state",schema.getIndexOfColumn("connection_status"));
         return columnMap;
     }
 
