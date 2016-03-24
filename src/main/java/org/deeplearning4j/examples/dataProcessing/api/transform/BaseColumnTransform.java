@@ -20,6 +20,7 @@ public abstract class BaseColumnTransform extends BaseTransform {
 
     protected final String columnName;
     protected int columnNumber = -1;
+    private static final long serialVersionUID = 0L;
 
     public BaseColumnTransform(String columnName) {
         this.columnName = columnName;
