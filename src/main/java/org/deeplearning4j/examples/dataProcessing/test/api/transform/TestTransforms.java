@@ -47,7 +47,7 @@ import static org.junit.Assert.fail;
  */
 public class TestTransforms {
 
-    private static Schema getSchema(ColumnType type, String... colNames) {
+    public static Schema getSchema(ColumnType type, String... colNames) {
 
         Schema.Builder schema = new Schema.Builder();
 
