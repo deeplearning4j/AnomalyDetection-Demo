@@ -370,7 +370,8 @@ public class NIDSMain {
         System.out.println("Evaluation complete. Time " + testTime +" min");
         // Save config
         try {
-            FileUtils.writeStringToFile(new File(PATH.NETWORK_CONFIG_FILE), net.conf().toJson());
+            String config = net.getLayerWiseConfigurations().toJson();
+            FileUtils.writeStringToFile(new File(PATH.NETWORK_CONFIG_FILE), config);
         } catch (IOException e) {
             e.printStackTrace();
         }
