@@ -86,7 +86,7 @@ public class NIDSMain {
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 1;
     @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-dataS")
-    protected static String dataSet = "NSLKDD";
+    protected static String dataSet = "UNSW_NB15";
     @Option(name="--preProcess",usage="Preprocess model",aliases="-pM")
     protected boolean preProcess = false;
     @Option(name="--earlyStop",usage="Apply early stop",aliases="-eS")

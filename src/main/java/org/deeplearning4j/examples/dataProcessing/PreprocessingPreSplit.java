@@ -200,8 +200,8 @@ public class PreprocessingPreSplit {
 
         //Store histograms
         System.out.println("Storing charts...");
-        Histograms.plot(preprocessedSchema, dataAnalysis, CHART_DIRECTORY_ORIG);
-        Histograms.plot(normSchema, normDataAnalysis, CHART_DIRECTORY_NORM);
+//        Histograms.plot(preprocessedSchema, dataAnalysis, CHART_DIRECTORY_ORIG);
+//        Histograms.plot(normSchema, normDataAnalysis, CHART_DIRECTORY_NORM);
         System.out.println();
     }
 
