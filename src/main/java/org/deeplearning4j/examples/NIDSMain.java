@@ -47,18 +47,19 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * NIDS Main Class
- *
- * Take in common parameters
- * Setup model
- * Run single server model, use spark stand alone or run on spark cluster
- *
+ **
  * Steps:
  * - Download dataset and store in System.getProperty("user.home"), "data/NIDS/<name of dataset>"
  *      - https://console.aws.amazon.com/s3/home?region=us-west-2#&bucket=anomaly-data&prefix=nids/UNSW/input/
  *      - https://www.unsw.adfa.edu.au/australian-centre-for-cyber-security/cybersecurity/ADFA-NB15-Datasets/
  * - Run PreprocessingPreSplit and pass in the name of the dataset folder (e.g.) UNSW_NB15 or NSLKDD
- * - Run NIDSMain (or TrainMLP) and pass in values for below and/or update variables below to train and store the model
- * - Run NIDSStreaming to run SparkStreamin and access analysis GUI of streaming results
+ * - Run NIDSMain and pass in values for below and/or update variables below to train and store the model
+ * - Run NIDSStreaming to run SparkStreaming and access analysis GUI of streaming results
+ *
+ * OR
+ *
+ * - Download dataset
+ * - Run FullPipelineRun
  *
  * Steps for RNN training:
  * - Download data set as above
@@ -256,16 +257,16 @@ public class NIDSMain {
                 break;
             case "Denoise":
                 BasicAutoEncoderModel aemodel = new BasicAutoEncoderModel(
-                        new int[]{nIn, 60, 25},
-                        new int[]{60, 25, nOut},
+                        new int[]{nIn, 60, 30},
+                        new int[]{60, 30, nOut},
                         iterations,
-                        "softsign",
+                        "sigmoid",
                         WeightInit.XAVIER,
                         OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
-                        Updater.SGD,
-                        LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD,
-                        5e-3,
-                        1,
+                        Updater.ADAM,
+                        LossFunctions.LossFunction.MSE,
+                        5e-4,
+                        1e-2,
                         0.3,
                         seed);
                 conf = aemodel.conf();

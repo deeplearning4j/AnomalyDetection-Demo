@@ -12,7 +12,7 @@ public class TrainAutoEncoder {
                 "--dataSet", "NSLKDD",
                 "--modelType", "Denoise",
                 "--batchSize", "100",
-                "--numBatches", "200",
+                "--numBatches", "100",
                 "--numTestBatches", "100",
                 "--iterations", "1",
                 "--numEpochs", "2",

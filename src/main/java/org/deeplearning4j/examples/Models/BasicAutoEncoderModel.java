@@ -67,6 +67,7 @@ public class BasicAutoEncoderModel {
                 .optimizationAlgo(optimizationAlgorithm)
                 .learningRate(learningRate)
                 .momentum(momentum)
+                .updater(updater)
                 .regularization(true)
                 .l2(l2)
                 .gradientNormalization(GradientNormalization.ClipElementWiseAbsoluteValue)

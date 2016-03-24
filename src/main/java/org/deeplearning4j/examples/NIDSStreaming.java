@@ -1,4 +1,4 @@
-package org.deeplearning4j.examples.streaming;
+package org.deeplearning4j.examples;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -8,6 +8,9 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDTableConverter;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
+import org.deeplearning4j.examples.streaming.CollectAtUIDriverFunction;
+import org.deeplearning4j.examples.streaming.FromRawCsvReceiver;
+import org.deeplearning4j.examples.streaming.Predict3Function;
 import org.deeplearning4j.examples.utils.SparkConnectFactory;
 import org.deeplearning4j.examples.ui.TableConverter;
 import org.deeplearning4j.examples.utils.DataPathUtil;
