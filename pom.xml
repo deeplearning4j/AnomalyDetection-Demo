@@ -249,7 +249,7 @@
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>echidna</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>

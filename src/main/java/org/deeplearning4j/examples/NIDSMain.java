@@ -187,8 +187,9 @@ public class NIDSMain {
                 evaluateUnsupervisedPerformance(testData);
             }
 
-            System.out.println("\nSave model and params....");
-            saveAndPrintResults(network);
+            if (saveModel) {
+                saveAndPrintResults(network);
+            }
             System.out.println("\n==========================Example Finished==============================");
             System.exit(0);
         }
@@ -370,6 +371,7 @@ public class NIDSMain {
         System.out.println("Training complete. Time: " + trainTime +" min");
         System.out.println("Evaluation complete. Time " + testTime +" min");
         // Save config
+        System.out.println("\nSave model and params....");
         try {
             String config = net.getLayerWiseConfigurations().toJson();
             FileUtils.writeStringToFile(new File(PATH.NETWORK_CONFIG_FILE), config);
