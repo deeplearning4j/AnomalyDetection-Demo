@@ -19,6 +19,18 @@ public class StringColumnCondition extends BaseColumnCondition {
 
     /**
      * Constructor for conditions equal or not equal
+     * Uses default sequence condition mode, {@link BaseColumnCondition#DEFAULT_SEQUENCE_CONDITION_MODE}
+     *
+     * @param column Column to check for the condition
+     * @param op     Operation (== or != only)
+     * @param value  Value to use in the condition
+     */
+    public StringColumnCondition(String column, ConditionOp op, String value) {
+        this(column, BaseColumnCondition.DEFAULT_SEQUENCE_CONDITION_MODE, op, value);
+    }
+
+    /**
+     * Constructor for conditions equal or not equal
      *
      * @param column                Column to check for the condition
      * @param sequenceConditionMode Mode for handling sequence data
@@ -26,14 +38,26 @@ public class StringColumnCondition extends BaseColumnCondition {
      * @param value                 Value to use in the condition
      */
     public StringColumnCondition(String column, SequenceConditionMode sequenceConditionMode,
-                                 ConditionOp op, String value ) {
+                                 ConditionOp op, String value) {
         super(column, sequenceConditionMode);
-        if(op != ConditionOp.Equal && op != ConditionOp.NotEqual){
+        if (op != ConditionOp.Equal && op != ConditionOp.NotEqual) {
             throw new IllegalArgumentException("Invalid condition op: can only use this constructor with Equal or NotEqual conditions");
         }
         this.op = op;
         this.value = value;
         this.set = null;
+    }
+
+    /**
+     * Constructor for operations: ConditionOp.InSet, ConditionOp.NotInSet
+     * Uses default sequence condition mode, {@link BaseColumnCondition#DEFAULT_SEQUENCE_CONDITION_MODE}
+     *
+     * @param column Column to check for the condition
+     * @param op     Operation. Must be either ConditionOp.InSet, ConditionOp.NotInSet
+     * @param set    Set to use in the condition
+     */
+    public StringColumnCondition(String column, ConditionOp op, Set<String> set) {
+        this(column, BaseColumnCondition.DEFAULT_SEQUENCE_CONDITION_MODE, op, set);
     }
 
     /**
@@ -47,7 +71,7 @@ public class StringColumnCondition extends BaseColumnCondition {
     public StringColumnCondition(String column, SequenceConditionMode sequenceConditionMode,
                                  ConditionOp op, Set<String> set) {
         super(column, sequenceConditionMode);
-        if(op != ConditionOp.InSet && op != ConditionOp.NotInSet){
+        if (op != ConditionOp.InSet && op != ConditionOp.NotInSet) {
             throw new IllegalArgumentException("Invalid condition op: can ONLY use this constructor with InSet or NotInSet ops");
         }
         this.op = op;
@@ -58,7 +82,7 @@ public class StringColumnCondition extends BaseColumnCondition {
 
     @Override
     public boolean columnCondition(Writable writable) {
-        switch (op){
+        switch (op) {
             case Equal:
                 return value.equals(writable.toString());
             case NotEqual:

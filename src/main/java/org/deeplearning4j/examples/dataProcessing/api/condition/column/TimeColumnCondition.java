@@ -19,6 +19,18 @@ public class TimeColumnCondition extends BaseColumnCondition {
 
     /**
      * Constructor for operations such as less than, equal to, greater than, etc.
+     * Uses default sequence condition mode, {@link BaseColumnCondition#DEFAULT_SEQUENCE_CONDITION_MODE}
+     *
+     * @param column Column to check for the condition
+     * @param op     Operation (<, >=, !=, etc)
+     * @param value  Time value (in epoch millisecond format) to use in the condition
+     */
+    public TimeColumnCondition(String column, ConditionOp op, long value) {
+        this(column, BaseColumnCondition.DEFAULT_SEQUENCE_CONDITION_MODE, op, value);
+    }
+
+    /**
+     * Constructor for operations such as less than, equal to, greater than, etc.
      *
      * @param column                Column to check for the condition
      * @param sequenceConditionMode Mode for handling sequence data
@@ -26,14 +38,26 @@ public class TimeColumnCondition extends BaseColumnCondition {
      * @param value                 Time value (in epoch millisecond format) to use in the condition
      */
     public TimeColumnCondition(String column, SequenceConditionMode sequenceConditionMode,
-                               ConditionOp op, long value ) {
+                               ConditionOp op, long value) {
         super(column, sequenceConditionMode);
-        if(op == ConditionOp.InSet || op == ConditionOp.NotInSet){
+        if (op == ConditionOp.InSet || op == ConditionOp.NotInSet) {
             throw new IllegalArgumentException("Invalid condition op: cannot use this constructor with InSet or NotInSet ops");
         }
         this.op = op;
         this.value = value;
         this.set = null;
+    }
+
+    /**
+     * Constructor for operations: ConditionOp.InSet, ConditionOp.NotInSet
+     * Uses default sequence condition mode, {@link BaseColumnCondition#DEFAULT_SEQUENCE_CONDITION_MODE}
+     *
+     * @param column Column to check for the condition
+     * @param op     Operation. Must be either ConditionOp.InSet, ConditionOp.NotInSet
+     * @param set    Set to use in the condition
+     */
+    public TimeColumnCondition(String column, ConditionOp op, Set<Long> set) {
+        this(column, BaseColumnCondition.DEFAULT_SEQUENCE_CONDITION_MODE, op, set);
     }
 
     /**
@@ -47,7 +71,7 @@ public class TimeColumnCondition extends BaseColumnCondition {
     public TimeColumnCondition(String column, SequenceConditionMode sequenceConditionMode,
                                ConditionOp op, Set<Long> set) {
         super(column, sequenceConditionMode);
-        if(op != ConditionOp.InSet && op != ConditionOp.NotInSet){
+        if (op != ConditionOp.InSet && op != ConditionOp.NotInSet) {
             throw new IllegalArgumentException("Invalid condition op: can ONLY use this constructor with InSet or NotInSet ops");
         }
         this.op = op;
@@ -58,7 +82,7 @@ public class TimeColumnCondition extends BaseColumnCondition {
 
     @Override
     public boolean columnCondition(Writable writable) {
-        switch (op){
+        switch (op) {
             case LessThan:
                 return writable.toLong() < value;
             case LessOrEqual:

@@ -3,6 +3,10 @@ package org.deeplearning4j.examples.dataProcessing.test.api.filter;
 import org.canova.api.io.data.DoubleWritable;
 import org.canova.api.io.data.IntWritable;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.examples.dataProcessing.api.condition.Condition;
+import org.deeplearning4j.examples.dataProcessing.api.condition.ConditionOp;
+import org.deeplearning4j.examples.dataProcessing.api.condition.column.IntegerColumnCondition;
+import org.deeplearning4j.examples.dataProcessing.api.filter.ConditionFilter;
 import org.deeplearning4j.examples.dataProcessing.api.filter.Filter;
 import org.deeplearning4j.examples.dataProcessing.api.filter.FilterInvalidValues;
 import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
@@ -13,13 +17,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Created by Alex on 21/03/2016.
  */
-public class TestFilterInvalidValues {
+public class TestFilters {
 
     @Test
     public void testFilterInvalidValues(){
@@ -48,7 +53,24 @@ public class TestFilterInvalidValues {
         assertTrue(filter.removeExample(Arrays.asList((Writable)new IntWritable(11),new DoubleWritable(0))));
         assertTrue(filter.removeExample(Arrays.asList((Writable)new IntWritable(0),new DoubleWritable(-101))));
         assertTrue(filter.removeExample(Arrays.asList((Writable)new IntWritable(0),new DoubleWritable(101))));
+    }
 
+    @Test
+    public void testConditionFilter(){
+        Schema schema = new Schema.Builder()
+                .addColumnInteger("column")
+                .build();
+
+        Condition condition = new IntegerColumnCondition("column", ConditionOp.LessThan,0);
+        condition.setInputSchema(schema);
+
+        Filter filter = new ConditionFilter(condition);
+
+        assertFalse(filter.removeExample(Collections.singletonList((Writable)new IntWritable(10))));
+        assertFalse(filter.removeExample(Collections.singletonList((Writable)new IntWritable(1))));
+        assertFalse(filter.removeExample(Collections.singletonList((Writable)new IntWritable(0))));
+        assertTrue(filter.removeExample(Collections.singletonList((Writable)new IntWritable(-1))));
+        assertTrue(filter.removeExample(Collections.singletonList((Writable)new IntWritable(-10))));
     }
 
 }

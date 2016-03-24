@@ -9,6 +9,9 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.dataProcessing.api.ColumnType;
 import org.deeplearning4j.examples.dataProcessing.api.MathOp;
 import org.deeplearning4j.examples.dataProcessing.api.Transform;
+import org.deeplearning4j.examples.dataProcessing.api.condition.Condition;
+import org.deeplearning4j.examples.dataProcessing.api.condition.ConditionOp;
+import org.deeplearning4j.examples.dataProcessing.api.condition.column.IntegerColumnCondition;
 import org.deeplearning4j.examples.dataProcessing.api.metadata.CategoricalMetaData;
 import org.deeplearning4j.examples.dataProcessing.api.metadata.DoubleMetaData;
 import org.deeplearning4j.examples.dataProcessing.api.metadata.IntegerMetaData;
@@ -21,6 +24,7 @@ import org.deeplearning4j.examples.dataProcessing.api.transform.categorical.Stri
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.DuplicateColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.RemoveColumnsTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.column.RenameColumnsTransform;
+import org.deeplearning4j.examples.dataProcessing.api.transform.condition.ConditionalReplaceValueTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.integer.IntegerMathOpTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.integer.ReplaceEmptyIntegerWithValueTransform;
 import org.deeplearning4j.examples.dataProcessing.api.transform.integer.ReplaceInvalidWithIntegerTransform;
@@ -559,70 +563,70 @@ public class TestTransforms {
     }
 
     @Test
-    public void testIntegerMathOpTransform(){
+    public void testIntegerMathOpTransform() {
         Schema schema = new Schema.Builder()
-                .addColumnInteger("column",-1,1)
+                .addColumnInteger("column", -1, 1)
                 .build();
 
-        Transform transform = new IntegerMathOpTransform("column", MathOp.Multiply,5);
+        Transform transform = new IntegerMathOpTransform("column", MathOp.Multiply, 5);
         transform.setInputSchema(schema);
 
         Schema out = transform.transform(schema);
         assertEquals(1, out.getColumnMetaData().size());
         assertEquals(ColumnType.Integer, out.getType(0));
-        IntegerMetaData meta = (IntegerMetaData)out.getMetaData(0);
-        assertEquals(-5, (int)meta.getMinAllowedValue());
-        assertEquals(5, (int)meta.getMaxAllowedValue());
+        IntegerMetaData meta = (IntegerMetaData) out.getMetaData(0);
+        assertEquals(-5, (int) meta.getMinAllowedValue());
+        assertEquals(5, (int) meta.getMaxAllowedValue());
 
-        assertEquals(Collections.singletonList((Writable)new IntWritable(-5)), transform.map(Collections.singletonList((Writable)new IntWritable(-1))));
-        assertEquals(Collections.singletonList((Writable)new IntWritable(0)), transform.map(Collections.singletonList((Writable)new IntWritable(0))));
-        assertEquals(Collections.singletonList((Writable)new IntWritable(5)), transform.map(Collections.singletonList((Writable)new IntWritable(1))));
+        assertEquals(Collections.singletonList((Writable) new IntWritable(-5)), transform.map(Collections.singletonList((Writable) new IntWritable(-1))));
+        assertEquals(Collections.singletonList((Writable) new IntWritable(0)), transform.map(Collections.singletonList((Writable) new IntWritable(0))));
+        assertEquals(Collections.singletonList((Writable) new IntWritable(5)), transform.map(Collections.singletonList((Writable) new IntWritable(1))));
     }
 
     @Test
-    public void testLongMathOpTransform(){
+    public void testLongMathOpTransform() {
         Schema schema = new Schema.Builder()
-                .addColumnLong("column",-1L,1L)
+                .addColumnLong("column", -1L, 1L)
                 .build();
 
-        Transform transform = new LongMathOpTransform("column", MathOp.Multiply,5);
+        Transform transform = new LongMathOpTransform("column", MathOp.Multiply, 5);
         transform.setInputSchema(schema);
 
         Schema out = transform.transform(schema);
         assertEquals(1, out.getColumnMetaData().size());
         assertEquals(ColumnType.Long, out.getType(0));
         LongMetaData meta = (LongMetaData) out.getMetaData(0);
-        assertEquals(-5, (long)meta.getMin());
-        assertEquals(5, (long)meta.getMax());
+        assertEquals(-5, (long) meta.getMin());
+        assertEquals(5, (long) meta.getMax());
 
-        assertEquals(Collections.singletonList((Writable)new LongWritable(-5)), transform.map(Collections.singletonList((Writable)new LongWritable(-1))));
-        assertEquals(Collections.singletonList((Writable)new LongWritable(0)), transform.map(Collections.singletonList((Writable)new LongWritable(0))));
-        assertEquals(Collections.singletonList((Writable)new LongWritable(5)), transform.map(Collections.singletonList((Writable)new LongWritable(1))));
+        assertEquals(Collections.singletonList((Writable) new LongWritable(-5)), transform.map(Collections.singletonList((Writable) new LongWritable(-1))));
+        assertEquals(Collections.singletonList((Writable) new LongWritable(0)), transform.map(Collections.singletonList((Writable) new LongWritable(0))));
+        assertEquals(Collections.singletonList((Writable) new LongWritable(5)), transform.map(Collections.singletonList((Writable) new LongWritable(1))));
     }
 
     @Test
-    public void testDoubleMathOpTransform(){
+    public void testDoubleMathOpTransform() {
         Schema schema = new Schema.Builder()
-                .addColumnDouble("column",-1.0,1.0)
+                .addColumnDouble("column", -1.0, 1.0)
                 .build();
 
-        Transform transform = new DoubleMathOpTransform("column", MathOp.Multiply,5.0);
+        Transform transform = new DoubleMathOpTransform("column", MathOp.Multiply, 5.0);
         transform.setInputSchema(schema);
 
         Schema out = transform.transform(schema);
         assertEquals(1, out.getColumnMetaData().size());
         assertEquals(ColumnType.Double, out.getType(0));
-        DoubleMetaData meta = (DoubleMetaData)out.getMetaData(0);
+        DoubleMetaData meta = (DoubleMetaData) out.getMetaData(0);
         assertEquals(-5.0, meta.getMin(), 1e-6);
         assertEquals(5.0, meta.getMax(), 1e-6);
 
-        assertEquals(Collections.singletonList((Writable)new DoubleWritable(-5)), transform.map(Collections.singletonList((Writable)new DoubleWritable(-1))));
-        assertEquals(Collections.singletonList((Writable)new DoubleWritable(0)), transform.map(Collections.singletonList((Writable)new DoubleWritable(0))));
-        assertEquals(Collections.singletonList((Writable)new DoubleWritable(5)), transform.map(Collections.singletonList((Writable)new DoubleWritable(1))));
+        assertEquals(Collections.singletonList((Writable) new DoubleWritable(-5)), transform.map(Collections.singletonList((Writable) new DoubleWritable(-1))));
+        assertEquals(Collections.singletonList((Writable) new DoubleWritable(0)), transform.map(Collections.singletonList((Writable) new DoubleWritable(0))));
+        assertEquals(Collections.singletonList((Writable) new DoubleWritable(5)), transform.map(Collections.singletonList((Writable) new DoubleWritable(1))));
     }
 
     @Test
-    public void testRenameColumnsTransform(){
+    public void testRenameColumnsTransform() {
 
         Schema schema = new Schema.Builder()
                 .addColumnDouble("col1")
@@ -630,7 +634,7 @@ public class TestTransforms {
                 .addColumnInteger("col3")
                 .build();
 
-        Transform transform = new RenameColumnsTransform(Arrays.asList("col1","col3"), Arrays.asList("column1","column3"));
+        Transform transform = new RenameColumnsTransform(Arrays.asList("col1", "col3"), Arrays.asList("column1", "column3"));
         transform.setInputSchema(schema);
 
         Schema out = transform.transform(schema);
@@ -643,6 +647,28 @@ public class TestTransforms {
         assertEquals("column1", out.getName(0));
         assertEquals("col2", out.getName(1));
         assertEquals("column3", out.getName(2));
+    }
+
+    @Test
+    public void testConditionalReplaceValueTransform() {
+        Schema schema = getSchema(ColumnType.Integer);
+
+        Condition condition = new IntegerColumnCondition("column", ConditionOp.LessThan, 0);
+        condition.setInputSchema(schema);
+
+        Transform transform = new ConditionalReplaceValueTransform("column",new IntWritable(0), condition);
+        transform.setInputSchema(schema);
+
+        assertEquals(Collections.singletonList((Writable)new IntWritable(10)),
+                transform.map(Collections.singletonList((Writable)new IntWritable(10))));
+        assertEquals(Collections.singletonList((Writable)new IntWritable(1)),
+                transform.map(Collections.singletonList((Writable)new IntWritable(1))));
+        assertEquals(Collections.singletonList((Writable)new IntWritable(0)),
+                transform.map(Collections.singletonList((Writable)new IntWritable(0))));
+        assertEquals(Collections.singletonList((Writable)new IntWritable(0)),
+                transform.map(Collections.singletonList((Writable)new IntWritable(-1))));
+        assertEquals(Collections.singletonList((Writable)new IntWritable(0)),
+                transform.map(Collections.singletonList((Writable)new IntWritable(-10))));
     }
 
 }
