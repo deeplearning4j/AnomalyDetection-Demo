@@ -8,7 +8,7 @@ import org.canova.api.records.reader.RecordReader;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
+import org.deeplearning4j.preprocessing.api.TransformProcess;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.factory.Nd4j;

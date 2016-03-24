@@ -5,11 +5,11 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.dataProcessing.spark.AnalyzeSpark;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
-import org.deeplearning4j.examples.dataProcessing.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.dataProcessing.spark.misc.StringToWritablesFunction;
+import org.deeplearning4j.preprocessing.api.dataquality.DataQualityAnalysis;
+import org.deeplearning4j.preprocessing.api.schema.Schema;
+import org.deeplearning4j.preprocessing.spark.AnalyzeSpark;
+import org.deeplearning4j.preprocessing.spark.misc.StringToWritablesFunction;
 
 import java.util.Collection;
 import java.util.List;

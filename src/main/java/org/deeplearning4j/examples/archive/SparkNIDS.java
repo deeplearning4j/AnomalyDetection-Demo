@@ -8,7 +8,6 @@ import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.NIDSMain;
-import org.deeplearning4j.examples.dataProcessing.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.spark.canova.CanovaDataSetFunction;
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer;

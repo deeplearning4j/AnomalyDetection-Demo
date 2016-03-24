@@ -123,7 +123,7 @@
         <dependencies>
             <dependency>
                 <groupId>org.nd4j</groupId>
-                <artifactId>nd4j-x86</artifactId>
+                <artifactId>nd4j-native</artifactId>
                 <version>${nd4j.version}</version>
             </dependency>
             <dependency>
@@ -242,6 +242,14 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-mllib_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
+        </dependency>
+
+        <!--For data preprocessing-->
+
+        <dependency>
+            <groupId>org.deeplearning4j</groupId>
+            <artifactId>echidna</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

@@ -6,22 +6,23 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.examples.dataProcessing.api.TransformProcess;
-import org.deeplearning4j.examples.dataProcessing.api.split.RandomSplit;
 import org.deeplearning4j.examples.datasets.iscx.ISCXUtil;
-import org.deeplearning4j.examples.utils.SparkConnectFactory;
-import org.deeplearning4j.examples.utils.SparkUtils;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.examples.dataProcessing.spark.AnalyzeSpark;
-import org.deeplearning4j.examples.dataProcessing.api.analysis.DataAnalysis;
-import org.deeplearning4j.examples.dataProcessing.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.examples.dataProcessing.spark.SparkTransformExecutor;
-import org.deeplearning4j.examples.dataProcessing.api.schema.Schema;
-import org.deeplearning4j.examples.dataProcessing.spark.misc.StringToWritablesFunction;
-import org.deeplearning4j.examples.utils.Histograms;
-import org.deeplearning4j.examples.utils.SparkExport;
 import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
+import org.deeplearning4j.preprocessing.SplitTrainTestRaw;
+import org.deeplearning4j.preprocessing.api.TransformProcess;
+import org.deeplearning4j.preprocessing.api.analysis.DataAnalysis;
+import org.deeplearning4j.preprocessing.api.charts.Histograms;
+import org.deeplearning4j.preprocessing.api.dataquality.DataQualityAnalysis;
+import org.deeplearning4j.preprocessing.api.schema.Schema;
+import org.deeplearning4j.preprocessing.api.split.RandomSplit;
+import org.deeplearning4j.preprocessing.spark.AnalyzeSpark;
+import org.deeplearning4j.preprocessing.spark.SparkTransformExecutor;
+import org.deeplearning4j.preprocessing.spark.misc.StringToWritablesFunction;
+import org.deeplearning4j.examples.utils.SparkConnectFactory;
+import org.deeplearning4j.preprocessing.spark.utils.SparkExport;
+import org.deeplearning4j.preprocessing.spark.utils.SparkUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -66,7 +67,7 @@ public class PreprocessingPreSplit {
         SparkTransformExecutor executor = new SparkTransformExecutor();
 
         if (rawSplit) {
-            SplitTrainTestRaw.split(dataSet, sc);
+            SplitTrainTestRaw.split(path.IN_DIR, path.RAW_TRAIN_FILE, path.RAW_TEST_FILE, sc);
             int i = 0;
             for (String inputPath : inputDir) {
 
@@ -199,8 +200,8 @@ public class PreprocessingPreSplit {
 
         //Store histograms
         System.out.println("Storing charts...");
-//        Histograms.plot(preprocessedSchema, dataAnalysis, CHART_DIRECTORY_ORIG);
-//        Histograms.plot(normSchema, normDataAnalysis, CHART_DIRECTORY_NORM);
+        Histograms.plot(preprocessedSchema, dataAnalysis, CHART_DIRECTORY_ORIG);
+        Histograms.plot(normSchema, normDataAnalysis, CHART_DIRECTORY_NORM);
         System.out.println();
     }
 

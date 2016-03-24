@@ -15,16 +15,16 @@ public class FullPipelineRun {
                 "--batchSize", "128",
                 "--numEpochs", "200",
                 "--iterations", "1",
-                "--dataSet", "UNSW_NB15",
-                "--nIn", "66",
-                "--nOut", "10",
-//                "--dataSet", "NSLKDD",
-//                "--nIn", "112",
-//                "--nOut", "40",
-//                "--numBatches", "200",
-//                "--numTestBatches", "20",
+//                "--dataSet", "UNSW_NB15",
+//                "--nIn", "66",
+//                "--nOut", "10",
+                "--dataSet", "NSLKDD",
+                "--nIn", "112",
+                "--nOut", "40",
+                "--numBatches", "200",
+                "--numTestBatches", "20"
 //                "--useHistogramListener",
-                "--saveModel"
+//                "--saveModel"
         );
 //        NIDSStreaming.main("UNSW_NB15");
 

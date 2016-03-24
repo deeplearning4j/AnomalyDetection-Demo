@@ -11,7 +11,7 @@ public class DataPathUtil {
 
     public static boolean WIN = System.getProperty("os.name").toLowerCase().contains("win");
     public static final String WIN_DIR = "C:/Data/";
-    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/NIDS/");
+    public static final String MAC_DIR = FilenameUtils.concat(System.getProperty("user.home"), "data/");
 
     protected static String rawFilePath = "raw/";
 
