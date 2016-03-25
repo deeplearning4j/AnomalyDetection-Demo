@@ -15,7 +15,7 @@ public class TrainAutoEncoder {
                 "--numBatches", "100",
                 "--numTestBatches", "100",
                 "--iterations", "1",
-                "--numEpochs", "2",
+                "--numEpochs", "100",
                 "--nIn", "112",
                 "--nOut", "40",
                 "--useHistogramListener"

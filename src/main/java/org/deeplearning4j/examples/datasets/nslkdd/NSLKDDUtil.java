@@ -72,6 +72,7 @@ public class NSLKDDUtil {
         return csvSchema;
     }
 
+    // Supervised
     public static TransformProcess getPreProcessingProcess(){
         TransformProcess seq = new TransformProcess.Builder(getCsvSchema())
                 .transform(new MapAllStringsExceptListTransform("service", "other",  Arrays.asList("other", "private", "http", "ftp_data","name",
@@ -90,7 +91,6 @@ public class NSLKDDUtil {
                         "ctf", "ssh", "daytime", "netstat", "nnsp", "IRC", "pop_3", "netbios_ssn", "remote_job","pop_2","printer",
                         "rje", "shell", "X11"))
                 .removeColumns("num_outbound_cmds", "other") // num_outbound_commands = 0 only not informative
-//                .removeColumns("attack") // remove for unsupervised
                 .build();
 
         return seq;

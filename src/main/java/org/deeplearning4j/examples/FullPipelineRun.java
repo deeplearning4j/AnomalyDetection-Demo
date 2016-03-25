@@ -25,8 +25,7 @@ public class FullPipelineRun {
 //                "--numBatches", "200",
                 "--numTestBatches", "1000",
 //                "--useHistogramListener",
-                "--saveModel"
-        );
+                "--saveModel");
 //        NIDSStreaming.main("UNSW_NB15");
 
     }
