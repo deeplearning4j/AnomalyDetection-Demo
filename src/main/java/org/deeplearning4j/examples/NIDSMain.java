@@ -331,7 +331,8 @@ public class NIDSMain {
         while(iter.hasNext()  && countTrain++ < numBatches) {
             next = iter.next();
             if(next == null) break;
-            net.fit(next);
+            if(supervised) net.fit(next);
+            else net.fit(next.getFeatureMatrix());
             if (countTrain % TEST_EVERY_N_MINIBATCHES == 0 && supervised) {
                 //Test:
                 log.info("--- Evaluation after {} examples ---",countTrain*batchSize);
