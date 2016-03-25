@@ -13,7 +13,6 @@ import org.deeplearning4j.examples.datasets.nslkdd.NSLKDDUtil;
 import org.deeplearning4j.preprocessing.SplitTrainTestRaw;
 import org.deeplearning4j.preprocessing.api.TransformProcess;
 import org.deeplearning4j.preprocessing.api.analysis.DataAnalysis;
-import org.deeplearning4j.preprocessing.api.charts.Histograms;
 import org.deeplearning4j.preprocessing.api.dataquality.DataQualityAnalysis;
 import org.deeplearning4j.preprocessing.api.schema.Schema;
 import org.deeplearning4j.preprocessing.api.split.RandomSplit;
