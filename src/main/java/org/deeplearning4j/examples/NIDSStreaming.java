@@ -97,6 +97,9 @@ public class NIDSStreaming {
             params = Nd4j.read(dis);
         }
 
+        //This is a work-around for this issue: https://github.com/deeplearning4j/nd4j/issues/732
+        params = Nd4j.create(params.data().asDouble(), params.shape());
+
         Thread.sleep(3000);
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(new File(path.NORMALIZER_FILE)))) {
             norm = (TransformProcess) ois.readObject();

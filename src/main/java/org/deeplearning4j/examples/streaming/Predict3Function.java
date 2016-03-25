@@ -3,6 +3,7 @@ package org.deeplearning4j.examples.streaming;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.canova.api.writable.Writable;
+import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -63,6 +64,7 @@ public class Predict3Function implements FlatMapFunction<Iterator<Tuple3<Long,IN
 
             INDArray inData = Nd4j.vstack(collected.toArray(new INDArray[collected.size()]));
             INDArray out = net.output(inData,false);
+
             for(int i=0; i<collected.size(); i++ ){
                 INDArray outi = out.getRow(i).dup();
                 Long keyi = exampleNums.get(i);
