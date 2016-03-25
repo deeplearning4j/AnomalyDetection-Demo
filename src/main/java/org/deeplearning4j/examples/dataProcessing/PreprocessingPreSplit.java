@@ -1,6 +1,7 @@
 package org.deeplearning4j.examples.dataProcessing;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
@@ -23,6 +24,7 @@ import org.deeplearning4j.preprocessing.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.examples.utils.SparkConnectFactory;
 import org.deeplearning4j.preprocessing.spark.utils.SparkExport;
 import org.deeplearning4j.preprocessing.spark.utils.SparkUtils;
+import org.deeplearning4j.preprocessing.ui.HtmlAnalysis;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -203,6 +205,13 @@ public class PreprocessingPreSplit {
 //        Histograms.plot(preprocessedSchema, dataAnalysis, CHART_DIRECTORY_ORIG);
 //        Histograms.plot(normSchema, normDataAnalysis, CHART_DIRECTORY_NORM);
         System.out.println();
+
+        try{
+            HtmlAnalysis.createHtmlAnalysisFile(dataAnalysis, new File(FilenameUtils.concat(path.CHART_DIR_ORIG,"orig_analysis.html")));
+            HtmlAnalysis.createHtmlAnalysisFile(normDataAnalysis, new File(FilenameUtils.concat(path.CHART_DIR_NORM,"norm_analysis.html")));
+        }catch(Exception e ){
+            e.printStackTrace();
+        }
     }
 
     public static void saveNormSchemaTransform(TransformProcess transform) throws Exception{

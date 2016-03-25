@@ -109,7 +109,7 @@ public class NIDSMain {
     protected int trainTime = 0;
     protected int testTime = 0;
 
-    protected int seed = 123;
+    protected int seed = 12345;
     protected int listenerFreq = 1;
     protected boolean supervised = false;
 
@@ -229,7 +229,7 @@ public class NIDSMain {
                         LossFunctions.LossFunction.MCXENT,
                         1e-2,
                         1e-5,
-                        1,
+                        0.9,
                         seed);
                 conf = mlpmodel.conf();
                 network = mlpmodel.buildModel(conf);

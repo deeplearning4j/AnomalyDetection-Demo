@@ -10,21 +10,22 @@ public class FullPipelineRun {
 
     public static void main(String... args) throws Exception {
         NIDSMain.main(
-                "--preProcess",
+//                "--preProcess",
                 "--modelType", "MLP",
-                "--batchSize", "128"
-//                "--numEpochs", "2",
+                "--batchSize", "128",
+                "--numEpochs", "1",
 //                "--iterations", "1",
-//                "--dataSet", "UNSW_NB15",
+                "--dataSet", "UNSW_NB15",
+                "--numBatches", "5000",
 //                "--nIn", "66",
 //                "--nOut", "10",
 //                "--dataSet", "NSLKDD",
 //                "--nIn", "112",
 //                "--nOut", "40",
 //                "--numBatches", "200",
-//                "--numTestBatches", "20",
+                "--numTestBatches", "1000",
 //                "--useHistogramListener",
-//                "--saveModel"
+                "--saveModel"
         );
 //        NIDSStreaming.main("UNSW_NB15");
 

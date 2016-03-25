@@ -7,7 +7,7 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
-import org.canova.api.berkeley.Pair;
+import org.apache.commons.math3.util.Pair;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.*;
 import org.deeplearning4j.examples.ui.config.NIDSConfig;
@@ -15,6 +15,7 @@ import org.deeplearning4j.examples.ui.resources.*;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 import scala.Tuple3;
 
 import javax.ws.rs.client.Client;
@@ -209,6 +210,8 @@ public class UIDriver extends Application<NIDSConfig> {
                 int serviceCol = (columnsMap.containsKey("service") ? columnsMap.get("service") : -1);
 
                 Map<String,Integer> serviceCounts = new HashMap<>();
+                List<IntRenderElements> renderElementsList = new ArrayList<>();
+
                 for(Tuple3<Long,INDArray,List<Writable>> t3 : list){
                     List<Writable> c = t3._3();
                     List<Writable> listWritables = (c instanceof List ? ((List<Writable>)c) : new ArrayList<>(c));
@@ -253,12 +256,18 @@ public class UIDriver extends Application<NIDSConfig> {
 
 
                         RenderElements re = new RenderElements(rc,barChart);
-                        WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
-                        wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                                .post(Entity.entity(re,MediaType.APPLICATION_JSON));
-                        
+//                        WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
+//                        wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+//                                .post(Entity.entity(re,MediaType.APPLICATION_JSON));
+//                        renderElementsList.add(new Pair<>(idx,re));
+                        renderElementsList.add(new IntRenderElements(idx,re));
                     }
                 }
+
+                WebTarget wt = client.target("http://localhost:8080/flow/update/");
+                wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(renderElementsList,MediaType.APPLICATION_JSON));
+
 
                 if(lastUpdateTime > 0){
                     long pastUpdateTime = updateTimeHistory.getFirst();
