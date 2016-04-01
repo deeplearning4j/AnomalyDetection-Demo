@@ -75,7 +75,7 @@ public class MLPAutoEncoderModel {
                 .layer(5, new OutputLayer.Builder().nIn(nIn[5]).nOut(nOut[5]).dropOut(0)
                         .lossFunction(LossFunctions.LossFunction.MSE)
                         .build())
-                .backprop(true).pretrain(true).build();
+                .backprop(true).pretrain(false).build();
     }
 
     public MultiLayerNetwork buildModel() {

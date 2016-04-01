@@ -35,6 +35,8 @@ public class DataPathUtil {
     public final String PRE_DIR;
     public final String PRE_TRAIN_DATA_DIR;
     public final String PRE_TEST_DATA_DIR;
+    public final String PRE_SEQ_TRAIN_DATA_DIR;
+    public final String PRE_SEQ_TEST_DATA_DIR;
     public final String TRAIN_DATA_FILE;
     public final String TEST_DATA_FILE;
     public final String NORMALIZER_FILE;
@@ -76,6 +78,8 @@ public class DataPathUtil {
         // for preprocessed data splits
         this.PRE_TRAIN_DATA_DIR = FilenameUtils.concat(PRE_DIR, "train/");
         this.PRE_TEST_DATA_DIR = FilenameUtils.concat(PRE_DIR, "test/");
+        this.PRE_SEQ_TRAIN_DATA_DIR = FilenameUtils.concat(PRE_DIR, "seq_train/");
+        this.PRE_SEQ_TEST_DATA_DIR = FilenameUtils.concat(PRE_DIR, "seq_test/");
         this.TRAIN_DATA_FILE = FilenameUtils.concat(PRE_TRAIN_DATA_DIR,"train.csv");
         this.TEST_DATA_FILE = FilenameUtils.concat(PRE_TRAIN_DATA_DIR,"test.csv");
 
@@ -99,6 +103,8 @@ public class DataPathUtil {
         if(!new File(RAW_TEST_DATA_DIR).exists()) new File(RAW_TEST_DATA_DIR).mkdirs();
         if(!new File(PRE_TRAIN_DATA_DIR).exists()) new File(PRE_TRAIN_DATA_DIR).mkdirs();
         if(!new File(PRE_TEST_DATA_DIR).exists()) new File(PRE_TEST_DATA_DIR).mkdirs();
+        if(!new File(PRE_SEQ_TRAIN_DATA_DIR).exists()) new File(PRE_SEQ_TRAIN_DATA_DIR).mkdirs();
+        if(!new File(PRE_SEQ_TEST_DATA_DIR).exists()) new File(PRE_SEQ_TEST_DATA_DIR).mkdirs();
         if(!new File(OUT_DIR).exists()) new File(OUT_DIR).mkdirs();
         if(!new File(EARLY_STOP_DIR).exists()) new File(EARLY_STOP_DIR).mkdirs();
         if(!new File(CHART_DIR_ORIG).exists()) new File(CHART_DIR_ORIG).mkdirs();

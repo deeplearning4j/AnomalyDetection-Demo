@@ -19,6 +19,7 @@ import org.deeplearning4j.preprocessing.spark.utils.SparkExport;
 import org.deeplearning4j.preprocessing.spark.utils.SparkUtils;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 /**Preprocessing - sequences.
@@ -30,6 +31,7 @@ public class PreprocessingSequence extends PreprocessingPreSplit {
     public static void main(String... args) throws Exception {
         setup(args[0], true);
         JavaSparkContext sc = SparkConnectFactory.getContext(dataSet);
+        trainTestDir = Arrays.asList(path.PRE_SEQ_TRAIN_DATA_DIR, path.PRE_SEQ_TEST_DATA_DIR);
 
         SparkTransformExecutor executor = new SparkTransformExecutor();
         Triple<TransformProcess, Schema, JavaRDD<List<List<Writable>>>> dataNormalized = null;

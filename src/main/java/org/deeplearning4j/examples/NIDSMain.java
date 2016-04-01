@@ -16,6 +16,7 @@ import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator;
 import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
 import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition;
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
+import org.deeplearning4j.earlystopping.trainer.IEarlyStoppingTrainer;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.dataProcessing.PreprocessingPreSplit;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
@@ -86,7 +87,7 @@ public class NIDSMain {
     @Option(name="--iterations",usage="Number of iterations",aliases="-i")
     protected int iterations = 1;
     @Option(name="--dataSet",usage="Name of dataSet folder",aliases="-dataS")
-    protected static String dataSet = "UNSW_NB15";
+    protected String dataSet = "UNSW_NB15";
     @Option(name="--preProcess",usage="Preprocess model",aliases="-pM")
     protected boolean preProcess = false;
     @Option(name="--earlyStop",usage="Apply early stop",aliases="-eS")
@@ -169,9 +170,11 @@ public class NIDSMain {
 
         if (earlyStop) {
             EarlyStoppingConfiguration esConf = earlyStopConfig(testData);
-            EarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConf, conf, trainData);
+            IEarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConf, conf, trainData);
             EarlyStoppingResult result = trainer.fit();
             printEarlyStopResults(result);
+
+
         } else {
             if(useHistogram)
                 network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
@@ -200,7 +203,7 @@ public class NIDSMain {
         DataSetIterator iter;
         if(rnn){
             CSVSequenceRecordReader rr = new CSVSequenceRecordReader(0,",");
-            String path = (train ? dataPath.PRE_TRAIN_DATA_DIR : dataPath.PRE_TEST_DATA_DIR);
+            String path = (train ? dataPath.PRE_SEQ_TEST_DATA_DIR : dataPath.PRE_SEQ_TEST_DATA_DIR);
             rr.initialize(new FileSplit(new File(path)));
             iter = new SequenceRecordReaderDataSetIterator(rr,batchSize,nOut,labelIdx,false);
         } else {
@@ -210,6 +213,7 @@ public class NIDSMain {
             iter = new RecordReaderDataSetIterator(rr, batchSize, labelIdx , nOut, numBatches);
         }
 
+        // TODO setup loadData to pass in input as labels when unsupervised
         return new MultipleEpochsIterator(numEpochs, iter);
 
     }
@@ -289,7 +293,7 @@ public class NIDSMain {
                         seed);
                 conf = maemodel.conf();
                 network = maemodel.buildModel(conf);
-                supervised = false;
+                supervised = true;
                 break;
         }
 
@@ -319,7 +323,7 @@ public class NIDSMain {
         Collections.sort(list);
         System.out.println("Score vs. Epoch:");
         for( Integer i : list){
-            System.out.println(i + "\t" + scoreVsEpoch.get(i));
+            System.out.println(scoreVsEpoch.get(i) + "\t" + i);
         }
     }
 

@@ -256,6 +256,7 @@ public class UIDriver extends Application<NIDSConfig> {
 
 
                         RenderElements re = new RenderElements(rc,barChart);
+                        // Passing in single attack example which causes chart load issues
 //                        WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
 //                        wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
 //                                .post(Entity.entity(re,MediaType.APPLICATION_JSON));
@@ -264,6 +265,7 @@ public class UIDriver extends Application<NIDSConfig> {
                     }
                 }
 
+                // Passing in grouped attack examples in a list which causes chart load issues
                 WebTarget wt = client.target("http://localhost:8080/flow/update/");
                 wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                         .post(Entity.entity(renderElementsList,MediaType.APPLICATION_JSON));

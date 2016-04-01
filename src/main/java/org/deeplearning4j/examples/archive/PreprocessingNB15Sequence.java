@@ -127,8 +127,8 @@ public class PreprocessingNB15Sequence {
         SequenceDataAnalysis trainDataAnalyis = AnalyzeSpark.analyzeSequence(normSchema, trainDataNormalized.getThird());
 
         //Save as CSV files
-        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_TRAIN_DATA_DIR),trainDataNormalized.getThird(), RNG_SEED);
-        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_TEST_DATA_DIR),testDataNormalized.getThird(), RNG_SEED);
+        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_SEQ_TRAIN_DATA_DIR),trainDataNormalized.getThird(), RNG_SEED);
+        SparkExport.exportCSVSequenceLocal(new File(PATH.PRE_SEQ_TEST_DATA_DIR),testDataNormalized.getThird(), RNG_SEED);
         sc.close();
 
         //Wait for spark to stop its console spam before printing analysis
