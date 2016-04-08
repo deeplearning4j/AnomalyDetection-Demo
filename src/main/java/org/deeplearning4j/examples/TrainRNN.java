@@ -14,11 +14,11 @@ public class TrainRNN {
                 "--dataSet", "UNSW_NB15",
                 "--modelType", "RNN",
                 "--batchSize", "64",
-                "--numEpochs", "5",
+                "--numEpochs", "25",
                 "--nIn", "66",
                 "--nOut", "10",
                 "-tBPTT", "50"
-//                ,"--useHistogramListener"
+                ,"--useHistogramListener"
         );
 
     }
