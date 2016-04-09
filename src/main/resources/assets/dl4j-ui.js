@@ -60,7 +60,11 @@ var Component = (function () {
     };
     Component.getComponent = function (jsonStr) {
         var json = JSON.parse(jsonStr);
-        var key = Object.keys(json)[0];
+        var key;
+        if (json["componentType"])
+            key = json["componentType"];
+        else
+            key = Object.keys(json)[0];
         switch (key) {
             case ComponentType[ComponentType.ComponentText]:
                 return new ComponentText(jsonStr);
@@ -142,7 +146,9 @@ var Chart = (function (_super) {
     function Chart(componentType, jsonStr) {
         _super.call(this, componentType);
         var jsonOrig = JSON.parse(jsonStr);
-        var json = jsonOrig[ComponentType[componentType]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[componentType]];
         this.suppressAxisHorizontal = json['suppressAxisHorizontal'];
         this.suppressAxisVertical = json['suppressAxisVertical'];
         this.showLegend = json['showLegend'];
@@ -281,7 +287,9 @@ var ChartHistogram = (function (_super) {
                 Chart.appendTitle(svg, _this.title, margin, titleStyle);
             }
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.ChartHistogram]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.ChartHistogram]];
         this.lowerBounds = json['lowerBounds'];
         this.upperBounds = json['upperBounds'];
         this.yValues = json['yvalues'];
@@ -408,7 +416,9 @@ var ChartLine = (function (_super) {
                 Chart.appendTitle(svg, _this.title, margin, titleStyle);
             }
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.ChartLine]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.ChartLine]];
         this.xData = json['x'];
         this.yData = json['y'];
         this.seriesNames = json['seriesNames'];
@@ -533,7 +543,9 @@ var ChartScatter = (function (_super) {
                 Chart.appendTitle(svg, _this.title, margin, titleStyle);
             }
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.ChartScatter]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.ChartScatter]];
         this.xData = json['x'];
         this.yData = json['y'];
         this.seriesNames = json['seriesNames'];
@@ -655,7 +667,9 @@ var ChartStackedArea = (function (_super) {
                 Chart.appendTitle(svg, _this.title, margin, titleStyle);
             }
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.ChartStackedArea]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.ChartStackedArea]];
         this.xData = json['x'];
         this.yData = json['y'];
         this.labels = json['labels'];
@@ -717,7 +731,9 @@ var ComponentDiv = (function (_super) {
             }
             appendToObject.append(newDiv);
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.ComponentDiv]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.ComponentDiv]];
         var components = json['components'];
         if (components) {
             this.components = [];
@@ -772,7 +788,9 @@ var DecoratorAccordion = (function (_super) {
             else
                 outerDiv.accordion({ collapsible: true, heightStyle: "content" });
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.DecoratorAccordion]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.DecoratorAccordion]];
         this.title = json['title'];
         this.defaultCollapsed = json['defaultCollapsed'];
         var innerCs = json['innerComponents'];
@@ -812,9 +830,10 @@ var ComponentTable = (function (_super) {
                 tbl.style.backgroundColor = s.getBackgroundColor();
             if (s && s.getColumnWidths()) {
                 var colWidths = s.getColumnWidths();
+                var unit = TSUtils.normalizeLengthUnit(s.getColumnWidthUnit());
                 for (var i = 0; i < colWidths.length; i++) {
                     var col = document.createElement('col');
-                    col.setAttribute('width', colWidths[i] + '%');
+                    col.setAttribute('width', colWidths[i] + unit);
                     tbl.appendChild(col);
                 }
             }
@@ -851,7 +870,9 @@ var ComponentTable = (function (_super) {
             }
             appendToObject.append(tbl);
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.ComponentTable]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.ComponentTable]];
         this.header = json['header'];
         this.content = json['content'];
         if (json['style'])
@@ -865,6 +886,7 @@ var StyleTable = (function (_super) {
         var _this = this;
         _super.call(this, jsonObj['StyleTable']);
         this.getColumnWidths = function () { return _this.columnWidths; };
+        this.getColumnWidthUnit = function () { return _this.columnWidthUnit; };
         this.getBorderWidthPx = function () { return _this.borderWidthPx; };
         this.getHeaderColor = function () { return _this.headerColor; };
         var style = jsonObj['StyleTable'];
@@ -872,6 +894,7 @@ var StyleTable = (function (_super) {
             this.columnWidths = jsonObj['StyleTable']['columnWidths'];
             this.borderWidthPx = jsonObj['StyleTable']['borderWidthPx'];
             this.headerColor = jsonObj['StyleTable']['headerColor'];
+            this.columnWidthUnit = jsonObj['StyleTable']['columnWidthUnit'];
         }
     }
     return StyleTable;
@@ -902,7 +925,9 @@ var ComponentText = (function (_super) {
                 appendToObject.append(newSpan);
             }
         };
-        var json = JSON.parse(jsonStr)[ComponentType[ComponentType.ComponentText]];
+        var json = JSON.parse(jsonStr);
+        if (!json["componentType"])
+            json = json[ComponentType[ComponentType.ComponentText]];
         this.text = json['text'];
         if (json['style'])
             this.style = new StyleText(json['style']);

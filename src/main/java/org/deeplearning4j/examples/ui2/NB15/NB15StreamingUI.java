@@ -10,6 +10,8 @@ import org.deeplearning4j.ui.api.LengthUnit;
 import org.deeplearning4j.ui.api.Style;
 import org.deeplearning4j.ui.components.component.ComponentDiv;
 import org.deeplearning4j.ui.components.component.style.StyleDiv;
+import org.deeplearning4j.ui.components.table.ComponentTable;
+import org.deeplearning4j.ui.components.table.style.StyleTable;
 import org.deeplearning4j.ui.components.text.ComponentText;
 import org.deeplearning4j.ui.components.text.style.StyleText;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -214,6 +216,12 @@ public class NB15StreamingUI extends StreamingUI {
             j++;
         }
 
+        Component tableComp = new ComponentTable.Builder(new StyleTable.Builder()
+                    .borderWidth(1).columnWidths(LengthUnit.Px,40,200,200,100,100).build())
+                .header("#","Source","Destination","Attack Prob.","Type")
+                .content(table)
+                .build();
+
 
 
 //        RenderableComponentTable rct = new RenderableComponentTable.Builder()
@@ -277,6 +285,39 @@ public class NB15StreamingUI extends StreamingUI {
 //            rcArea.addSeries(s,out);
 //        }
 
+//        Style topDivStyle = new StyleDiv.Builder()
+//                .backgroundColor(Color.GRAY)
+//                .width(33.333, LengthUnit.Percent)
+//                .floatValue(StyleDiv.FloatValue.left)
+//                .build();
+//
+//        Style headerDivStyle = new StyleDiv.Builder()
+//                .backgroundColor(Color.BLACK)
+//                .width(100,LengthUnit.Percent)
+//                .build();
+//
+//        StyleText headerStyle = new StyleText.Builder()
+//                .color(Color.WHITE)
+//                .fontSize(18)
+//                .build();
+//        Component text = new ComponentText("Network Utilization: Connections/sec", headerStyle);
+//
+//        ComponentDiv headerDiv1 = new ComponentDiv(headerDivStyle,text);
+//
+//        Component topThird1 = new ComponentDiv(topDivStyle, headerDiv1);
+
+        List<Component> list = new ArrayList<>();
+        list.add(getHeader());
+
+        list.add(tableComp);
+
+        updateUI(list.toArray(new Component[list.size()]));
+
+        System.out.println("***** CALLED UPDATEUI *****");
+    }
+
+    private Component getHeader(){
+
         Style topDivStyle = new StyleDiv.Builder()
                 .backgroundColor(Color.GRAY)
                 .width(33.333, LengthUnit.Percent)
@@ -290,35 +331,19 @@ public class NB15StreamingUI extends StreamingUI {
 
         StyleText headerStyle = new StyleText.Builder()
                 .color(Color.WHITE)
-                .fontSize(18)
+                .fontSize(16)
                 .build();
-        Component text = new ComponentText("Network Utilization: Connections/sec", headerStyle);
 
-        ComponentDiv headerDiv1 = new ComponentDiv(headerDivStyle,text);
-        ComponentDiv headerDiv2 = new ComponentDiv(null,text);
+        ComponentDiv headerDiv1 = new ComponentDiv(headerDivStyle,new ComponentText("Network Utilization: Connections/sec", headerStyle));
+        ComponentDiv headerDiv2 = new ComponentDiv(headerDivStyle,new ComponentText("Middle", headerStyle));
+        ComponentDiv headerDiv3 = new ComponentDiv(headerDivStyle,new ComponentText("Right", headerStyle));
 
         Component topThird1 = new ComponentDiv(topDivStyle, headerDiv1);
+        Component topThird2 = new ComponentDiv(topDivStyle, headerDiv2);
+        Component topThird3 = new ComponentDiv(topDivStyle, headerDiv3);
 
-        Component simpleDiv = new ComponentDiv(null,text);
+        Component div = new ComponentDiv(null,topThird1,topThird2,topThird3);
 
-
-//        updateUI(topThird1);
-
-//        updateUI(new ComponentText("TEST",null), text, headerDiv1);   //:(
-        updateUI(new ComponentText("TEST",null), text); //OK
-//        updateUI(simpleDiv);    //OK
-//        updateUI(headerDiv1);   //NOPE
-//        updateUI(headerDiv2);   //OK
-//        updateUI()
-
-        ObjectMapper om = new ObjectMapper();
-        try{
-//            System.out.println(om.writeValueAsString(new ComponentText("TEST",null)));
-            System.out.println(om.writeValueAsString(headerDiv1));
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-
-        System.out.println("***** CALLED UPDATEUI *****");
+        return div;
     }
 }

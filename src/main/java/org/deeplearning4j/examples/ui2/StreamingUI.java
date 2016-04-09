@@ -182,7 +182,7 @@ public abstract class StreamingUI extends Application<UiConfig> {
                     Response resp = uiUpdateTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
                             .post(Entity.entity(lastComponents, MediaType.APPLICATION_JSON));
 
-                    System.out.println("***** RESPONSE: " + resp);
+                    if(resp.getStatus() >= 400 && resp.getStatus() < 600) log.warn("UI update response: {}",resp);
 
                     lastUIComponentPostTime = lastUIComponentUpdateTime;
 

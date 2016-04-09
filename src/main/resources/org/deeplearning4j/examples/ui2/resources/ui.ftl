@@ -14,7 +14,7 @@
 <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script scr="/assets/dl4j-ui.js"></script>
+<script src="/assets/dl4j-ui.js"></script>
 
 <script>
     //Store last update times:
@@ -28,10 +28,21 @@
         //If necessary: get the new elements, and render them
 
         $.get("/ui/components", function(data){
-            var jsonObj = JSON.parse(JSON.stringify(data));
+            var componentArr = JSON.parse(JSON.stringify(data));
 
-            console.log(jsonObj);
+//            console.log(jsonObj);
 //            console.log("testing");
+
+            var mainDiv = $('#outerdiv');
+            mainDiv.html('');
+//            var componentArray = Component.getComponent(JSON.stringify(data));
+            for(var i=0; i<componentArr.length; i++ ){
+                var temp = componentArr[i];
+                var c = Component.getComponent(JSON.stringify(temp));
+                c.render(mainDiv);
+//                r.render(componentArr[i])
+            }
+
         });
 
     }, 1000);
