@@ -31,7 +31,7 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,List<Writa
 
     private static final Logger log = LoggerFactory.getLogger(FromRawCsvReceiver.class);
 
-    private final String localCSVPath;
+//    private final String localCSVPath;
     private final TransformProcess preprocess;
     private final TransformProcess normalizer;
     private final int labelIndex;
@@ -45,15 +45,31 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,List<Writa
     private WritableConverter converter = null;
     private boolean regression = false;
 
+    private File dataFile;
+
+    public FromRawCsvReceiver(File dataFile, TransformProcess preprocess, TransformProcess normalizer,
+                               int labelIdx, int nOut, int examplesPerSecond) throws Exception {
+        super(StorageLevel.MEMORY_ONLY());
+        this.preprocess = preprocess;
+        this.normalizer = normalizer;
+        this.examplesPerSecond = examplesPerSecond;
+        this.labelIndex = labelIdx;
+        this.numPossibleLabels = nOut;
+
+        this.dataFile = dataFile;
+    }
+
     public FromRawCsvReceiver(String localCSVPath, TransformProcess preprocess, TransformProcess normalizer,
                               int labelIdx, int nOut, int examplesPerSecond) throws Exception {
         super(StorageLevel.MEMORY_ONLY());
         this.preprocess = preprocess;
         this.normalizer = normalizer;
         this.examplesPerSecond = examplesPerSecond;
-        this.localCSVPath = localCSVPath;
+//        this.localCSVPath = localCSVPath;
         this.labelIndex = labelIdx;
         this.numPossibleLabels = nOut;
+
+        this.dataFile = new File(localCSVPath);
 
 //        RecordReader rr = new CSVRecordReader(0,",");
 //        rr.initialize(new FileSplit(new File(localCSVPath)));
@@ -73,7 +89,8 @@ public class FromRawCsvReceiver extends Receiver<Tuple3<Long,INDArray,List<Writa
 
         rr = new CSVRecordReader(0,",");
         try{
-            rr.initialize(new FileSplit(new File(localCSVPath)));
+//            rr.initialize(new FileSplit(new File(localCSVPath)));
+            rr.initialize(new FileSplit(dataFile));
         }catch(Exception e){
             throw new RuntimeException(e);
         }

@@ -9,11 +9,9 @@ application.home_IS_UNDEFINEiD
 README.md~
 *.jpg
 *.png
-*.bin
 *.releaseBackup
 *.jpg
 *.png
-*.bin
 *.out
 *~
 *.iml
