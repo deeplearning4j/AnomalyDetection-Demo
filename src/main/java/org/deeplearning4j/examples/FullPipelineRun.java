@@ -17,10 +17,9 @@ public class FullPipelineRun {
 //                "--preProcess",
                 "--modelType", "MLP",
                 "--batchSize", "128",
-                "--numEpochs", "20000",
 //                "--iterations", "1",
                 "--dataSet", "UNSW_NB15",
-                "--numBatches", "5000",
+                "--numBatches", "10000",
 //                "--nIn", "66",
 //                "--nOut", "10",
 //                "--dataSet", "NSLKDD",
@@ -28,7 +27,7 @@ public class FullPipelineRun {
 //                "--nOut", "40",
 //                "--numBatches", "200",
                 "--numTestBatches", "1000",
-                "--useHistogramListener",
+//                "--useHistogramListener",
 //                "--earlyStop",
                 "--saveModel");
 //        NIDSStreaming.main("UNSW_NB15");
