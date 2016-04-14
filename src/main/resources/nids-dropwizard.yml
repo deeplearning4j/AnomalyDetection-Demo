@@ -1,4 +1,4 @@
-#Dropwizard configuration
+#Dropwizard configuration: nids-dropwizard.yml
 template: Hello, %s!
 
 defaultName: NIDSUI

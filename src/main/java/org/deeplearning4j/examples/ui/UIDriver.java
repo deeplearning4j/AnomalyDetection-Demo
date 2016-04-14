@@ -7,7 +7,9 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Pair;
+import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.*;
 import org.deeplearning4j.examples.ui.config.NIDSConfig;
@@ -24,6 +26,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -70,8 +73,20 @@ public class UIDriver extends Application<NIDSConfig> {
         this.tableConverter = tableConverter;
         this.columnsMap = columnsMap;
 
+        File config;
         try {
-            run("server", "dropwizard.yml");
+            config = new ClassPathResource("nids-dropwizard.yml").getFile();
+//            System.out.println(FileUtils.readFileToString(config));
+        } catch(Exception e){
+            throw new RuntimeException(e);
+        }
+
+//        System.out.println("Dropwizard config: " + config.getAbsolutePath());
+
+
+        try {
+//            run("server", "dropwizard.yml");
+            run("server", config.getAbsolutePath());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
