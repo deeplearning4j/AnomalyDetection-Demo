@@ -43,16 +43,10 @@ public class StreamingDemoEntryPoint {
     private static final long DEMO_DURATION_SECONDS = 1800; //Exit after this number of seconds
 
     public static void main(String[] args) throws Exception {
-
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
-
-        URL[] urls = ((URLClassLoader)cl).getURLs();
-
-        for(URL url: urls){
-            System.out.println(url.getFile());
-        }
-
-        System.out.println("LOGGER CLASS: " + LoggerFactory.getILoggerFactory().getClass());
+//        ClassLoader cl = ClassLoader.getSystemClassLoader();
+//        URL[] urls = ((URLClassLoader)cl).getURLs();
+//        for(URL url: urls)System.out.println(url.getFile());
+//        System.out.println("LOGGER CLASS: " + LoggerFactory.getILoggerFactory().getClass());
 
         //Check to make sure we can find the files we expect:
         checkFilesPreExecution();
