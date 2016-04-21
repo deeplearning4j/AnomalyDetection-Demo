@@ -26,6 +26,8 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,14 @@ public class StreamingDemoEntryPoint {
     private static final long DEMO_DURATION_SECONDS = 1800; //Exit after this number of seconds
 
     public static void main(String[] args) throws Exception {
+
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+        URL[] urls = ((URLClassLoader)cl).getURLs();
+
+        for(URL url: urls){
+            System.out.println(url.getFile());
+        }
 
         //Check to make sure we can find the files we expect:
         checkFilesPreExecution();
