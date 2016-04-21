@@ -23,7 +23,7 @@ public class CollectAtUIProcessorFunction implements Function2<JavaRDD<Tuple3<Lo
         UIProcessor uiDriver = UIProcessor.getInstance();
 
         List<Tuple3<Long, INDArray, List<Writable>>> list = v1.collect();
-        
+
         uiDriver.addPredictions(list);
 
         return null;
