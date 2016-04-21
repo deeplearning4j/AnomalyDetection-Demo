@@ -10,16 +10,16 @@ public class TrainRNN {
 
     public static void main(String[] args) throws Exception {
 
-        NIDSMain.main(
-                "--dataSet", "UNSW_NB15",
-                "--modelType", "RNN",
-                "--batchSize", "64",
-                "--numEpochs", "25",
-                "--nIn", "66",
-                "--nOut", "10",
-                "-tBPTT", "50"
-                ,"--useHistogramListener"
-        );
+//        NIDSMain.main(
+//                "--dataSet", "UNSW_NB15",
+//                "--modelType", "RNN",
+//                "--batchSize", "64",
+//                "--numEpochs", "25",
+//                "--nIn", "66",
+//                "--nOut", "10",
+//                "-tBPTT", "50"
+//                ,"--useHistogramListener"
+//        );
 
     }
 

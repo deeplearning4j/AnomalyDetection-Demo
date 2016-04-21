@@ -16,43 +16,43 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by Alex on 14/03/2016.
  */
-@Path("/flow")
-@Produces(MediaType.APPLICATION_JSON)
-public class FlowDetailsResource {
-
-    private Map<Integer,RenderElements> map = new ConcurrentHashMap<>();
-
-    private static final RenderElements NOT_FOUND = new RenderElements(new RenderableComponentString("(Not found)"));
-
-    @GET
-    @Path("/{id}")
-    public Response getFlowDetails(@PathParam("id") int flowNumber){
-        if(!map.containsKey(flowNumber)) return Response.ok(NOT_FOUND).build();
-        return Response.ok(map.get(flowNumber)).build();
-    }
-
+//@Path("/flow")
+//@Produces(MediaType.APPLICATION_JSON)
+//public class FlowDetailsResource {
+//
+//    private Map<Integer,RenderElements> map = new ConcurrentHashMap<>();
+//
+//    private static final RenderElements NOT_FOUND = new RenderElements(new RenderableComponentString("(Not found)"));
+//
+//    @GET
+//    @Path("/{id}")
+//    public Response getFlowDetails(@PathParam("id") int flowNumber){
+//        if(!map.containsKey(flowNumber)) return Response.ok(NOT_FOUND).build();
+//        return Response.ok(map.get(flowNumber)).build();
+//    }
+//
+////    @POST
+////    @Path("/update/{id}")
+////    @Consumes(MediaType.APPLICATION_JSON)
+////    @Produces(MediaType.APPLICATION_JSON)
+////    public Response update(@PathParam("id")int flowNumber, RenderElements renderElements){
+////        map.put(flowNumber,renderElements);
+////        return Response.ok(Collections.singletonMap("status", "ok")).build();
+////    }
+//
 //    @POST
-//    @Path("/update/{id}")
+//    @Path("/update/")
 //    @Consumes(MediaType.APPLICATION_JSON)
 //    @Produces(MediaType.APPLICATION_JSON)
-//    public Response update(@PathParam("id")int flowNumber, RenderElements renderElements){
-//        map.put(flowNumber,renderElements);
+////    public Response update(List<Pair<Integer,RenderElements>> renderElements){
+//    public Response update(List<IntRenderElements> renderElements){
+////        map.put(flowNumber,renderElements);
+////        for(Pair<Integer,RenderElements> pair : renderElements ){
+////            map.put(pair.getFirst(), pair.getSecond());
+////        }
+//        for(IntRenderElements pair : renderElements ){
+//            map.put(pair.getIdx(), pair.getRenderElements());
+//        }
 //        return Response.ok(Collections.singletonMap("status", "ok")).build();
 //    }
-
-    @POST
-    @Path("/update/")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-//    public Response update(List<Pair<Integer,RenderElements>> renderElements){
-    public Response update(List<IntRenderElements> renderElements){
-//        map.put(flowNumber,renderElements);
-//        for(Pair<Integer,RenderElements> pair : renderElements ){
-//            map.put(pair.getFirst(), pair.getSecond());
-//        }
-        for(IntRenderElements pair : renderElements ){
-            map.put(pair.getIdx(), pair.getRenderElements());
-        }
-        return Response.ok(Collections.singletonMap("status", "ok")).build();
-    }
-}
+//}

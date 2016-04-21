@@ -1,6 +1,11 @@
 package org.deeplearning4j.examples.ui;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.math3.util.Pair;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.*;
@@ -9,10 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple3;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+//import javax.ws.rs.client.Client;
+//import javax.ws.rs.client.ClientBuilder;
+//import javax.ws.rs.client.Entity;
+//import javax.ws.rs.client.WebResource;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**Derived from UIDriver, minus all the dropwizard stuff...
  */
 public class UIProcessor {
+
+    public static final ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     public static final double CHART_HISTORY_SECONDS = 20.0;   //N seconds of chart history for UI
     private static final int NUM_ATTACKS_TO_KEEP = 22;
@@ -40,17 +47,16 @@ public class UIProcessor {
 
     //Web targets: for posting results
 //    private final Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-//    private final WebTarget connectionRateChartTarget = client.target("http://localhost:8080/charts/update/connection");
-//    private final WebTarget bytesRateChartTarget = client.target("http://localhost:8080/charts/update/bytes");
-//    private final WebTarget tableTarget = client.target("http://localhost:8080/table/update");
-//    private final WebTarget areaChartTarget = client.target("http://localhost:8080/areachart/update");
-
-
-    private final Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-    private WebTarget connectionRateChartTarget = client.target("http://localhost:8080/charts/update/connection");
-    private WebTarget bytesRateChartTarget = client.target("http://localhost:8080/charts/update/bytes");
-    private WebTarget tableTarget = client.target("http://localhost:8080/table/update");
-    private WebTarget areaChartTarget = client.target("http://localhost:8080/areachart/update");
+//    private final WebResource connectionRateChartTarget = client.target("http://localhost:8080/charts/update/connection");
+//    private final WebResource bytesRateChartTarget = client.target("http://localhost:8080/charts/update/bytes");
+//    private final WebResource tableTarget = client.target("http://localhost:8080/table/update");
+//    private final WebResource areaChartTarget = client.target("http://localhost:8080/areachart/update");
+    
+    private final Client client = Client.create();  //ClientBuilder.newClient().register(JacksonJsonProvider.class);
+    private WebResource connectionRateChartTarget;// = client.resource("http://localhost:8080/charts/update/connection");
+    private WebResource bytesRateChartTarget;// = client.target("http://localhost:8080/charts/update/bytes");
+    private WebResource tableTarget;// = client.target("http://localhost:8080/table/update");
+    private WebResource areaChartTarget;// = client.target("http://localhost:8080/areachart/update");
     private Thread uiThread;
 
     private final String location;
@@ -62,10 +68,10 @@ public class UIProcessor {
                         TableConverter tableConverter, Map<String,Integer> columnsMap) {
         this.location = location;
 
-        connectionRateChartTarget = client.target(location + "charts/update/connection");
-        bytesRateChartTarget = client.target(location + "/charts/update/bytes");
-        tableTarget = client.target(location + "/table/update");
-        areaChartTarget = client.target(location + "/areachart/update");
+        connectionRateChartTarget = client.resource(location + "charts/update/connection");
+        bytesRateChartTarget = client.resource(location + "charts/update/bytes");
+        tableTarget = client.resource(location + "table/update");
+        areaChartTarget = client.resource(location + "areachart/update");
 
         this.classNames = classNames;
         this.normalClassIdx = normalClassIdx;
@@ -229,9 +235,19 @@ public class UIProcessor {
                     }
                 }
 
-                WebTarget wt = client.target("http://localhost:8080/flow/update/");
-                wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(renderElementsList,MediaType.APPLICATION_JSON));
+                // Passing in grouped attack examples in a list which causes chart load issues
+                String renderElementsStr = null;
+                try{
+                    renderElementsStr = objectMapper.writeValueAsString(renderElementsList);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+                client.resource(location + "flow/update/")
+                        .type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                        .post(ClientResponse.class, renderElementsStr);
+//                WebTarget wt = client.target("http://localhost:8080/flow/update/");
+//                wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+//                        .post(Entity.entity(renderElementsList,MediaType.APPLICATION_JSON));
 
 
                 if(lastUpdateTime > 0){
@@ -300,8 +316,17 @@ public class UIProcessor {
                         .margins(30,20,60,20)
                         .addSeries("Connections/sec",time,rate).build();
 
-                connectionRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(connectionRate,MediaType.APPLICATION_JSON));
+//                connectionRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+//                        .post(Entity.entity(connectionRate,MediaType.APPLICATION_JSON));
+
+                String connectionRateString = null;
+                try{
+                    connectionRateString = objectMapper.writeValueAsString(connectionRate);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                ClientResponse cs = connectionRateChartTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, connectionRateString);
 
                 RenderableComponent byteRate = new RenderableComponentLineChart.Builder()
                         .setRemoveAxisHorizontal(true)
@@ -309,8 +334,16 @@ public class UIProcessor {
                         .margins(30,20,60,20)
                         .addSeries("kBytes/sec",bytesTime,bytesRate).build();
 
-                bytesRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(byteRate,MediaType.APPLICATION_JSON));
+                String byteRateString = null;
+                try{
+                    byteRateString = objectMapper.writeValueAsString(byteRate);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                cs = bytesRateChartTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, byteRateString);
+//                bytesRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+//                        .post(Entity.entity(byteRate,MediaType.APPLICATION_JSON));
 
 
 
@@ -349,8 +382,17 @@ public class UIProcessor {
                         .colWidthsPercent(8,28,28,16,20)
                         .build();
 
-                tableTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(rct,MediaType.APPLICATION_JSON));
+//                tableTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+//                        .post(Entity.entity(rct,MediaType.APPLICATION_JSON));
+
+                String rctString = null;
+                try{
+                    rctString = objectMapper.writeValueAsString(rct);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                cs = tableTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, rctString);
 
                 //Calculate new proportions:
                 RenderableComponentStackedAreaChart.Builder rcArea = new RenderableComponentStackedAreaChart.Builder()
@@ -405,8 +447,16 @@ public class UIProcessor {
 
 
 
-                areaChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(rcArea.build(),MediaType.APPLICATION_JSON));
+//                areaChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+//                        .post(Entity.entity(rcArea.build(),MediaType.APPLICATION_JSON));
+                String areaString = null;
+                try{
+                    areaString = objectMapper.writeValueAsString(rcArea.build());
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                areaChartTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, areaString);
 
 
                 //Clear the list for the next iteration

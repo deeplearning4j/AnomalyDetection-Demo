@@ -22,13 +22,14 @@ public class CollectAtUIDriverFunction implements Function2<JavaRDD<Tuple3<Long,
 
     @Override
     public Void call(JavaRDD<Tuple3<Long, INDArray, List<Writable>>> v1, Time time) throws Exception {
-        UIDriver uiDriver = UIDriver.getInstance();
-
-        List<Tuple3<Long, INDArray, List<Writable>>> list = v1.collect();
-
-//        System.out.println("*** " + time + " - " + list);
-        uiDriver.addPredictions(list);
-
-        return null;
+        throw new RuntimeException();
+//        UIDriver uiDriver = UIDriver.getInstance();
+//
+//        List<Tuple3<Long, INDArray, List<Writable>>> list = v1.collect();
+//
+////        System.out.println("*** " + time + " - " + list);
+//        uiDriver.addPredictions(list);
+//
+//        return null;
     }
 }

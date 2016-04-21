@@ -17,7 +17,6 @@ import org.deeplearning4j.examples.ui.TableConverter;
 import org.deeplearning4j.examples.ui.UIDriver;
 import org.deeplearning4j.preprocessing.api.TransformProcess;
 import org.deeplearning4j.preprocessing.api.schema.Schema;
-import org.deeplearning4j.ui.UiUtils;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.slf4j.Logger;
@@ -38,7 +37,7 @@ import java.util.Map;
  *
  */
 public class StreamingDemoEntryPoint {
-
+/*
     private static final int EXAMPLES_PER_SEC = 20;     //Number of examples to generate per second
     private static final long DEMO_DURATION_SECONDS = 1800; //Exit after this number of seconds
 
@@ -185,5 +184,5 @@ public class StreamingDemoEntryPoint {
             System.out.println("OK: found required files");
         }
     }
-
+*/
 }

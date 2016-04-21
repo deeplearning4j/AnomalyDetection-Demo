@@ -31,10 +31,10 @@ import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.ui.weights.HistogramIterationListener;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+//import org.deeplearning4j.ui.weights.HistogramIterationListener;
+//import org.kohsuke.args4j.CmdLineException;
+//import org.kohsuke.args4j.CmdLineParser;
+//import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class NIDSMain {
-
+/*
     protected static final Logger log = LoggerFactory.getLogger(NIDSMain.class);
 
     // values to pass in from command line when compiled, esp running remotely
@@ -403,5 +403,5 @@ public class NIDSMain {
     public static void main(String... args) throws Exception {
         new NIDSMain().run(args);
     }
-
+*/
 }

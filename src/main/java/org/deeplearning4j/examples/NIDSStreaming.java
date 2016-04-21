@@ -32,6 +32,7 @@ import java.util.*;
  * Created by Alex on 10/03/2016.
  */
 public class NIDSStreaming {
+    /*
 
     public static String dataSet;
 
@@ -129,5 +130,5 @@ public class NIDSStreaming {
         System.out.println("DONE");
         System.exit(0);
     }
-
+*/
 }

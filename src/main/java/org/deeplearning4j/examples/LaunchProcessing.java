@@ -102,7 +102,7 @@ public class LaunchProcessing {
 
         //******
         //FOR TESTING PURPOSES ONLY
-//        sparkConf.setMaster("local[*]");
+        sparkConf.setMaster("local[*]");
         //******
 
         JavaStreamingContext sc = new JavaStreamingContext(sparkConf, Durations.seconds(1));    //Batches: emitted every 1 second

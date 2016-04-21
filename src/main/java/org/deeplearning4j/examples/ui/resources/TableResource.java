@@ -12,24 +12,24 @@ import java.util.Collections;
 /**
  * Created by Alex on 15/03/2016.
  */
-@Path("/table")
-@Produces(MediaType.APPLICATION_JSON)
-public class TableResource {
-
-    private RenderableComponent table = null;
-
-    @GET
-    public Response getTable(){
-        return Response.ok(table).build();
-    }
-
-    @POST
-    @Path("/update")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response update(RenderableComponentTable table){
-        this.table = table;
-        return Response.ok(Collections.singletonMap("status", "ok")).build();
-    }
-
-}
+//@Path("/table")
+//@Produces(MediaType.APPLICATION_JSON)
+//public class TableResource {
+//
+//    private RenderableComponent table = null;
+//
+//    @GET
+//    public Response getTable(){
+//        return Response.ok(table).build();
+//    }
+//
+//    @POST
+//    @Path("/update")
+//    @Consumes(MediaType.APPLICATION_JSON)
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response update(RenderableComponentTable table){
+//        this.table = table;
+//        return Response.ok(Collections.singletonMap("status", "ok")).build();
+//    }
+//
+//}

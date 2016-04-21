@@ -22,12 +22,13 @@ public class CollectAtUIFunction implements Function2<JavaRDD<Tuple3<Long, INDAr
 
     @Override
     public Void call(JavaRDD<Tuple3<Long, INDArray, List<Writable>>> v1, Time time) throws Exception {
-        StreamingUI ui = StreamingUI.getInstance();
-
-        List<Tuple3<Long, INDArray, List<Writable>>> list = v1.collect();
-
-        ui.receivePredictions(list);
-
-        return null;
+        throw new RuntimeException();
+//        StreamingUI ui = StreamingUI.getInstance();
+//
+//        List<Tuple3<Long, INDArray, List<Writable>>> list = v1.collect();
+//
+//        ui.receivePredictions(list);
+//
+//        return null;
     }
 }
