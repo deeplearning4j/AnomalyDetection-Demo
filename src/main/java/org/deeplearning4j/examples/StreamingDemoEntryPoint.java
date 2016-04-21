@@ -20,6 +20,8 @@ import org.deeplearning4j.preprocessing.api.schema.Schema;
 import org.deeplearning4j.ui.UiUtils;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Tuple3;
 
 import java.io.DataInputStream;
@@ -49,6 +51,8 @@ public class StreamingDemoEntryPoint {
         for(URL url: urls){
             System.out.println(url.getFile());
         }
+
+        System.out.println("LOGGER CLASS: " + LoggerFactory.getILoggerFactory().getClass());
 
         //Check to make sure we can find the files we expect:
         checkFilesPreExecution();
