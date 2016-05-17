@@ -30,10 +30,8 @@
         <logback.version>1.1.2</logback.version>
         <netty.version>4.0.28.Final</netty.version>
         <lombok.version>1.16.4</lombok.version>
-        <nd4j.version>0.4-rc3.9-SNAPSHOT</nd4j.version>
-        <dl4j.version>0.4-rc3.9-SNAPSHOT</dl4j.version>
-        <!--<nd4j.version>0.4-rc3.8</nd4j.version>-->
-        <!--<dl4j.version>0.4-rc3.8</dl4j.version>-->
+        <nd4j.version>0.4-rc3.10-SNAPSHOT</nd4j.version>
+        <dl4j.version>0.4-rc3.10-SNAPSHOT</dl4j.version>
         <scala.binary.version>2.10</scala.binary.version>
         <scala.version>2.10.4</scala.version>
         <spark.version>1.6.0</spark.version>
