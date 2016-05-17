@@ -18,7 +18,7 @@ public class DataPathUtil {
     protected static String inputFilePath = "input/";
     protected static String preprocessedFilePath = "preprocessed/";
     protected static String outputFilePath = "out/";
-    protected static String chartFilePath = FilenameUtils.concat(outputFilePath,"/charts/");
+    protected static String chartFilePath = FilenameUtils.concat(outputFilePath,"charts/");
     protected String dataSet;
 
     public final String DATA_BASE_DIR;

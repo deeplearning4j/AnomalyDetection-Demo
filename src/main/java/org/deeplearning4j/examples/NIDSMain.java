@@ -11,6 +11,7 @@ import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
 import org.deeplearning4j.earlystopping.EarlyStoppingModelSaver;
 import org.deeplearning4j.earlystopping.EarlyStoppingResult;
+import org.deeplearning4j.earlystopping.listener.EarlyStoppingListener;
 import org.deeplearning4j.earlystopping.saver.LocalFileModelSaver;
 import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator;
 import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
@@ -158,48 +159,45 @@ public class NIDSMain {
             PreprocessingPreSplit.main(dataSet);
         }
 
-        System.out.println("\nLoad data....");
         boolean rnn = modelType.toLowerCase().equals("rnn");
-        MultipleEpochsIterator trainData = loadData(batchSize, PATH, labelIdx, numEpochs, numBatches, nOut, true, rnn);
+        MultipleEpochsIterator trainData;
         MultipleEpochsIterator testData = loadData(testBatchSize, PATH, labelIdx, 1, numTestBatches, nOut, false, rnn);
 
         System.out.println("\nBuild model....");
         buildModel();
 
         System.out.println("Train model....");
-
         if (earlyStop) {
+            trainData = loadData(batchSize, PATH, labelIdx, 1, numBatches, nOut, true, rnn);
             EarlyStoppingConfiguration esConf = earlyStopConfig(testData);
             IEarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConf, conf, trainData);
             EarlyStoppingResult result = trainer.fit();
             printEarlyStopResults(result);
-
-
+            numEpochs = result.getBestModelEpoch();
+            network = (MultiLayerNetwork) result.getBestModel();
         } else {
-            if(useHistogram)
-                network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
-            else
-                network.setListeners(new ScoreIterationListener(listenerFreq));
-
+            trainData = loadData(batchSize, PATH, labelIdx, numEpochs, numBatches, nOut, true, rnn);
             network = trainModel(network, trainData, testData);
-
-            System.out.println("\nFinal evaluation....");
-            if (supervised) {
-                evaluateSupervisedPerformance(network, testData);
-            } else {
-                evaluateUnsupervisedPerformance(testData);
-            }
-
-            if (saveModel) {
-                saveAndPrintResults(network);
-            }
-            System.out.println("\n==========================Example Finished==============================");
-            System.exit(0);
         }
+
+        System.out.println("\nFinal evaluation....");
+        if (supervised) {
+            evaluateSupervisedPerformance(network, testData);
+        } else {
+            evaluateUnsupervisedPerformance(testData);
+        }
+
+        if (saveModel) {
+            saveAndPrintResults(network);
+        }
+        System.out.println("\n==========================Example Finished==============================");
+        System.exit(0);
+
     }
 
     protected MultipleEpochsIterator loadData(int batchSize, DataPathUtil dataPath, int labelIdx, int numEpochs, int numBatches,
                                               int nOut, boolean train, boolean rnn) throws Exception{
+        System.out.println("\nLoad data....");
         DataSetIterator iter;
         if(rnn){
             CSVSequenceRecordReader rr = new CSVSequenceRecordReader(0,",");
@@ -296,6 +294,11 @@ public class NIDSMain {
                 supervised = true;
                 break;
         }
+        if(useHistogram)
+            network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
+        else
+            network.setListeners(new ScoreIterationListener(listenerFreq));
+
 
     }
 
@@ -395,7 +398,6 @@ public class NIDSMain {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
     }
 
