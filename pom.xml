@@ -329,9 +329,9 @@
         </dependency>
         <!--includes kohsuke package-->
         <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-ui</artifactId>
-            <version>${dl4j.version}</version>
+            <groupId>args4j</groupId>
+            <artifactId>args4j</artifactId>
+            <version>2.32</version>
         </dependency>
 
         <!-- For UI components -->
