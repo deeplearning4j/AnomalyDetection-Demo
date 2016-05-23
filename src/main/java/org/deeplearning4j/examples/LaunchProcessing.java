@@ -44,10 +44,14 @@ public class LaunchProcessing {
     public static void main(String[] args) throws Exception {
 
         String location;
+        String master = null;
         if(args == null || args.length == 0){
             location = "http://localhost:8080/";
         } else {
             location = args[0];
+        }
+        if(args != null && args.length >= 2){
+            master = args[1];
         }
         log.info("Launching processing with DropWizard running at {}",location);
 
@@ -100,10 +104,8 @@ public class LaunchProcessing {
         SparkConf sparkConf = new SparkConf();
         sparkConf.setAppName("NIDS_Demo");
 
-        //******
-        //FOR TESTING PURPOSES ONLY
-        sparkConf.setMaster("local[*]");
-        //******
+        if(master != null) sparkConf.setMaster(master); //For executing locally
+
 
         JavaStreamingContext sc = new JavaStreamingContext(sparkConf, Durations.seconds(1));    //Batches: emitted every 1 second
 
