@@ -11,7 +11,6 @@ import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
 import org.deeplearning4j.earlystopping.EarlyStoppingModelSaver;
 import org.deeplearning4j.earlystopping.EarlyStoppingResult;
-import org.deeplearning4j.earlystopping.listener.EarlyStoppingListener;
 import org.deeplearning4j.earlystopping.saver.LocalFileModelSaver;
 import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator;
 import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
@@ -32,7 +31,6 @@ import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
-import org.deeplearning4j.ui.weights.HistogramIterationListener;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -294,9 +292,9 @@ public class NIDSMain {
                 supervised = true;
                 break;
         }
-        if(useHistogram)
-            network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
-        else
+//        if(useHistogram)
+//            network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
+//        else
             network.setListeners(new ScoreIterationListener(listenerFreq));
 
 

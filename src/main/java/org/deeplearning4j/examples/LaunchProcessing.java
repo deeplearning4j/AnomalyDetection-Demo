@@ -10,14 +10,13 @@ import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.datasets.nb15.ui.NB15TableConverter;
-import org.deeplearning4j.examples.streaming.CollectAtUIDriverFunction;
+import org.deeplearning4j.examples.streaming.CollectAtUIProcessorFunction;
 import org.deeplearning4j.examples.streaming.FromRawCsvReceiver;
 import org.deeplearning4j.examples.streaming.Predict3Function;
 import org.deeplearning4j.examples.ui.TableConverter;
-import org.deeplearning4j.examples.ui.UIDriver;
+import org.deeplearning4j.examples.ui.UIProcessor;
 import org.deeplearning4j.preprocessing.api.TransformProcess;
 import org.deeplearning4j.preprocessing.api.schema.Schema;
-import org.deeplearning4j.ui.UiUtils;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.slf4j.Logger;
@@ -28,8 +27,6 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +34,23 @@ import java.util.Map;
 /** Assumption here: this is being submitted to spark-submit.
  *
  */
-public class StreamingDemoEntryPoint {
+public class LaunchProcessing {
+
+    private static final Logger log = LoggerFactory.getLogger(LaunchProcessing.class);
 
     private static final int EXAMPLES_PER_SEC = 20;     //Number of examples to generate per second
     private static final long DEMO_DURATION_SECONDS = 1800; //Exit after this number of seconds
 
     public static void main(String[] args) throws Exception {
+
+        String location;
+        if(args == null || args.length == 0){
+            location = "http://localhost:8080/";
+        } else {
+            location = args[0];
+        }
+        log.info("Launching processing with DropWizard running at {}",location);
+
 //        ClassLoader cl = ClassLoader.getSystemClassLoader();
 //        URL[] urls = ((URLClassLoader)cl).getURLs();
 //        for(URL url: urls)System.out.println(url.getFile());
@@ -69,7 +77,7 @@ public class StreamingDemoEntryPoint {
         TransformProcess preProcessor = NB15Util.getPreProcessingProcess();
         TransformProcess norm;
         Map<String,Integer> columnMap = tableConverter.getColumnMap();
-        UIDriver.createInstance(labels,normalIdx,services,tableConverter,columnMap);
+        UIProcessor.createInstance(location,labels,normalIdx,services,tableConverter,columnMap);
 
         //Load config and parameters:
         String conf = FileUtils.readFileToString(networkConfigFile);
@@ -112,14 +120,10 @@ public class StreamingDemoEntryPoint {
                 new Predict3Function(sc.sc().broadcast(conf),sc.sc().broadcast(params),64));
 
         //And finally push the predictions to the UI driver so they can be displayed:
-        predictionStream.foreachRDD(new CollectAtUIDriverFunction());
+        predictionStream.foreachRDD(new CollectAtUIProcessorFunction());
 
         //Start streaming:
         sc.start();
-
-        //Try to open browser on this machine:
-        UiUtils.tryOpenBrowser("http://localhost:8080/intrusion/",null);
-
 
         sc.awaitTermination(DEMO_DURATION_SECONDS * 1000);     //For testing: only run for short period of time
 

@@ -1,49 +1,35 @@
 package org.deeplearning4j.examples.ui;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.google.common.collect.ImmutableMap;
-import io.dropwizard.Application;
-import io.dropwizard.assets.AssetsBundle;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.dropwizard.views.ViewBundle;
-import org.apache.commons.io.FileUtils;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.math3.util.Pair;
-import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.*;
-import org.deeplearning4j.examples.ui.config.NIDSConfig;
-import org.deeplearning4j.examples.ui.resources.*;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Tuple2;
 import scala.Tuple3;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**UIDriver: main class for the UI
- * Assumptions with current design:
- * -
- * How to use: Start UI using
+/**Derived from UIDriver, minus all the dropwizard stuff...
  */
-public class UIDriver extends Application<NIDSConfig> {
+public class UIProcessor {
+
+    public static final ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
     public static final double CHART_HISTORY_SECONDS = 20.0;   //N seconds of chart history for UI
     private static final int NUM_ATTACKS_TO_KEEP = 22;
 
-    private static volatile UIDriver instance;
+    private static volatile UIProcessor instance;
 
-    private static final Logger log = LoggerFactory.getLogger(UIDriver.class);
+    private static final Logger log = LoggerFactory.getLogger(UIProcessor.class);
 
     private TableConverter tableConverter;
     private Map<String,Integer> columnsMap;
@@ -54,18 +40,27 @@ public class UIDriver extends Application<NIDSConfig> {
     private LinkedBlockingQueue<Tuple3<Long,INDArray,List<Writable>>> predictions = new LinkedBlockingQueue<>();
     private AtomicBoolean shutdown = new AtomicBoolean(false);
 
-    //Web targets: for posting results
-    private final Client client = ClientBuilder.newClient().register(JacksonJsonProvider.class);
-    private final WebTarget connectionRateChartTarget = client.target("http://localhost:8080/charts/update/connection");
-    private final WebTarget bytesRateChartTarget = client.target("http://localhost:8080/charts/update/bytes");
-    private final WebTarget tableTarget = client.target("http://localhost:8080/table/update");
-    private final WebTarget areaChartTarget = client.target("http://localhost:8080/areachart/update");
-
+    //Jersey 1.0 web targets: for posting results
+    private final Client client = Client.create();  //ClientBuilder.newClient().register(JacksonJsonProvider.class);
+    private WebResource connectionRateChartTarget;// = client.resource("http://localhost:8080/charts/update/connection");
+    private WebResource bytesRateChartTarget;// = client.target("http://localhost:8080/charts/update/bytes");
+    private WebResource tableTarget;// = client.target("http://localhost:8080/table/update");
+    private WebResource areaChartTarget;// = client.target("http://localhost:8080/areachart/update");
     private Thread uiThread;
 
-    private UIDriver(List<String> classNames, int normalClassIdx, List<String> serviceNames,
-                     TableConverter tableConverter, Map<String,Integer> columnsMap) {
-        super();
+    private final String location;
+
+    /**
+     * @param location          Location of the dropwizard UI server For example: "http://localhost:8080/"
+     */
+    private UIProcessor(String location, List<String> classNames, int normalClassIdx, List<String> serviceNames,
+                        TableConverter tableConverter, Map<String,Integer> columnsMap) {
+        this.location = location;
+
+        connectionRateChartTarget = client.resource(location + "charts/update/connection");
+        bytesRateChartTarget = client.resource(location + "charts/update/bytes");
+        tableTarget = client.resource(location + "table/update");
+        areaChartTarget = client.resource(location + "areachart/update");
 
         this.classNames = classNames;
         this.normalClassIdx = normalClassIdx;
@@ -73,69 +68,23 @@ public class UIDriver extends Application<NIDSConfig> {
         this.tableConverter = tableConverter;
         this.columnsMap = columnsMap;
 
-        File config;
-        try {
-            config = new ClassPathResource("nids-dropwizard.yml").getFile();
-//            System.out.println(FileUtils.readFileToString(config));
-        } catch(Exception e){
-            throw new RuntimeException(e);
-        }
-
-//        System.out.println("Dropwizard config: " + config.getAbsolutePath());
-
-
-        try {
-//            run("server", "dropwizard.yml");
-            run("server", config.getAbsolutePath());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
         //Create UI thread
         uiThread = new Thread(new UIThreadRunnable());
         uiThread.setDaemon(true);
         uiThread.start();
 
-        log.info("UIDriver started: http://localhost:8080/intrusion/");
+        log.info("UIProcessor started: Location is " + location);
     }
 
-    @Override
-    public String getName() {
-        return "nids-ui";
-    }
-
-    @Override
-    public void initialize(Bootstrap<NIDSConfig> bootstrap) {
-        //Necessary to avoid abstract method issue with certain dependencies/versions of dropwizard
-        bootstrap.addBundle(new ViewBundle<NIDSConfig>() {
-            @Override
-            public Map<String, Map<String, String>> getViewConfiguration(NIDSConfig nidsConfig) {
-                return ImmutableMap.of();
-            }
-        });
-        bootstrap.addBundle(new AssetsBundle());
-    }
-
-    @Override
-    public void run(NIDSConfig configuration, Environment environment) {
-        final UIResource resource = new UIResource();
-        environment.jersey().register(resource);
-
-        //Register our resources
-        environment.jersey().register(new FlowDetailsResource());
-        environment.jersey().register(new LineChartResource());
-        environment.jersey().register(new TableResource());
-        environment.jersey().register(new AreaChartResource());
-    }
-
-    /** Get an existing UIDriver instance. If no instance has been manually created, this will throw an exception */
-    public static UIDriver getInstance() {
+    /** Get an existing UIProcessor instance. If no instance has been manually created, this will throw an exception */
+    public static UIProcessor getInstance() {
         if (instance != null) return instance;
-        throw new RuntimeException("No UIDriver instance has been created");
+        throw new RuntimeException("No UIProcessor instance has been created");
 
     }
 
-    /** Create a new UIDriver instance. Should only every be called once.
+    /** Create a new UIProcessor instance. Should only every be called once.
+     * @param location          Location of the dropwizard UI server For example: "http://localhost:8080/"
      * @param classNames Names of the output classes, in probability distribution passed to addPrediction/s
      * @param normalClassIdx Index of the 'normal' / non-attack index in classNames (and addPredictions INDArray)
      * @param serviceNames Names of the services
@@ -143,12 +92,12 @@ public class UIDriver extends Application<NIDSConfig> {
      * @param columnsMap a map of column names to integers...
      * @return
      */
-    public synchronized static UIDriver createInstance(List<String> classNames, int normalClassIdx, List<String> serviceNames,
-                                                       TableConverter tableConverter, Map<String,Integer> columnsMap){
-        if(instance != null) throw new RuntimeException("Can only create one UIDriver instance at a time");
+    public synchronized static UIProcessor createInstance(String location, List<String> classNames, int normalClassIdx, List<String> serviceNames,
+                                                          TableConverter tableConverter, Map<String,Integer> columnsMap){
+        if(instance != null) throw new RuntimeException("Can only create one UIProcessor instance at a time");
         //avoid race conditions on creation
 
-        instance = new UIDriver(classNames,normalClassIdx,serviceNames,tableConverter,columnsMap);
+        instance = new UIProcessor(location, classNames,normalClassIdx,serviceNames,tableConverter,columnsMap);
         return instance;
     }
 
@@ -199,7 +148,7 @@ public class UIDriver extends Application<NIDSConfig> {
         }
 
         private void runHelper(){
-            log.info("Starting UI driver thread");
+            log.info("Starting UIProcessor thread");
 
             //Initialize service names history...
             for(String s : serviceNames){
@@ -214,7 +163,7 @@ public class UIDriver extends Application<NIDSConfig> {
                 try{
                     list.add(predictions.take());   //Blocks if no elements are available
                 }catch(InterruptedException e){
-                    log.warn("Interrupted exception thrown in UI driver thread");
+                    log.warn("Interrupted exception thrown in UIProcessor thread");
                 }
                 predictions.drainTo(list);      //Doesn't block, but retrieves + removes all elements
 
@@ -271,19 +220,20 @@ public class UIDriver extends Application<NIDSConfig> {
 
 
                         RenderElements re = new RenderElements(rc,barChart);
-                        // Passing in single attack example which causes chart load issues
-//                        WebTarget wt = client.target("http://localhost:8080/flow/update/" + idx);
-//                        wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-//                                .post(Entity.entity(re,MediaType.APPLICATION_JSON));
-//                        renderElementsList.add(new Pair<>(idx,re));
                         renderElementsList.add(new IntRenderElements(idx,re));
                     }
                 }
 
                 // Passing in grouped attack examples in a list which causes chart load issues
-                WebTarget wt = client.target("http://localhost:8080/flow/update/");
-                wt.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(renderElementsList,MediaType.APPLICATION_JSON));
+                String renderElementsStr = null;
+                try{
+                    renderElementsStr = objectMapper.writeValueAsString(renderElementsList);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+                client.resource(location + "flow/update/")
+                        .type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+                        .post(ClientResponse.class, renderElementsStr);
 
 
                 if(lastUpdateTime > 0){
@@ -352,8 +302,14 @@ public class UIDriver extends Application<NIDSConfig> {
                         .margins(30,20,60,20)
                         .addSeries("Connections/sec",time,rate).build();
 
-                connectionRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(connectionRate,MediaType.APPLICATION_JSON));
+                String connectionRateString = null;
+                try{
+                    connectionRateString = objectMapper.writeValueAsString(connectionRate);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                ClientResponse cs = connectionRateChartTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, connectionRateString);
 
                 RenderableComponent byteRate = new RenderableComponentLineChart.Builder()
                         .setRemoveAxisHorizontal(true)
@@ -361,8 +317,14 @@ public class UIDriver extends Application<NIDSConfig> {
                         .margins(30,20,60,20)
                         .addSeries("kBytes/sec",bytesTime,bytesRate).build();
 
-                bytesRateChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(byteRate,MediaType.APPLICATION_JSON));
+                String byteRateString = null;
+                try{
+                    byteRateString = objectMapper.writeValueAsString(byteRate);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                cs = bytesRateChartTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, byteRateString);
 
 
 
@@ -401,8 +363,14 @@ public class UIDriver extends Application<NIDSConfig> {
                         .colWidthsPercent(8,28,28,16,20)
                         .build();
 
-                tableTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(rct,MediaType.APPLICATION_JSON));
+                String rctString = null;
+                try{
+                    rctString = objectMapper.writeValueAsString(rct);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+
+                cs = tableTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, rctString);
 
                 //Calculate new proportions:
                 RenderableComponentStackedAreaChart.Builder rcArea = new RenderableComponentStackedAreaChart.Builder()
@@ -455,17 +423,21 @@ public class UIDriver extends Application<NIDSConfig> {
                     rcArea.addSeries(s,out);
                 }
 
+                String areaString = null;
+                try{
+                    areaString = objectMapper.writeValueAsString(rcArea.build());
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
 
-
-                areaChartTarget.request(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(rcArea.build(),MediaType.APPLICATION_JSON));
+                areaChartTarget.type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).post(ClientResponse.class, areaString);
 
 
                 //Clear the list for the next iteration
                 list.clear();
             }
 
-            log.info("UI driver thread shutting down");
+            log.info("UIProcessor thread shutting down");
         }
     }
 
