@@ -2,8 +2,6 @@ package org.deeplearning4j.examples;
 
 
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
-import org.deeplearning4j.examples.ui2.NB15.NB15StreamingUI;
-import org.deeplearning4j.examples.ui2.temp.NIDSStreamingNew;
 
 /**
  * Run to split, preprocess and train model.

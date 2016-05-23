@@ -1,5 +1,5 @@
 CURRDIR=$(pwd)
-CLASS="org.deeplearning4j.examples.StreamingDemoEntryPoint"
+CLASS="org.deeplearning4j.examples.LaunchProcessing"
 MASTER="local[*]"
 ADDITIONALARGS="--num-executors 1 --executor-cores 12 --executor-memory 1024M"
 JARLOC="$CURRDIR/AnomalyDetection-Demo-1.0.jar"
