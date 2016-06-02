@@ -6,10 +6,10 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.util.ClassPathResource;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.preprocessing.api.schema.Schema;
-import org.deeplearning4j.preprocessing.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.preprocessing.spark.AnalyzeSpark;
-import org.deeplearning4j.preprocessing.spark.misc.StringToWritablesFunction;
+import io.skymind.echidna.api.schema.Schema;
+import io.skymind.echidna.api.dataquality.DataQualityAnalysis;
+import io.skymind.echidna.spark.AnalyzeSpark;
+import io.skymind.echidna.spark.misc.StringToWritablesFunction;
 
 import java.util.List;
 

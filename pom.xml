@@ -35,6 +35,7 @@
         <scala.binary.version>2.10</scala.binary.version>
         <scala.version>2.10.4</scala.version>
         <spark.version>1.6.0</spark.version>
+        <echidna.version>0.0.0.16-SNAPSHOT</echidna.version>
     </properties>
 
     <distributionManagement>
@@ -190,11 +191,15 @@
         </dependency>
 
         <!--For data preprocessing-->
-
         <dependency>
-            <groupId>org.deeplearning4j</groupId>
-            <artifactId>echidna</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <groupId>io.skymind</groupId>
+            <artifactId>echidna-core</artifactId>
+            <version>${echidna.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.skymind</groupId>
+            <artifactId>echidna-spark_${scala.binary.version}</artifactId>
+            <version>${echidna.version}</version>
         </dependency>
 
         <dependency>
