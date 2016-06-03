@@ -7,21 +7,20 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.canova.api.berkeley.Triple;
 import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
-import org.deeplearning4j.preprocessing.api.TransformProcess;
+import io.skymind.echidna.api.TransformProcess;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.preprocessing.api.split.RandomSplit;
-import org.deeplearning4j.preprocessing.api.transform.categorical.CategoricalToIntegerTransform;
-import org.deeplearning4j.preprocessing.api.schema.Schema;
-import org.deeplearning4j.preprocessing.api.charts.Histograms;
-import org.deeplearning4j.preprocessing.spark.AnalyzeSpark;
-import org.deeplearning4j.preprocessing.api.analysis.DataAnalysis;
-import org.deeplearning4j.preprocessing.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.preprocessing.spark.SparkTransformExecutor;
-import org.deeplearning4j.preprocessing.spark.misc.StringToWritablesFunction;
-import org.deeplearning4j.preprocessing.api.transform.normalize.Normalize;
-import org.deeplearning4j.preprocessing.spark.utils.SparkExport;
-import org.deeplearning4j.preprocessing.spark.utils.SparkUtils;
+import io.skymind.echidna.api.split.RandomSplit;
+import io.skymind.echidna.api.transform.categorical.CategoricalToIntegerTransform;
+import io.skymind.echidna.api.schema.Schema;
+import io.skymind.echidna.spark.AnalyzeSpark;
+import io.skymind.echidna.api.analysis.DataAnalysis;
+import io.skymind.echidna.api.dataquality.DataQualityAnalysis;
+import io.skymind.echidna.spark.SparkTransformExecutor;
+import io.skymind.echidna.spark.misc.StringToWritablesFunction;
+import io.skymind.echidna.api.transform.normalize.Normalize;
+import io.skymind.echidna.spark.utils.SparkExport;
+import io.skymind.echidna.spark.utils.SparkUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -132,8 +131,8 @@ public class PreprocessingNB15 {
         System.out.println(trainDataAnalyis);
 
         //analysis and histograms
-        Histograms.exportPlots(preprocessedSchema, da, PATH.CHART_DIR_ORIG);
-        Histograms.exportPlots(normSchema, trainDataAnalyis, PATH.CHART_DIR_NORM);
+//        Histograms.exportPlots(preprocessedSchema, da, PATH.CHART_DIR_ORIG);
+//        Histograms.exportPlots(normSchema, trainDataAnalyis, PATH.CHART_DIR_NORM);
     }
 
     public static Triple<TransformProcess, Schema, JavaRDD<List<Writable>>>

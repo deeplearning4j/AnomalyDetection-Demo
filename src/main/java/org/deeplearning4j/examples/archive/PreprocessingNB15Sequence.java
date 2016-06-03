@@ -9,31 +9,30 @@ import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.writable.Writable;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.utils.DataPathUtil;
-import org.deeplearning4j.preprocessing.api.TransformProcess;
-import org.deeplearning4j.preprocessing.api.analysis.DataAnalysis;
-import org.deeplearning4j.preprocessing.api.analysis.SequenceDataAnalysis;
-import org.deeplearning4j.preprocessing.api.dataquality.DataQualityAnalysis;
-import org.deeplearning4j.preprocessing.api.filter.FilterInvalidValues;
-import org.deeplearning4j.preprocessing.api.charts.Histograms;
-import org.deeplearning4j.preprocessing.api.schema.Schema;
-import org.deeplearning4j.preprocessing.api.schema.SequenceSchema;
-import org.deeplearning4j.preprocessing.api.sequence.SplitMaxLengthSequence;
-import org.deeplearning4j.preprocessing.api.sequence.comparator.StringComparator;
-import org.deeplearning4j.preprocessing.api.split.RandomSplit;
-import org.deeplearning4j.preprocessing.api.transform.ConditionalTransform;
-import org.deeplearning4j.preprocessing.api.transform.categorical.IntegerToCategoricalTransform;
-import org.deeplearning4j.preprocessing.api.transform.categorical.StringToCategoricalTransform;
-import org.deeplearning4j.preprocessing.api.transform.integer.ReplaceEmptyIntegerWithValueTransform;
-import org.deeplearning4j.preprocessing.api.transform.integer.ReplaceInvalidWithIntegerTransform;
-import org.deeplearning4j.preprocessing.api.transform.string.MapAllStringsExceptListTransform;
-import org.deeplearning4j.preprocessing.api.transform.string.RemoveWhiteSpaceTransform;
-import org.deeplearning4j.preprocessing.api.transform.string.ReplaceEmptyStringTransform;
-import org.deeplearning4j.preprocessing.api.transform.string.StringMapTransform;
-import org.deeplearning4j.preprocessing.spark.AnalyzeSpark;
-import org.deeplearning4j.preprocessing.spark.SparkTransformExecutor;
-import org.deeplearning4j.preprocessing.spark.misc.StringToWritablesFunction;
-import org.deeplearning4j.preprocessing.spark.utils.SparkExport;
-import org.deeplearning4j.preprocessing.spark.utils.SparkUtils;
+import io.skymind.echidna.api.TransformProcess;
+import io.skymind.echidna.api.analysis.DataAnalysis;
+import io.skymind.echidna.api.analysis.SequenceDataAnalysis;
+import io.skymind.echidna.api.dataquality.DataQualityAnalysis;
+import io.skymind.echidna.api.filter.FilterInvalidValues;
+import io.skymind.echidna.api.schema.Schema;
+import io.skymind.echidna.api.schema.SequenceSchema;
+import io.skymind.echidna.api.sequence.SplitMaxLengthSequence;
+import io.skymind.echidna.api.sequence.comparator.StringComparator;
+import io.skymind.echidna.api.split.RandomSplit;
+import io.skymind.echidna.api.transform.ConditionalTransform;
+import io.skymind.echidna.api.transform.categorical.IntegerToCategoricalTransform;
+import io.skymind.echidna.api.transform.categorical.StringToCategoricalTransform;
+import io.skymind.echidna.api.transform.integer.ReplaceEmptyIntegerWithValueTransform;
+import io.skymind.echidna.api.transform.integer.ReplaceInvalidWithIntegerTransform;
+import io.skymind.echidna.api.transform.string.MapAllStringsExceptListTransform;
+import io.skymind.echidna.api.transform.string.RemoveWhiteSpaceTransform;
+import io.skymind.echidna.api.transform.string.ReplaceEmptyStringTransform;
+import io.skymind.echidna.api.transform.string.StringMapTransform;
+import io.skymind.echidna.spark.AnalyzeSpark;
+import io.skymind.echidna.spark.SparkTransformExecutor;
+import io.skymind.echidna.spark.misc.StringToWritablesFunction;
+import io.skymind.echidna.spark.utils.SparkExport;
+import io.skymind.echidna.spark.utils.SparkUtils;
 
 import java.io.File;
 import java.util.Arrays;
@@ -149,8 +148,8 @@ public class PreprocessingNB15Sequence {
         System.out.println(trainDataAnalyis);
 
         //analysis and histograms
-        Histograms.exportPlots(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
-        Histograms.exportPlots(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORM);
+//        Histograms.exportPlots(preprocessedSchema, da, CHART_DIRECTORY_ORIG);
+//        Histograms.exportPlots(normSchema, trainDataAnalyis, CHART_DIRECTORY_NORM);
 
         System.out.println();
     }

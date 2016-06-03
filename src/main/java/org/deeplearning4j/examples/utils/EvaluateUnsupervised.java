@@ -12,7 +12,7 @@ import org.canova.api.writable.Writable;
 import org.deeplearning4j.berkeley.Pair;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.deeplearning4j.preprocessing.spark.misc.StringToWritablesFunction;
+import io.skymind.echidna.spark.misc.StringToWritablesFunction;
 import org.deeplearning4j.spark.canova.CanovaDataSetFunction;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
