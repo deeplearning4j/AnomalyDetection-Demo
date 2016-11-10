@@ -1,7 +1,7 @@
 package org.deeplearning4j.examples.datasets.nb15.ui;
 
-import org.canova.api.writable.Writable;
-import io.skymind.echidna.api.schema.Schema;
+import org.datavec.api.writable.Writable;
+import org.datavec.api.transform.schema.Schema;
 import org.deeplearning4j.examples.ui.TableConverter;
 import org.deeplearning4j.examples.ui.components.RenderableComponentTable;
 

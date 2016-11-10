@@ -1,6 +1,6 @@
 package org.deeplearning4j.examples.ui;
 
-import org.canova.api.writable.Writable;
+import org.datavec.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.RenderableComponentTable;
 
 import java.util.Collection;

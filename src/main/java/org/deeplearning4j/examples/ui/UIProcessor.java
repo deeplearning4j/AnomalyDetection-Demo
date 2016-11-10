@@ -6,7 +6,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.math3.util.Pair;
-import org.canova.api.writable.Writable;
+import org.datavec.api.writable.Writable;
 import org.deeplearning4j.examples.ui.components.*;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.slf4j.Logger;

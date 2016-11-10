@@ -4,7 +4,7 @@ import lombok.NoArgsConstructor;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.streaming.Time;
-import org.canova.api.writable.Writable;
+import org.datavec.api.writable.Writable;
 import org.deeplearning4j.examples.ui.UIProcessor;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import scala.Tuple3;

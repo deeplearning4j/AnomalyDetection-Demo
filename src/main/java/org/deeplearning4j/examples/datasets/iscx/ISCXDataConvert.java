@@ -11,8 +11,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.canova.api.io.data.Text;
-import org.canova.api.writable.Writable;
+import org.datavec.api.writable.Text;
+import org.datavec.api.writable.Writable;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 
 import java.io.File;
