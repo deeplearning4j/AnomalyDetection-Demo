@@ -29,13 +29,13 @@
         <spring.version>3.2.5.RELEASE</spring.version>
         <logback.version>1.1.2</logback.version>
         <netty.version>4.0.28.Final</netty.version>
-        <lombok.version>1.16.4</lombok.version>
-        <nd4j.version>0.4-rc3.9</nd4j.version>
-        <dl4j.version>0.4-rc3.9</dl4j.version>
+        <lombok.version>1.16.10</lombok.version>
+        <nd4j.version>0.6.0</nd4j.version>
+        <dl4j.version>0.6.0</dl4j.version>
         <scala.binary.version>2.10</scala.binary.version>
         <scala.version>2.10.4</scala.version>
         <spark.version>1.6.0</spark.version>
-        <echidna.version>0.0.0.16-SNAPSHOT</echidna.version>
+        <datavec.version>0.6.0</datavec.version>
     </properties>
 
     <distributionManagement>
@@ -192,14 +192,14 @@
 
         <!--For data preprocessing-->
         <dependency>
-            <groupId>io.skymind</groupId>
-            <artifactId>echidna-core</artifactId>
-            <version>${echidna.version}</version>
+            <groupId>org.datavec</groupId>
+            <artifactId>datavec-api</artifactId>
+            <version>${datavec.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.skymind</groupId>
-            <artifactId>echidna-spark_${scala.binary.version}</artifactId>
-            <version>${echidna.version}</version>
+            <groupId>org.datavec</groupId>
+            <artifactId>datavec-spark_${scala.binary.version}</artifactId>
+            <version>${datavec.version}</version>
         </dependency>
 
         <!--<dependency>-->
@@ -215,7 +215,7 @@
         </dependency>
         <dependency>
             <groupId>org.deeplearning4j</groupId>
-            <artifactId>dl4j-spark</artifactId>
+            <artifactId>dl4j-spark_${scala.binary.version}</artifactId>
             <version>${dl4j.version}</version>
             <exclusions>
                 <exclusion>

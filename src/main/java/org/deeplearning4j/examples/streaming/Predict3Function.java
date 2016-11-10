@@ -2,7 +2,7 @@ package org.deeplearning4j.examples.streaming;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
-import org.canova.api.writable.Writable;
+import org.datavec.api.writable.Writable;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;

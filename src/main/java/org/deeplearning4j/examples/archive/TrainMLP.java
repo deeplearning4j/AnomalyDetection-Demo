@@ -1,9 +1,9 @@
 package org.deeplearning4j.examples.archive;
 
 import org.apache.commons.io.FileUtils;
-import org.canova.api.records.reader.impl.CSVRecordReader;
-import org.canova.api.split.FileSplit;
-import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
+import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
+import org.datavec.api.split.FileSplit;
+import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.utils.DataPathUtil;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;

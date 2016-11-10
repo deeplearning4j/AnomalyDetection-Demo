@@ -1,16 +1,16 @@
 package org.deeplearning4j.examples.datasets.iscx;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.canova.api.berkeley.Triple;
-import org.canova.api.writable.Writable;
-import io.skymind.echidna.api.TransformProcess;
-import io.skymind.echidna.api.analysis.DataAnalysis;
-import io.skymind.echidna.api.schema.Schema;
-import io.skymind.echidna.api.transform.categorical.CategoricalToIntegerTransform;
-import io.skymind.echidna.api.transform.categorical.StringToCategoricalTransform;
-import io.skymind.echidna.api.transform.normalize.Normalize;
-import io.skymind.echidna.api.transform.string.StringListToCategoricalSetTransform;
-import io.skymind.echidna.spark.SparkTransformExecutor;
+import org.datavec.api.berkeley.Triple;
+import org.datavec.api.writable.Writable;
+import org.datavec.api.transform.TransformProcess;
+import org.datavec.api.transform.analysis.DataAnalysis;
+import org.datavec.api.transform.schema.Schema;
+import org.datavec.api.transform.transform.categorical.CategoricalToIntegerTransform;
+import org.datavec.api.transform.transform.categorical.StringToCategoricalTransform;
+import org.datavec.api.transform.transform.normalize.Normalize;
+import org.datavec.api.transform.transform.string.StringListToCategoricalSetTransform;
+import org.datavec.spark.transform.SparkTransformExecutor;
 
 import java.util.Arrays;
 import java.util.Collection;

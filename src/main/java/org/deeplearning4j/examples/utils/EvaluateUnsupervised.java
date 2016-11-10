@@ -4,16 +4,16 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.storage.StorageLevel;
-import org.canova.api.io.data.BooleanWritable;
-import org.canova.api.records.reader.RecordReader;
-import org.canova.api.records.reader.impl.CSVRecordReader;
-import org.canova.api.split.StringSplit;
-import org.canova.api.writable.Writable;
+import org.datavec.api.writable.BooleanWritable;
+import org.datavec.api.records.reader.RecordReader;
+import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
+import org.datavec.api.split.StringSplit;
+import org.datavec.api.writable.Writable;
 import org.deeplearning4j.berkeley.Pair;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import io.skymind.echidna.spark.misc.StringToWritablesFunction;
-import org.deeplearning4j.spark.canova.CanovaDataSetFunction;
+import org.datavec.spark.transform.misc.StringToWritablesFunction;
+import org.deeplearning4j.spark.datavec.DataVecDataSetFunction;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import scala.Tuple2;
@@ -133,9 +133,9 @@ public class EvaluateUnsupervised {
         if (sc == null)
             throw new IllegalArgumentException("Reinitialize EvaluateUnsupervised with attributes to setup Spark.");
         JavaRDD<String> rawStrings = sc.textFile(path);
-        JavaRDD<Collection<Writable>> rdd = rawStrings.map(new Function<String, Collection<Writable>>() {
+        JavaRDD<List<Writable>> rdd = rawStrings.map(new Function<String, List<Writable>>() {
             @Override
-            public Collection<Writable> call(String s) throws Exception {
+            public List<Writable> call(String s) throws Exception {
                 RecordReader recordReader = new CSVRecordReader(0, ",");
                 recordReader.initialize(new StringSplit(s));
                 return recordReader.next();
@@ -143,7 +143,7 @@ public class EvaluateUnsupervised {
         });
 
         int nOut = network.getOutputLayer().getParam("b").shape()[0];
-        JavaRDD<DataSet> ds = rdd.map(new CanovaDataSetFunction(labelIdx, nOut, false));
+        JavaRDD<DataSet> ds = rdd.map(new DataVecDataSetFunction(labelIdx, nOut, false));
         ds.persist(StorageLevel.MEMORY_ONLY());
         return ds;
 

@@ -1,30 +1,33 @@
 package org.deeplearning4j.examples.datasets.nb15;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.canova.api.berkeley.Triple;
-import org.canova.api.writable.Writable;
-import io.skymind.echidna.api.TransformProcess;
-import io.skymind.echidna.api.analysis.DataAnalysis;
-import io.skymind.echidna.api.schema.SequenceSchema;
-import io.skymind.echidna.api.sequence.SplitMaxLengthSequence;
-import io.skymind.echidna.api.sequence.comparator.StringComparator;
-import io.skymind.echidna.spark.SparkTransformExecutor;
-import io.skymind.echidna.api.filter.FilterInvalidValues;
-import io.skymind.echidna.api.schema.Schema;
-import io.skymind.echidna.api.transform.ConditionalTransform;
-import io.skymind.echidna.api.transform.categorical.CategoricalToIntegerTransform;
-import io.skymind.echidna.api.transform.categorical.IntegerToCategoricalTransform;
-import io.skymind.echidna.api.transform.categorical.StringToCategoricalTransform;
-import io.skymind.echidna.api.transform.integer.ReplaceEmptyIntegerWithValueTransform;
-import io.skymind.echidna.api.transform.integer.ReplaceInvalidWithIntegerTransform;
-import io.skymind.echidna.api.transform.normalize.Normalize;
-import io.skymind.echidna.api.transform.string.MapAllStringsExceptListTransform;
-import io.skymind.echidna.api.transform.string.RemoveWhiteSpaceTransform;
-import io.skymind.echidna.api.transform.string.ReplaceEmptyStringTransform;
-import io.skymind.echidna.api.transform.string.StringMapTransform;
+import org.datavec.api.berkeley.Triple;
+import org.datavec.api.writable.Writable;
+import org.datavec.api.transform.TransformProcess;
+import org.datavec.api.transform.analysis.DataAnalysis;
+import org.datavec.api.transform.condition.ConditionOp;
+import org.datavec.api.transform.condition.column.StringColumnCondition;
+import org.datavec.api.transform.sequence.split.SplitMaxLengthSequence;
+import org.datavec.api.transform.sequence.comparator.StringComparator;
+import org.datavec.spark.transform.SparkTransformExecutor;
+import org.datavec.api.transform.filter.FilterInvalidValues;
+import org.datavec.api.transform.schema.Schema;
+import org.datavec.api.transform.transform.condition.ConditionalReplaceValueTransform;
+import org.datavec.api.transform.transform.categorical.CategoricalToIntegerTransform;
+import org.datavec.api.transform.transform.categorical.IntegerToCategoricalTransform;
+import org.datavec.api.transform.transform.categorical.StringToCategoricalTransform;
+import org.datavec.api.transform.transform.integer.ReplaceEmptyIntegerWithValueTransform;
+import org.datavec.api.transform.transform.integer.ReplaceInvalidWithIntegerTransform;
+import org.datavec.api.transform.transform.normalize.Normalize;
+import org.datavec.api.transform.transform.string.MapAllStringsExceptListTransform;
+import org.datavec.api.transform.transform.string.RemoveWhiteSpaceTransform;
+import org.datavec.api.transform.transform.string.ReplaceEmptyStringTransform;
+import org.datavec.api.transform.transform.string.StringMapTransform;
+import org.datavec.api.writable.IntWritable;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -86,7 +89,8 @@ public class NB15Util {
                 .transform(new ReplaceEmptyStringTransform("attack category", "none"))  //Replace empty strings in "attack category"
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
                 .transform(new ReplaceInvalidWithIntegerTransform("count ftp commands", 0)) //Only invalid ones here are whitespace
-                .transform(new ConditionalTransform("is ftp login", 1, 0, "service", Arrays.asList("ftp", "ftp-data")))
+                .transform(new ConditionalReplaceValueTransform("is ftp login", new IntWritable(1), new StringColumnCondition("service", ConditionOp.InSet, new HashSet(Arrays.asList("ftp", "ftp-data")))))
+                .transform(new ConditionalReplaceValueTransform("is ftp login", new IntWritable(0), new StringColumnCondition("service", ConditionOp.NotInSet, new HashSet(Arrays.asList("ftp", "ftp-data")))))
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
                 .transform(new StringMapTransform("attack category", Collections.singletonMap("Backdoors", "Backdoor"))) //Replace all instances of "Backdoors" with "Backdoor"
                 .transform(new StringToCategoricalTransform("attack category", "none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"))
@@ -118,7 +122,8 @@ public class NB15Util {
                 .transform(new ReplaceEmptyStringTransform("attack category", "none"))  //Replace empty strings in "attack category"
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
                 .transform(new ReplaceInvalidWithIntegerTransform("count ftp commands", 0)) //Only invalid ones here are whitespace
-                .transform(new ConditionalTransform("is ftp login", 1, 0, "service", Arrays.asList("ftp", "ftp-data")))
+                .transform(new ConditionalReplaceValueTransform("is ftp login", new IntWritable(1), new StringColumnCondition("service", ConditionOp.InSet, new HashSet(Arrays.asList("ftp", "ftp-data")))))
+                .transform(new ConditionalReplaceValueTransform("is ftp login", new IntWritable(0), new StringColumnCondition("service", ConditionOp.NotInSet, new HashSet(Arrays.asList("ftp", "ftp-data")))))
                 .transform(new ReplaceEmptyIntegerWithValueTransform("count flow http methods", 0))
                 .transform(new StringMapTransform("attack category", Collections.singletonMap("Backdoors", "Backdoor"))) //Replace all instances of "Backdoors" with "Backdoor"
                 .transform(new StringToCategoricalTransform("attack category", "none", "Exploits", "Reconnaissance", "DoS", "Generic", "Shellcode", "Fuzzers", "Worms", "Backdoor", "Analysis"))

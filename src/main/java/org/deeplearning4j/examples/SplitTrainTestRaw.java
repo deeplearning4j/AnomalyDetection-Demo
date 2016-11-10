@@ -1,7 +1,7 @@
 package org.deeplearning4j.examples;
-import io.skymind.echidna.api.split.RandomSplit;
-import io.skymind.echidna.spark.utils.SparkExport;
-import io.skymind.echidna.spark.utils.SparkUtils;
+import org.datavec.api.transform.split.RandomSplit;
+import org.datavec.spark.transform.utils.SparkExport;
+import org.datavec.spark.transform.utils.SparkUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.deeplearning4j.examples.utils.SparkConnectFactory;

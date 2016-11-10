@@ -1,12 +1,11 @@
 package org.deeplearning4j.examples;
 
 import org.apache.commons.io.FileUtils;
-import org.canova.api.records.reader.impl.CSVRecordReader;
-import org.canova.api.records.reader.impl.CSVSequenceRecordReader;
-import org.canova.api.split.FileSplit;
-import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
-import org.deeplearning4j.datasets.canova.SequenceRecordReaderDataSetIterator;
-import org.deeplearning4j.datasets.iterator.DataSetIterator;
+import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
+import org.datavec.api.records.reader.impl.csv.CSVSequenceRecordReader;
+import org.datavec.api.split.FileSplit;
+import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
+import org.deeplearning4j.datasets.datavec.SequenceRecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.iterator.MultipleEpochsIterator;
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
 import org.deeplearning4j.earlystopping.EarlyStoppingModelSaver;
@@ -19,6 +18,7 @@ import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
 import org.deeplearning4j.earlystopping.trainer.IEarlyStoppingTrainer;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.dataProcessing.PreprocessingPreSplit;
+import org.deeplearning4j.examples.dataProcessing.PreprocessingSequence;
 import org.deeplearning4j.examples.datasets.nb15.NB15Util;
 import org.deeplearning4j.examples.models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.models.BasicMLPModel;
@@ -35,6 +35,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
@@ -155,6 +156,7 @@ public class NIDSMain {
         if (preProcess) {
             System.out.println("\nPreprocess data....");
             PreprocessingPreSplit.main(dataSet);
+            PreprocessingSequence.main(dataSet);
         }
 
         boolean rnn = modelType.toLowerCase().equals("rnn");
@@ -199,7 +201,7 @@ public class NIDSMain {
         DataSetIterator iter;
         if(rnn){
             CSVSequenceRecordReader rr = new CSVSequenceRecordReader(0,",");
-            String path = (train ? dataPath.PRE_SEQ_TEST_DATA_DIR : dataPath.PRE_SEQ_TEST_DATA_DIR);
+            String path = (train ? dataPath.PRE_SEQ_TRAIN_DATA_DIR : dataPath.PRE_SEQ_TEST_DATA_DIR);
             rr.initialize(new FileSplit(new File(path)));
             iter = new SequenceRecordReaderDataSetIterator(rr,batchSize,nOut,labelIdx,false);
         } else {
