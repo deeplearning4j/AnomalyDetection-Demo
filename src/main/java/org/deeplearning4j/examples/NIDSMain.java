@@ -35,6 +35,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
@@ -184,7 +185,7 @@ public class NIDSMain {
         if (supervised) {
             evaluateSupervisedPerformance(network, testData);
         } else {
-            evaluateUnsupervisedPerformance(testData);
+            evaluateUnsupervisedPerformance(network, testData);
         }
 
         if (saveModel) {
@@ -278,20 +279,20 @@ public class NIDSMain {
                 break;
             case "MLPAuto":
                 MLPAutoEncoderModel maemodel = new MLPAutoEncoderModel(
-                        new int[]{nIn,50,200,300,200,50},
-                        new int[]{50,200,300,200,50,nOut},
+                        new int[]{nIn, 30, 10, 30},
+                        new int[]{30, 10, 30, nIn},
                         iterations,
-                        "softplus",
+                        "relu",
                         WeightInit.XAVIER,
                         OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
-                        Updater.NESTEROVS,
-                        LossFunctions.LossFunction.MCXENT,
-                        1e-3,
-                        1,
+                        Updater.ADAGRAD,
+                        LossFunctions.LossFunction.MSE,
+                        0.05,
+                        0.0001,
                         seed);
                 conf = maemodel.conf();
                 network = maemodel.buildModel(conf);
-                supervised = true;
+                supervised = false;
                 break;
         }
 //        if(useHistogram)
@@ -339,7 +340,7 @@ public class NIDSMain {
             next = iter.next();
             if(next == null) break;
             if(supervised) net.fit(next);
-            else net.fit(next.getFeatureMatrix());
+            else net.fit(next.getFeatureMatrix(), next.getFeatureMatrix());
             if (countTrain % TEST_EVERY_N_MINIBATCHES == 0 && supervised) {
                 //Test:
                 log.info("--- Evaluation after {} examples ---",countTrain*batchSize);
@@ -363,15 +364,17 @@ public class NIDSMain {
 
     }
 
-    protected void evaluateUnsupervisedPerformance(MultipleEpochsIterator iter){
-        org.nd4j.linalg.dataset.DataSet test = iter.next(1);
-        INDArray result = network.scoreExamples(test,false);
-
-        INDArray r = result.slice(0);
-        System.out.println("\nSingle evaluation score: " +  result);
-
-        DataSetLossCalculator calc = new DataSetLossCalculator(iter, true);
-        System.out.println("\nAverage evaluation score: " +  calc.calculateScore(network));
+    protected void evaluateUnsupervisedPerformance(MultiLayerNetwork net, MultipleEpochsIterator iter){
+        int countTest = 0;
+        double averageScore = 0;
+        while (iter.hasNext()) {
+            countTest++;
+            DataSet ds = iter.next();
+            double score = net.score(new DataSet(ds.getFeatureMatrix(), ds.getFeatureMatrix()), false);
+            averageScore += score;
+        }
+        averageScore /= countTest;
+        System.out.println("\nAverage evaluation score: " + averageScore);
     }
 
     protected void saveAndPrintResults(MultiLayerNetwork net) {

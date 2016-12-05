@@ -25,7 +25,7 @@ public class MLPAutoEncoderModel {
     protected LossFunctions.LossFunction lossFunctions;
     protected double learningRate;
     protected double l2;
-    double dropoutRate = 0.7;
+    double dropoutRate = 0.0;
     protected long seed;
 
     public MLPAutoEncoderModel(int[] nIn, int[] nOut, int iterations, String activation, WeightInit weightInit, double learningRate, double l2){
@@ -59,21 +59,17 @@ public class MLPAutoEncoderModel {
                 .learningRate(learningRate)
                 .regularization(true)
                 .l2(l2)
-                .updater(Updater.RMSPROP)
-                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .updater(updater)
+                .optimizationAlgo(optimizationAlgorithm)
                 .list()
-                .layer(0, new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0]).dropOut(0.3)
+                .layer(0, new DenseLayer.Builder().nIn(nIn[0]).nOut(nOut[0])
                         .build())
-                .layer(1, new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1]).dropOut(0.3)
+                .layer(1, new DenseLayer.Builder().nIn(nIn[1]).nOut(nOut[1])
                         .build())
                 .layer(2, new DenseLayer.Builder().nIn(nIn[2]).nOut(nOut[2])
                         .build())
-                .layer(3, new DenseLayer.Builder().nIn(nIn[3]).nOut(nOut[3])
-                        .build())
-                .layer(4, new DenseLayer.Builder().nIn(nIn[4]).nOut(nOut[4]).dropOut(0)
-                        .build())
-                .layer(5, new OutputLayer.Builder().nIn(nIn[5]).nOut(nOut[5]).dropOut(0)
-                        .lossFunction(LossFunctions.LossFunction.MSE)
+                .layer(3, new OutputLayer.Builder().nIn(nIn[3]).nOut(nOut[3])
+                        .lossFunction(lossFunctions)
                         .build())
                 .backprop(true).pretrain(false).build();
     }
