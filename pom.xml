@@ -30,12 +30,12 @@
         <logback.version>1.1.2</logback.version>
         <netty.version>4.0.28.Final</netty.version>
         <lombok.version>1.16.10</lombok.version>
-        <nd4j.version>0.6.0</nd4j.version>
-        <dl4j.version>0.6.0</dl4j.version>
+        <nd4j.version>0.7.1</nd4j.version>
+        <dl4j.version>0.7.1</dl4j.version>
         <scala.binary.version>2.10</scala.binary.version>
         <scala.version>2.10.4</scala.version>
         <spark.version>1.6.0</spark.version>
-        <datavec.version>0.6.0</datavec.version>
+        <datavec.version>0.7.1</datavec.version>
     </properties>
 
     <distributionManagement>
