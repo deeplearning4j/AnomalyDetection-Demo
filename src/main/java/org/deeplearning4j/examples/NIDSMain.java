@@ -24,7 +24,9 @@ import org.deeplearning4j.examples.models.BasicAutoEncoderModel;
 import org.deeplearning4j.examples.models.BasicMLPModel;
 import org.deeplearning4j.examples.models.BasicRNNModel;
 import org.deeplearning4j.examples.models.MLPAutoEncoderModel;
+import org.deeplearning4j.examples.models.VariationalAutoEncoderModel;
 import org.deeplearning4j.examples.utils.DataPathUtil;
+import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
@@ -73,7 +75,7 @@ public class NIDSMain {
     protected static final Logger log = LoggerFactory.getLogger(NIDSMain.class);
 
     // values to pass in from command line when compiled, esp running remotely
-    @Option(name="--modelType",usage="Type of model (MLP, RNN, Auto)",aliases = "-mT")
+    @Option(name="--modelType",usage="Type of model (MLP, RNN, MLPAuto, VarAuto)",aliases = "-mT")
     protected String modelType = "MLP";
     @Option(name="--batchSize",usage="Batch size",aliases="-b")
     protected int batchSize = 128;
@@ -294,6 +296,23 @@ public class NIDSMain {
                 network = maemodel.buildModel(conf);
                 supervised = false;
                 break;
+            case "VarAuto":
+                VariationalAutoEncoderModel vaemodel = new VariationalAutoEncoderModel(
+                        new int[]{nIn, 64, 64},
+                        new int[]{16, 64, 64},
+                        iterations,
+                        "leakyrelu",
+                        WeightInit.XAVIER,
+                        OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT,
+                        Updater.ADAM,
+                        LossFunctions.LossFunction.RECONSTRUCTION_CROSSENTROPY,
+                        0.01,
+                        0.0001,
+                        seed);
+                conf = vaemodel.conf();
+                network = vaemodel.buildModel(conf);
+                supervised = false;
+                break;
         }
 //        if(useHistogram)
 //            network.setListeners(new ScoreIterationListener(listenerFreq), new HistogramIterationListener(listenerFreq));
@@ -341,6 +360,12 @@ public class NIDSMain {
             if(next == null) break;
             if(supervised) net.fit(next);
             else net.fit(next.getFeatureMatrix(), next.getFeatureMatrix());
+
+            Layer layer = net.getLayer(0);
+            if (layer instanceof org.deeplearning4j.nn.layers.variational.VariationalAutoencoder) {
+                System.out.println(layer.score());
+            }
+
             if (countTrain % TEST_EVERY_N_MINIBATCHES == 0 && supervised) {
                 //Test:
                 log.info("--- Evaluation after {} examples ---",countTrain*batchSize);
